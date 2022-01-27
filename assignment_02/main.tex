@@ -1,0 +1,115 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{bytefield}
+\usepackage[a4paper,margin=1in,footskip=0.25in]{geometry}
+\usepackage[english]{babel}
+\usepackage[autostyle, english = american]{csquotes}
+\MakeOuterQuote{"}
+
+\title{CS3093D Networks Laboratory  - Assignment 2}
+\author{Anandu B Ajith - B180288CS}
+\date{23 January 2022}
+
+
+\begin{document}
+
+\maketitle
+
+\section*{Question 1}
+\vspace{10pt}
+
+\begin{itemize}
+    \item DNS Lookup\begin{itemize}
+        \item Client performs DNS query for A, AAAA records of minerva.nitc.ac.in
+        \item Gets response of A record which points to 103.160.223.7
+    \end{itemize}
+    \item TCP Connection setup \begin{itemize}
+        \item Client initiates a TCP connection to server (103.160.223.7) port 443 and sends SYN packet.
+        \item Server responds with with SYN, ACK. Client then responds with ACK packet and the TCP Connection is setup.
+    \end{itemize}
+    \item TLS Setup \begin{itemize}
+        \item Since we are using HTTPS protocol, client sends "ClientHello" over the TCP connection
+        \item Server responds with "ServerHello"
+        \item Server sends "Certificate, Server Key Exchange, Server Hello Done" message
+        \item Client sends "Client Key Exchange, Change Cipher Spec, Encrypted Handshake Message" to the server, server verifies the handshake, accepts the change "Change Cipher Spec" message.
+        \item Server responds with "Change Cipher Spec" and Encrypted Handshake
+        \item Client, server verifies the handshake, and TLS Connection setup is complete
+    \end{itemize}
+    \item Application data is exchanged over the TCP connected using TLS encryption, some TCP packets were re-transmitted.
+    \item Once the transfer is complete, server sends FIN packet, Client ACK's the packet and the TCP connection is closed.
+\end{itemize}
+
+\pagebreak
+\section*{Question 2}
+\vspace{10pt}
+
+The credentials were exchanged over HTTP, which is in plain text. We can use WireShark String Filter to search for the string "username" in all the packets data fields, to find the packet which contains username and password.
+
+\subsection*{2.a}
+Source: \textbf{192.168.44.53} on port \textbf{53810} \\
+Destination: \textbf{192.168.44.1} on port \textbf{1000}
+
+\subsection*{2.b}
+The credentials were sent over HTTP protocol, which is not encrypted.
+
+\subsection*{2.c}
+The login credentials were \\
+
+\indent username = "\textbf{vasudevanar}" \\
+\indent password = "\textbf{vasu}" 
+
+
+
+
+\pagebreak
+\section*{Question 3}
+\vspace{10pt}
+% \begin{bytefield}[bitwidth=1.4em]{32}
+%     \bitheader{0-31} \\
+%     \bitbox{16}{source port} & \bitbox{16}{destination port} \\
+%     \bitbox{32}{sequence number} \\
+%     \bitbox{32}{acknowledgement number} \\
+%     \bitbox{4}{data offset} & \bitbox{3}{reserved} 
+%         & \bitbox{9}{flags} & \bitbox{16}{window size} \\
+%     \bitbox{16}{checksum} & \bitbox{16}{urgent pointer} \\
+%     \bitbox{32}{options} \\
+%     \bitbox{32}{data} \\
+% \end{bytefield}
+
+\subsection*{Packet 27}
+\vspace{10pt}
+
+\begin{bytefield}[bitwidth=1.4em, bitheight=8ex]{32}
+    \bitheader{0-31} \\
+    \bitbox{16}{\textbf{443} \\ \small{source port}} 
+        & \bitbox{16}{\textbf{59138} \\ \small{destination port}} \\
+    \bitbox{32}{\textbf{3056868986} \\ \small{sequence number}} \\
+    \bitbox{32}{\textbf{1084580465} \\ \small{acknowledgement number}} \\
+    \bitbox{4}{\textbf{20} \\ \small{data offset}}
+        & \bitbox{3}{\textbf{NULL} \\ \small{reserved}} 
+        & \bitbox{9}{\textbf{0x011} \\ \small{flags (FIN,ACK)}} 
+        & \bitbox{16}{\textbf{60} \\ \small{window size}} \\
+    \bitbox{16}{\textbf{0x5442} \\ \small{checksum}} 
+        & \bitbox{16}{\textbf{0} \\ \small{urgent pointer}} 
+\end{bytefield}
+
+\subsection*{Packet 32}
+\vspace{10pt}
+
+\begin{bytefield}[bitwidth=1.4em, bitheight=8ex]{32}
+    \bitheader{0-31} \\
+    \bitbox{16}{\textbf{59139} \\ \small{source port}} 
+        & \bitbox{16}{\textbf{443} \\ \small{destination port}} \\
+    \bitbox{32}{\textbf{1660956066} \\ \small{sequence number}} \\
+    \bitbox{32}{\textbf{3861199010} \\ \small{acknowledgement number}} \\
+    \bitbox{4}{\textbf{20} \\ \small{data offset}}
+        & \bitbox{3}{\textbf{NULL} \\ \small{reserved}} 
+        & \bitbox{9}{\textbf{0x014} \\ \small{flags (RST,ACK)}} 
+        & \bitbox{16}{\textbf{0} \\ \small{window size}} \\
+    \bitbox{16}{\textbf{0xFAEC} \\ \small{checksum}} 
+        & \bitbox{16}{\textbf{0} \\ \small{urgent pointer}} 
+\end{bytefield}
+
+
+
+\end{document}
