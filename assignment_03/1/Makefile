@@ -1,7 +1,7 @@
 CC=gcc
 BIN=./bin
 SOURCE=./src/
-CFLAGS=
+CFLAGS=-g
 
 INC=src/fruits.c
 

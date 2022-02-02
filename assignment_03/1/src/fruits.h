@@ -10,6 +10,7 @@ typedef struct _fruit {
 } Fruit;
 
 void add_fruit(char *, int);
-void print_inventory();
-void purchase_fruit(char*, int);
+void print_inventory(char*);
+int purchase_fruit(char*, int);
 void setup_fruits();
+Fruit* parse_fruit_string(char*);
