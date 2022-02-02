@@ -15,3 +15,13 @@ message sizes.
 
 
 # Notes
+- This would mean we are directly sending right? [ we need to calculate data taransmission rate ]
+
+- what results you want us to display??
+    - Transmission rate? in realtime?
+
+- ARQ -> Automatic Repeat Request
+    - Stop and wait ARQ => Send packet wait for ACK, if not ACK in x time, resend packet [ keep packet in server memory ]
+    - GoBackN ARQ => ?
+    - SelectiveRepeat ARQ => ?
+
