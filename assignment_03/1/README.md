@@ -10,8 +10,10 @@ If the count of the fruit the user needs is more than the available count, the s
 includes all the fruit names along with their count.
 
 
-# Notes
+# Notes/TODO
 - All of them need to take PORT argument
 - Inventory code is abstracted away
+- Need to switch out fixed BUF_SIZE to strlen [ for having smaller packets ]
+- switch to send_all recv_all functions
 
 

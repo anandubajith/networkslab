@@ -55,7 +55,7 @@ int main (int argc, char *argv[])
         // send client welcome message
         memset(server_message, 0, BUF_SIZE);
         strcpy(server_message, "Welcome to store\n" );
-        send(client_socket, server_message, BUF_SIZE, 0);
+        send(client_socket, server_message, strlen(server_message), 0);
 
         // wait for client to reply to message
         char client_message[BUF_SIZE];
@@ -75,12 +75,12 @@ int main (int argc, char *argv[])
                 /* printf("Printing inventory\n"); */
                 memset(server_message, 0, BUF_SIZE);
                 print_inventory(server_message);
-                send(client_socket, server_message, BUF_SIZE, 0);
+                send(client_socket, server_message, strlen(server_message), 0);
             } else if ( strcmp(client_message, "Buy") == 0 ) {
                 printf("Purchase\n");
                 memset(server_message, 0, BUF_SIZE);
                 strcpy(server_message, "Enter FruitName and count\n");
-                send(client_socket, server_message, BUF_SIZE, 0);
+                send(client_socket, server_message, strlen(server_message), 0);
                 // recv another line with FruitName + count
                 int num = recv_string(client_message, client_socket);
                 if ( num == -1 ) {
@@ -100,10 +100,10 @@ int main (int argc, char *argv[])
                     }
                     free(f);
                 }
-                send(client_socket, server_message, BUF_SIZE, 0);
+                send(client_socket, server_message, strlen(server_message), 0);
             } else {
                 strcpy(server_message, "Invalid request\n");
-                send(client_socket, server_message, BUF_SIZE, 0);
+                send(client_socket, server_message, strlen(server_message), 0);
             }
         }
     }
