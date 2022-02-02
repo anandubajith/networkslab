@@ -45,11 +45,12 @@ void add_fruit(char *name, int count) {
 }
 
 void print_inventory(char *buf) {
-    sprintf(buf, "\nInventory\n");
+    int length = 0;
+    length += sprintf(buf, "Inventory\n===\n");
     for (int i =0; i < fruit_count; i++) {
-        sprintf(buf + strlen(buf), "%s -> %d\n" , fruits[i]->name, fruits[i]->count);
+        length += sprintf(buf + length, "%s -> %d\n" , fruits[i]->name, fruits[i]->count);
     }
-    sprintf(buf + strlen(buf), "Total %d items\n" , fruit_count);
+    sprintf(buf + length, "Total %d items\n" , fruit_count);
 }
 
 int purchase_fruit(char *name, int count) {

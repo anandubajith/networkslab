@@ -16,7 +16,6 @@ int recv_string(char *s, int socket) {
     memset(s, 0, BUF_SIZE);
     int num = 0;
     while( (num = recv(socket, s , BUF_SIZE, 0)) == 0 ) {
-        printf("%s\n",s);
         memset(s, 0, BUF_SIZE);
     }
     if ( num != -1 ) {
@@ -24,6 +23,7 @@ int recv_string(char *s, int socket) {
     }
     return num;
 }
+// todo: write send function also
 
 int main (int argc, char *argv[])
 {
@@ -31,7 +31,6 @@ int main (int argc, char *argv[])
     setup_fruits();
 
     char* server_message = malloc(sizeof(char) * BUF_SIZE);
-    strcpy(server_message, "Welcome to store\n" );
     int server_sock = socket(AF_INET, SOCK_STREAM, 0);
     if (setsockopt(server_sock, SOL_SOCKET, SO_REUSEADDR, &(int){1}, sizeof(int)) < 0)
         printf("setsockopt(SO_REUSEADDR) failed");
@@ -50,16 +49,18 @@ int main (int argc, char *argv[])
     listen(server_sock, BACKLOG);
 
     while ( 1) {
+        printf("Waiting for connection\n");
         int client_socket = accept(server_sock, NULL, NULL);
+        printf("Accepted connection\n");
         // send client welcome message
+        memset(server_message, 0, BUF_SIZE);
+        strcpy(server_message, "Welcome to store\n" );
         send(client_socket, server_message, BUF_SIZE, 0);
 
         // wait for client to reply to message
         char client_message[BUF_SIZE];
-        int read_size = 0;
         while(1) {
-
-            send(client_socket, ">", 2, 0);
+//            send(client_socket, ">\n", strlen(">\n"), 0);
             int num = recv_string(client_message, client_socket);
             if ( num == -1) {
                 break;
@@ -102,9 +103,9 @@ int main (int argc, char *argv[])
                 }
                 send(client_socket, server_message, BUF_SIZE, 0);
             } else {
-                printf("Invalid request\n");
+                strcpy(server_message, "Invalid request\n");
+                send(client_socket, server_message, BUF_SIZE, 0);
             }
-
         }
     }
 
