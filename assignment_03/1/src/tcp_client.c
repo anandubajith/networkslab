@@ -39,14 +39,24 @@ int main (int argc, char *argv[])
         //recv_string(buffer, sock);
         read(sock, buffer, BUF_SIZE);
         printf("%s", buffer);
-        printf("\n>");
+        printf(">");
         memset(buffer, 0, BUF_SIZE);
         scanf("%[^\n]", buffer);
-        printf("Scanned \"%s\"\n", buffer);
+        char t;
+        scanf("%c", &t);
+
+        /* printf("Scanned \"%s\"\n", buffer); */
+        if ( strlen(buffer) == 0){
+            continue;
+        }
         buffer[BUF_SIZE-1] = '\0';
         // send it to server
         send(sock, buffer, BUF_SIZE, 0);
+        if ( strcmp("Bye", buffer) == 0) {
+            close(sock);
+            printf("Connection closed\n");
+            return 0;
+        }
     }
-    close(sock);
     return 0;
 }

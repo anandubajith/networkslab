@@ -60,7 +60,6 @@ int main (int argc, char *argv[])
         // wait for client to reply to message
         char client_message[BUF_SIZE];
         while(1) {
-//            send(client_socket, ">\n", strlen(">\n"), 0);
             int num = recv_string(client_message, client_socket);
             if ( num == -1) {
                 break;
