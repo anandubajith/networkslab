@@ -37,26 +37,49 @@ int main(){
     while(1) {
         int num = 0;
         socklen_t size = sizeof(their_addr);
+        memset(buffer, 0, BUF_SIZE);
         recvfrom(server_sock, buffer, BUF_SIZE-1 , 0, (struct sockaddr *)&their_addr, &size);
-        printf("Got \"%s\"", buffer);
 
-        // parse this command
-        /*
-         * Let the command be like
-         * Hello         -> Welcome to server message
-         * SendInventory -> Send the inventory object
-         * Buy           -> ????
-         * Buy[Apple][4] -> Buy apple 4 quantity
-         *
-         */
+        // trim newline [may not be needed]
+        buffer[strlen(buffer) -1] = 0;
 
-        memset(buffer, 0, BUF_SIZE);
-        strcpy(buffer, "Hi there");
+        if ( strcmp("Hello", buffer) == 0) {
+            memset(buffer, 0, BUF_SIZE);
+            strcpy(buffer, "Welcome to store\n" );
+        } else if (strcmp("SendInventory", buffer) == 0) {
+            memset(buffer, 0, BUF_SIZE);
+            print_inventory(buffer);
+        } else if ( strncmp("Buy", buffer, 3) == 0 ) {
+            printf("Two cases: %s\n", buffer);
+            int length = strlen(buffer);
+            if ( length == 3) {
+                memset(buffer, 0, BUF_SIZE);
+                strcpy(buffer, "Enter FruitName and count\n");
+            } else {
+                buffer[length -1] = '\0'; // remove the ]
+                Fruit* f = parse_fruit_string(buffer + 4);
+                memset(buffer, 0, BUF_SIZE);
+                if ( f != NULL) {
+                    // purchase the fruit + return with message
+                    int r =purchase_fruit(f->name, f->count);
+                    if ( r == 1) {
+                        sprintf(buffer, "%s -> %d purchased successfully\n", f->name, f->count);
+                    } else {
+                        sprintf(buffer, "Purchase failed (Invalid fruit or count)\n");
+                    }
+                } else {
+                    strcpy(buffer, "Invalid input\n");
+                }
+                free(f);
+            }
+
+        } else {
+            memset(buffer, 0, BUF_SIZE);
+            strcpy(buffer, "Invalid message\n" );
+        }
+
         sendto(server_sock,buffer, strlen(buffer), 0, (struct sockaddr *)&their_addr, size );
-        memset(buffer, 0, BUF_SIZE);
     }
-
-
 
     close(server_sock);
 }
