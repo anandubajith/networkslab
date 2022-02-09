@@ -35,13 +35,15 @@ int main(){
 
     char* buffer = malloc(sizeof(char) * BUF_SIZE);
     while(1) {
-        int num = 0;
         socklen_t size = sizeof(their_addr);
         memset(buffer, 0, BUF_SIZE);
         recvfrom(server_sock, buffer, BUF_SIZE-1 , 0, (struct sockaddr *)&their_addr, &size);
 
         // trim newline [may not be needed]
-        buffer[strlen(buffer) -1] = 0;
+        int len = strlen(buffer);
+        if ( buffer[len-1] == '\n') {
+            buffer[len-1] = '\0';
+        }
 
         if ( strcmp("Hello", buffer) == 0) {
             memset(buffer, 0, BUF_SIZE);
