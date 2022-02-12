@@ -33,15 +33,16 @@ int main (int argc, char *argv[])
 
     Message *m = malloc(sizeof(Message));
     memset(m, 0, sizeof(*m));
-    m->seq_no = 1;
-    m->type = 2;
-    m->offset = 99;
 
     listen(server_sock, BACKLOG);
 
     while ( 1) {
         printf("Waiting for connection\n");
-        m->type=2;
+        memset(m, 0, sizeof(*m));
+        m->seq_no = 1;
+        m->type = 2;
+        m->offset = 99;
+
         int client_socket = accept(server_sock, NULL, NULL);
         printf("Accepted connection\n");
         FILE *fptr = fopen("./file.bin", "r");
@@ -59,6 +60,7 @@ int main (int argc, char *argv[])
         printf("Nothing more to read\n");
         printf("Sent %d packets\n", packet_count);
 
+        memset(m, 0, sizeof(*m));
         m->type=33;
         m->offset = 0;
         send(client_socket, m, sizeof(*m), 0);
