@@ -12,7 +12,6 @@
 #define BUF_SIZE 1024
 #define PORT 12356
 
-
 int main (int argc, char *argv[])
 {
 
@@ -38,29 +37,25 @@ int main (int argc, char *argv[])
     m->type = 2;
     m->offset = 99;
 
-    /* for( int i = 0; i < PACKET_SIZE;i++ ) { */
-    /*     m->data[i] = 'A' + i%26; */
-    /* } */
-
-
     listen(server_sock, BACKLOG);
 
     while ( 1) {
         printf("Waiting for connection\n");
+        m->type=2;
         int client_socket = accept(server_sock, NULL, NULL);
         printf("Accepted connection\n");
         FILE *fptr = fopen("./file.bin", "r");
         int packet_count =0;
-
         int count = fread(m->data, sizeof(char), PACKET_SIZE, fptr);
         while ( count ) {
             packet_count++;
             m->offset = count;
             send(client_socket, m, sizeof(*m), 0);
             bzero(m->data, PACKET_SIZE);
-            usleep(1e5);
+            /* usleep(1e3); */
             count = fread(m->data, sizeof(char), PACKET_SIZE, fptr);
         }
+        fclose(fptr);
         printf("Nothing more to read\n");
         printf("Sent %d packets\n", packet_count);
 
