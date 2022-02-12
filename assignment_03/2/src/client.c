@@ -23,8 +23,9 @@ void recv_file(char *filename, int sock) {
     while (1) {
         memset(m, 0, sizeof(*m));
         recv(sock, m, sizeof(*m), 0);
-        printf("received packet=%d seq_no=%d ack_no=%d size=%d\n", packet_count,m->seq_no,  m->ack_no, m->size);
         packet_count++;
+
+        printf("received packet=%d seq_no=%d ack_no=%d size=%d\n", packet_count,m->seq_no,  m->ack_no, m->size);
 
         if ( m->seq_no != current_seq_no) {
             // ack we sent was not received
@@ -36,7 +37,15 @@ void recv_file(char *filename, int sock) {
         fwrite(m->data, sizeof(char), m->size, fptr);
 
         bzero(m->data,PACKET_SIZE);
-        m->ack_no = current_seq_no;
+        // START: Simulating packet loss
+        /* int jitter = (rand()%1000); */
+        /* m->ack_no = current_seq_no; */
+        /* if ( jitter > 0 ) { */
+        /*     m->ack_no -= 1; */
+        /* } */
+        // END: Simulating packet loss
+
+        printf("sending packet=%d seq_no=%d ack_no=%d size=%d\n", packet_count, m->seq_no,  m->ack_no, m->size);
         send(sock, m, sizeof(*m), 0);
 
         current_seq_no++;

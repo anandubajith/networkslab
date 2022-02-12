@@ -35,7 +35,7 @@ void send_file(char *filename, int client_socket) {
         if ( r == -1 ) {
             // TODO
             printf("Waiting for ACK timed out\n");
-            // move -PACKET_SIZE with fseek
+            // move -PACKET_SIZE with fseek and resend packt
             fseek(fptr, -PACKET_SIZE, SEEK_CUR);
         } else {
             if ( m->ack_no != current_seq_no ) {
