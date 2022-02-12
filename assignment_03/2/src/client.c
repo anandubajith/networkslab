@@ -12,6 +12,33 @@
 #define BUF_SIZE 1024
 #define PORT 12356
 
+
+void recv_file(char *filename, int sock) {
+    Message *m = malloc(sizeof(Message));
+    FILE *fptr = fopen(filename, "w");
+
+    int packet_count = 0;
+    while (1) {
+        memset(m, 0, sizeof(*m));
+        recv(sock, m, sizeof(*m), 0);
+        printf("received packet=%d seq_no=%d size=%d\n", packet_count,m->seq_no,  m->size);
+        packet_count++;
+        m->ack = m->seq_no;
+        send(sock, m, sizeof(*m), 0);
+
+        fwrite(m->data, sizeof(char), m->size, fptr);
+
+        // this would be the last packet
+        if ( m->size < PACKET_SIZE ) {
+            break;
+        }
+    }
+    printf("Received %d packets\n", packet_count);
+    fclose(fptr);
+
+    free(m);
+}
+
 int main (int argc, char *argv[])
 {
 
@@ -27,26 +54,7 @@ int main (int argc, char *argv[])
         exit(1);
     }
 
-    Message *m = malloc(sizeof(Message));
-
-    FILE *fptr = fopen("./output", "w");
-    int packet_count = 0;
-    while (1) {
-        memset(m, 0, sizeof(*m));
-        recv(sock, m, sizeof(*m), 0);
-
-        printf("received packet %d with %d bytes\n", packet_count, m->offset);
-        packet_count++;
-        if ( m->type == 33) {
-            printf("Received %d packets\n", packet_count);
-            fclose(fptr);
-            return 0;
-        }
-        fprintf(fptr,"%s", m->data);
-    }
-    fclose(fptr);
-    /* printf("Seq: %d\nType: %d\nOffset: %d\n", m->seq_no, m->type, m->offset); */
-    /* printf("bufdata:%s\n", m->data); */
+    recv_file("./outout", sock);
 
     return 0;
 }

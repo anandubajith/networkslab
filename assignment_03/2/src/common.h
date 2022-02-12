@@ -4,7 +4,8 @@
 typedef struct _message {
     int seq_no;
     int type;
-    int offset;
+    int ack;
+    int size;
     char data[PACKET_SIZE];
 } Message;
 
