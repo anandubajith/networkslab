@@ -23,7 +23,7 @@ void recv_file(char *filename, int sock) {
         recv(sock, m, sizeof(*m), 0);
         printf("received packet=%d seq_no=%d size=%d\n", packet_count,m->seq_no,  m->size);
         packet_count++;
-        m->ack = m->seq_no;
+        m->ack_no = m->seq_no;
         send(sock, m, sizeof(*m), 0);
 
         fwrite(m->data, sizeof(char), m->size, fptr);
@@ -35,7 +35,6 @@ void recv_file(char *filename, int sock) {
     }
     printf("Received %d packets\n", packet_count);
     fclose(fptr);
-
     free(m);
 }
 

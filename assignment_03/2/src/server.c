@@ -20,7 +20,6 @@ void send_file(char *filename, int client_socket) {
     int current_seq_no = 0;
 
     memset(m, 0, sizeof(*m));
-    m->type = 2;// for filedata
 
     int count = fread(m->data, sizeof(char), PACKET_SIZE, fptr);
     while ( count ) {
@@ -38,10 +37,10 @@ void send_file(char *filename, int client_socket) {
             // move -PACKET_SIZE with fseek
             fseek(fptr, -PACKET_SIZE, SEEK_CUR);
         } else {
-            if ( m->ack != current_seq_no ) {
+            if ( m->ack_no != current_seq_no ) {
                 // received ACK of older packet [ go back to last recv packed ]
                 printf("ACK mismatch");
-                fseek(fptr, -(current_seq_no-m->ack + 1) * PACKET_SIZE, SEEK_CUR);
+                fseek(fptr, -(current_seq_no-m->ack_no + 1) * PACKET_SIZE, SEEK_CUR);
             } else {
                 current_seq_no++;
             }
