@@ -34,6 +34,7 @@ int main (int argc, char *argv[])
     while (1) {
         memset(m, 0, sizeof(*m));
         recv(sock, m, sizeof(*m), 0);
+
         printf("received packet %d with %d bytes\n", packet_count, m->offset);
         packet_count++;
         if ( m->type == 33) {

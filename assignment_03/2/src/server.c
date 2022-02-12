@@ -53,6 +53,13 @@ int main (int argc, char *argv[])
             m->offset = count;
             send(client_socket, m, sizeof(*m), 0);
             bzero(m->data, PACKET_SIZE);
+
+            // wait for ACK
+            recv(client_socket, m, sizeof(*m), 0);
+            // Compare ACK move backward or Timeout and resend packet
+
+
+            bzero(m->data, PACKET_SIZE);
             /* usleep(1e3); */
             count = fread(m->data, sizeof(char), PACKET_SIZE, fptr);
         }
