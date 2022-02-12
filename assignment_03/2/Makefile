@@ -3,7 +3,7 @@ BIN=./bin
 SOURCE=./src/
 CFLAGS=-g
 
-INC=
+INC=src/tcp.c
 
 LIST=$(BIN)/server $(BIN)/client
 
