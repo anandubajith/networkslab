@@ -27,6 +27,7 @@ void send_file(char *filename, int client_socket) {
         m->size = count;
         m->seq_no = current_seq_no;
 
+        printf("sending packet=%d seq_no=%d ack_no=%d size=%d\n", packet_count,m->seq_no, m->ack_no, m->size);
         send(client_socket, m, sizeof(*m), 0);
         // wait for an ACK
         bzero(m->data, PACKET_SIZE);
@@ -39,7 +40,7 @@ void send_file(char *filename, int client_socket) {
         } else {
             if ( m->ack_no != current_seq_no ) {
                 // received ACK of older packet [ go back to last recv packed ]
-                printf("ACK mismatch");
+                printf("ACK mismatch\n");
                 fseek(fptr, -(current_seq_no-m->ack_no + 1) * PACKET_SIZE, SEEK_CUR);
             } else {
                 current_seq_no++;
@@ -55,7 +56,6 @@ void send_file(char *filename, int client_socket) {
 
     // send that file is done
     memset(m, 0, sizeof(*m));
-    m->type=33;
     m->size = 0;
     send(client_socket, m, sizeof(*m), 0);
     free(m);

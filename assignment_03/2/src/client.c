@@ -18,16 +18,28 @@ void recv_file(char *filename, int sock) {
     FILE *fptr = fopen(filename, "w");
 
     int packet_count = 0;
+    int current_seq_no = 0;
+
     while (1) {
         memset(m, 0, sizeof(*m));
         recv(sock, m, sizeof(*m), 0);
-        printf("received packet=%d seq_no=%d size=%d\n", packet_count,m->seq_no,  m->size);
+        printf("received packet=%d seq_no=%d ack_no=%d size=%d\n", packet_count,m->seq_no,  m->ack_no, m->size);
         packet_count++;
-        m->ack_no = m->seq_no;
-        send(sock, m, sizeof(*m), 0);
+
+        if ( m->seq_no != current_seq_no) {
+            // ack we sent was not received
+            printf("ACK was not received on server\n");
+            fseek(fptr, -(current_seq_no-m->seq_no+1)*PACKET_SIZE,SEEK_CUR);
+            current_seq_no = m->seq_no;
+        }
 
         fwrite(m->data, sizeof(char), m->size, fptr);
 
+        bzero(m->data,PACKET_SIZE);
+        m->ack_no = current_seq_no;
+        send(sock, m, sizeof(*m), 0);
+
+        current_seq_no++;
         // this would be the last packet
         if ( m->size < PACKET_SIZE ) {
             break;
@@ -53,7 +65,7 @@ int main (int argc, char *argv[])
         exit(1);
     }
 
-    recv_file("./outout", sock);
+    recv_file("./output", sock);
 
     return 0;
 }
