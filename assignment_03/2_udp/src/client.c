@@ -32,6 +32,7 @@ void* timer_thread() {
 
 
 void recv_file(char *filename, int sock, void* server_address, socklen_t size) {
+    printf("Reached recv-file\n");
     Message *m = malloc(sizeof(Message));
 
     FILE *fptr = fopen(filename, "w");
@@ -42,15 +43,16 @@ void recv_file(char *filename, int sock, void* server_address, socklen_t size) {
     current_seq_no = 0;
 
     pthread_t timer_t;
-    pthread_create(&timer_t, NULL, timer_thread, NULL);
+    /* pthread_create(&timer_t, NULL, timer_thread, NULL); */
 
     while (1) {
         memset(m, 0, sizeof(*m));
 
+        printf("Waiting for packet\n");
         int recv_size = recvfrom(sock,m , sizeof(*m), 0, (struct sockaddr *)server_address, &size);
         packet_count++;
 
-        /* printf("received packet=%d seq_no=%d ack_no=%d size=%d\n", packet_count,m->seq_no,  m->ack_no, m->size); */
+        printf("received packet=%d seq_no=%d ack_no=%d size=%d\n", packet_count,m->seq_no,  m->ack_no, m->size);
 
         if ( recv_size > 0 && m->seq_no == current_seq_no ) {
             fwrite(m->data, sizeof(char), m->size, fptr);
@@ -59,13 +61,13 @@ void recv_file(char *filename, int sock, void* server_address, socklen_t size) {
         }
         bzero(m->data,PACKET_SIZE);
 
-        /* printf("sending packet=%d seq_no=%d ack_no=%d size=%d\n", packet_count, m->seq_no,  m->ack_no, m->size); */
+        printf("sending packet=%d seq_no=%d ack_no=%d size=%d\n", packet_count, m->seq_no,  m->ack_no, m->size);
 
         send(sock, m, sizeof(*m), 0);
 
         // this would be the last packet
         if ( m->size < PACKET_SIZE ) {
-            pthread_cancel(timer_t);
+            /* pthread_cancel(timer_t); */
             break;
         }
     }

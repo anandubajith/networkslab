@@ -14,22 +14,4 @@ c. Create a socket that implements stop and wait ARQ protocol and analyze the RT
 message sizes.
 
 
-# Notes
-
-- 50MB = 50 * 1024 * 1024 bytes
-    => Duration?
-    => 500 bytes => 0.1 seconds
-    => 5kB => 1second
-    => 1000kb = 1mb => 200seconds
-    => 50MB => 166 minutes
-
-- This would mean we are directly sending right? [ we need to calculate data taransmission rate ]
-
-- what results you want us to display??
-    - Transmission rate? in realtime?
-
-- ARQ -> Automatic Repeat Request
-    - Stop and wait ARQ => Send packet wait for ACK, if not ACK in x time, resend packet [ keep packet in server memory ]
-    - GoBackN ARQ => ?
-    - SelectiveRepeat ARQ => ?
 
