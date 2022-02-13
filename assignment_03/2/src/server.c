@@ -9,6 +9,7 @@
 #include "common.h"
 
 #define BACKLOG 5
+#define BUF_SIZE 1024
 #define PORT 12356
 
 int main (int argc, char *argv[])
@@ -39,12 +40,28 @@ int main (int argc, char *argv[])
 
     listen(server_sock, BACKLOG);
 
+    char* buffer = malloc(sizeof(char) * BUF_SIZE);
+
     while (1) {
         printf("Waiting for connection\n");
         int client_socket = accept(server_sock, NULL, NULL);
         printf("Accepted connection\n");
-        send_file("./file.bin", client_socket);
-        close(client_socket);
+        while (1) {
+            memset(buffer, 0, BUF_SIZE);
+            recv(client_socket, buffer,BUF_SIZE , 0);
+            printf("Received message %s\n", buffer);
+            if ( strcmp("Bye", buffer) == 0) {
+                close(client_socket);
+                break;
+            } else if ( strcmp("GiveMeVideo", buffer) == 0) {
+                printf("Sending video :)\n");
+                send_file("./file.bin", client_socket);
+            } else {
+                printf("Invalid message\n");
+                strcpy(buffer, "Gibberish\n");
+                send(client_socket, buffer, strlen(buffer), 0);
+            }
+        }
     }
 
     close(server_sock);

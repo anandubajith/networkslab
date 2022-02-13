@@ -28,7 +28,30 @@ int main (int argc, char *argv[])
         exit(1);
     }
 
-    recv_file("./output", sock);
+    char* buffer = malloc(sizeof(char) * BUF_SIZE);
+
+    while(1) {
+        printf(">");
+        memset(buffer, 0, BUF_SIZE);
+        scanf("%[^\n]", buffer);
+        char t; scanf("%c", &t);
+        if ( strlen(buffer) == 0){
+            continue;
+        }
+        if ( strcmp(buffer, "GiveMeVideo") == 0 ) {
+            send(sock, buffer, strlen(buffer), 0);
+            recv_file("./output", sock);
+        } else {
+            send(sock, buffer, strlen(buffer), 0);
+            if ( strcmp(buffer, "Bye") == 0 ) {
+                close(sock);
+                return 0;
+            }
+            memset(buffer, 0, BUF_SIZE);
+            recv(sock, buffer,BUF_SIZE , 0);
+            printf("%s", buffer);
+        }
+    }
 
     return 0;
 }
