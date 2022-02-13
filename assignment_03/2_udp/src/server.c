@@ -32,12 +32,12 @@ void send_file(char *filename, int sock, void* their_addr, socklen_t size) {
         printf("sending packet=%d seq_no=%d ack_no=%d size=%d\n", packet_count,m->seq_no, m->ack_no, m->size);
 
         clock_t begin = clock();
-        sendto(sock, m, sizeof(*m), 0, (struct sockaddr *)&their_addr, size );
+        sendto(sock, m, sizeof(*m), 0, (struct sockaddr *)their_addr, size );
         // wait for an ACK
         bzero(m->data, PACKET_SIZE);
         printf("Wating for ACK\n");
 
-        int r = recvfrom(sock, m , sizeof(*m), 0, (struct sockaddr *)&their_addr, &size);
+        int r = recvfrom(sock, m , sizeof(*m), 0, (struct sockaddr *)their_addr, &size);
         clock_t end = clock();
         double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
 
@@ -86,6 +86,13 @@ int main (int argc, char *argv[])
     server_address.sin_family = AF_INET;
     server_address.sin_port = htons(PORT);
     server_address.sin_addr.s_addr = INADDR_ANY;
+    socklen_t server_size = sizeof(server_address);
+
+    struct sockaddr_in client_address;
+    client_address.sin_family = AF_INET;
+    client_address.sin_port = htons(PORT+1);
+    client_address.sin_addr.s_addr = INADDR_ANY;
+    socklen_t client_size = sizeof(client_address);
 
 
     int success = bind(server_sock, (struct sockaddr*) &server_address, sizeof(server_address));
@@ -103,23 +110,25 @@ int main (int argc, char *argv[])
     if (setsockopt (server_sock, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof timeout) < 0)
         printf("setsocketopt(SO_RCVTIMEO) failed");
 
+
     while (1) {
-        socklen_t size = sizeof(their_addr);
         memset(buffer, 0, BUF_SIZE);
-        int l = recvfrom(server_sock, buffer, BUF_SIZE-1 , 0, (struct sockaddr *)&their_addr, &size);
+        int l = recvfrom(server_sock, buffer, BUF_SIZE-1 , 0, (struct sockaddr *)&client_address, &client_size);
         int len = strlen(buffer);
+        if ( len == 0)
+            continue;
         printf("Received Message: %d \"%s\"\n\n" , len, buffer);
         if ( strcmp("Bye", buffer) == 0) {
             printf("Client closed connection\n");
             break;
         } else if ( strcmp("GiveMeVideo", buffer) == 0) {
             printf("Sending video :)\n");
-            send_file("./file.bin", server_sock, &their_addr, size) ;
+            send_file("./file.bin", server_sock, &client_address, client_size) ;
         } else {
             printf("Invalid message\n");
             memset(buffer, 0, BUF_SIZE);
             strcpy(buffer, "Gibberish\n");
-            sendto(server_sock,buffer, strlen(buffer), 0, (struct sockaddr *)&their_addr, size );
+            sendto(server_sock,buffer, strlen(buffer), 0, (struct sockaddr *)&client_address, client_size);
         }
     }
 

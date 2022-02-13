@@ -63,7 +63,7 @@ void recv_file(char *filename, int sock, void* server_address, socklen_t size) {
 
         printf("sending packet=%d seq_no=%d ack_no=%d size=%d\n", packet_count, m->seq_no,  m->ack_no, m->size);
 
-        send(sock, m, sizeof(*m), 0);
+        sendto(sock, m, sizeof(*m), 0, (struct sockaddr *)server_address, size );
 
         // this would be the last packet
         if ( m->size < PACKET_SIZE ) {
@@ -81,16 +81,23 @@ void recv_file(char *filename, int sock, void* server_address, socklen_t size) {
 int main (int argc, char *argv[])
 {
 
-    int server_sock = socket(AF_INET, SOCK_DGRAM, 0);
-    if (setsockopt(server_sock, SOL_SOCKET, SO_REUSEADDR, &(int){1}, sizeof(int)) < 0)
+    int client_sock = socket(AF_INET, SOCK_DGRAM, 0);
+    if (setsockopt(client_sock, SOL_SOCKET, SO_REUSEADDR, &(int){1}, sizeof(int)) < 0)
         printf("setsockopt(SO_REUSEADDR) failed");
 
     struct sockaddr_in server_address;
     server_address.sin_family = AF_INET;
     server_address.sin_port = htons(PORT);
     server_address.sin_addr.s_addr = INADDR_ANY;
+    socklen_t server_size = sizeof(server_address);
 
-    socklen_t size = sizeof(server_address);
+    struct sockaddr_in client_address;
+    client_address.sin_family = AF_INET;
+    client_address.sin_port = htons(PORT+1);
+    client_address.sin_addr.s_addr = INADDR_ANY;
+    socklen_t client_size = sizeof(client_address);
+
+    int success = bind(client_sock, (struct sockaddr*) &client_address, sizeof(client_address));
 
     char* buffer = malloc(sizeof(char) * BUF_SIZE);
 
@@ -110,11 +117,11 @@ int main (int argc, char *argv[])
             printf("Connection closed\n");
             return 0;
         } else if ( strcmp("GiveMeVideo", buffer) == 0 ) {
-            sendto(server_sock,buffer, strlen(buffer), 0, (struct sockaddr *)&server_address, size );
-            recv_file("./output", server_sock, &server_address, size) ;
+            sendto(client_sock,buffer, strlen(buffer), 0, (struct sockaddr *)&server_address, server_size );
+            recv_file("./output", client_sock, &server_address, server_size) ;
         } else {
-            sendto(server_sock, buffer, strlen(buffer), 0, (struct sockaddr *)&server_address, size );
-            recvfrom(server_sock, buffer, BUF_SIZE-1 , 0, (struct sockaddr *)&server_address, &size);
+            sendto(client_sock, buffer, strlen(buffer), 0, (struct sockaddr *)&server_address, server_size );
+            recvfrom(client_sock, buffer, BUF_SIZE-1 , 0, (struct sockaddr *)&server_address, &server_size );
             printf("%s", buffer);
 
         }
