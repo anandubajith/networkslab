@@ -9,24 +9,86 @@
 
 #include "common.h"
 
-#define BUF_SIZE 1024
-#define PORT 12356
+int current_seq_no = 0;
+FILE *progress_ptr = NULL;
 
+void* timer_thread() {
+    int prev_seq_no = 0;
+    // current_seq_no - prev_seq_no * 500 bytes
+    // was transferred in last 0.1 sec
+    // => Transmission speed = (current -prev) * 500 * 10 bytes per second
+    // write this to the file
+    while (1) {
+        int bps = (current_seq_no - prev_seq_no) * PACKET_SIZE * 10;
+        printf("\rTransmission rate = %d kbps ", bps/1024);
+        fflush(stdout);
+        prev_seq_no = current_seq_no;
+        fprintf(progress_ptr, "%d\t%d\n",prev_seq_no, bps/1024);
+        usleep(1e5);
+    }
+    // TODO better to use mutex, but since only reading int int
+    // it won't cause issue here
+}
+
+
+void recv_file(char *filename, int sock, void* server_address, socklen_t size) {
+    Message *m = malloc(sizeof(Message));
+
+    FILE *fptr = fopen(filename, "w");
+    progress_ptr = fopen("stats.dat", "w");
+
+    int packet_count = 0;
+
+    current_seq_no = 0;
+
+    pthread_t timer_t;
+    pthread_create(&timer_t, NULL, timer_thread, NULL);
+
+    while (1) {
+        memset(m, 0, sizeof(*m));
+
+        int recv_size = recvfrom(sock,m , sizeof(*m), 0, (struct sockaddr *)server_address, &size);
+        packet_count++;
+
+        /* printf("received packet=%d seq_no=%d ack_no=%d size=%d\n", packet_count,m->seq_no,  m->ack_no, m->size); */
+
+        if ( recv_size > 0 && m->seq_no == current_seq_no ) {
+            fwrite(m->data, sizeof(char), m->size, fptr);
+            m->ack_no = current_seq_no;
+            current_seq_no++;
+        }
+        bzero(m->data,PACKET_SIZE);
+
+        /* printf("sending packet=%d seq_no=%d ack_no=%d size=%d\n", packet_count, m->seq_no,  m->ack_no, m->size); */
+
+        send(sock, m, sizeof(*m), 0);
+
+        // this would be the last packet
+        if ( m->size < PACKET_SIZE ) {
+            pthread_cancel(timer_t);
+            break;
+        }
+    }
+    printf("\nReceived %d packets\n", packet_count);
+    fclose(fptr);
+    fclose(progress_ptr);
+    free(m);
+
+}
 
 int main (int argc, char *argv[])
 {
 
-    int sock = socket(AF_INET, SOCK_STREAM, 0);
+    int server_sock = socket(AF_INET, SOCK_DGRAM, 0);
+    if (setsockopt(server_sock, SOL_SOCKET, SO_REUSEADDR, &(int){1}, sizeof(int)) < 0)
+        printf("setsockopt(SO_REUSEADDR) failed");
+
     struct sockaddr_in server_address;
     server_address.sin_family = AF_INET;
     server_address.sin_port = htons(PORT);
     server_address.sin_addr.s_addr = INADDR_ANY;
 
-    int r = connect(sock, (struct sockaddr *) &server_address, sizeof(server_address));
-    if ( r == -1) {
-        printf("Error: " );
-        exit(1);
-    }
+    socklen_t size = sizeof(server_address);
 
     char* buffer = malloc(sizeof(char) * BUF_SIZE);
 
@@ -35,21 +97,24 @@ int main (int argc, char *argv[])
         memset(buffer, 0, BUF_SIZE);
         scanf("%[^\n]", buffer);
         char t; scanf("%c", &t);
+
         if ( strlen(buffer) == 0){
             continue;
         }
-        if ( strcmp(buffer, "GiveMeVideo") == 0 ) {
-            send(sock, buffer, strlen(buffer), 0);
-            recv_file("./output", sock);
+
+        buffer[BUF_SIZE-1] = '\0';
+
+        if ( strcmp("Bye", buffer) == 0) {
+            printf("Connection closed\n");
+            return 0;
+        } else if ( strcmp("GiveMeVideo", buffer) == 0 ) {
+            sendto(server_sock,buffer, strlen(buffer), 0, (struct sockaddr *)&server_address, size );
+            recv_file("./output", server_sock, &server_address, size) ;
         } else {
-            send(sock, buffer, strlen(buffer), 0);
-            if ( strcmp(buffer, "Bye") == 0 ) {
-                close(sock);
-                return 0;
-            }
-            memset(buffer, 0, BUF_SIZE);
-            recv(sock, buffer,BUF_SIZE , 0);
+            sendto(server_sock,buffer, strlen(buffer), 0, (struct sockaddr *)&server_address, size );
+            recvfrom(server_sock, buffer, BUF_SIZE-1 , 0, (struct sockaddr *)&server_address, &size);
             printf("%s", buffer);
+
         }
     }
 
