@@ -8,6 +8,10 @@ FILE *progress_ptr = NULL;
 
 void* timer_thread() {
     static int prev_seq_no = 0;
+    // current_seq_no - prev_seq_no * 500 bytes
+    // was transferred in last 0.1 sec
+    // => Transmission speed = (current -prev) * 500 * 10 bytes per second
+    // write this to the file
     while (1) {
         int bps = (current_seq_no - prev_seq_no) * PACKET_SIZE * 10;
         printf("\rTransmission rate = %d kbps ", bps/1024);
@@ -16,12 +20,8 @@ void* timer_thread() {
         fprintf(progress_ptr, "%d\t%d\n",prev_seq_no, bps/1024);
         usleep(1e5);
     }
-    // THIS SHOULD USE MUTEX
-    //
-    // current_seq_no - prev_seq_no * 500 bytes
-    // was transferred in last 0.1 sec
-    // => Transmission speed = (current -prev) * 500 * 10 bytes per second
-    // write this to the file
+    // TODO better to use mutex, but since only reading int int
+    // it won't cause issue here
 }
 
 
