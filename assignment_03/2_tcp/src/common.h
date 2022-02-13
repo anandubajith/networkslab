@@ -7,7 +7,9 @@
 #include<netinet/in.h>
 
 #define PACKET_SIZE 500
-#define TIMEOUT 123
+#define BUF_SIZE 1024
+#define PORT 12356
+#define BACKLOG 5
 
 typedef struct _message {
     int seq_no;
@@ -15,6 +17,3 @@ typedef struct _message {
     int size;
     char data[PACKET_SIZE];
 } Message;
-
-void recv_file(char *, int );
-void send_file(char *, int );

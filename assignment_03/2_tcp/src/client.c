@@ -10,9 +10,6 @@
 
 #include "common.h"
 
-#define BUF_SIZE 1024
-#define PORT 12356
-
 int current_seq_no = 0;
 FILE *progress_ptr = NULL;
 

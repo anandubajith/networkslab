@@ -9,10 +9,6 @@
 
 #include "common.h"
 
-#define BACKLOG 5
-#define BUF_SIZE 1024
-#define PORT 12356
-
 void send_file(char *filename, int client_socket) {
     Message *m = malloc(sizeof(Message));
     FILE *fptr = fopen(filename, "r");
