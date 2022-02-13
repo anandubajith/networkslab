@@ -3,7 +3,7 @@ BIN=./bin
 SOURCE=./src/
 CFLAGS=-g -lpthread
 
-INC=src/tcp.c
+INC=
 
 LIST=$(BIN)/server $(BIN)/client
 
@@ -14,7 +14,7 @@ $(BIN)/%: $(SOURCE)%.c
 	$(CC) $(INC) $< $(CFLAGS) -o $@ $(LIBS)
 
 clean:
-	rm -rf $(BIN) stats.dat output
+	rm -rf $(BIN) stats.dat output file.bin
 
 dummy:
 	seq 10000000 > file.bin
