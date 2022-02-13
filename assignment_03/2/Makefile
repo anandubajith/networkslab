@@ -19,3 +19,9 @@ clean:
 dummy:
 	seq 10000000 > file.bin
 	truncate --size=50M file.bin
+
+demo:
+	tmux new-session \; \
+		send-keys './bin/server' C-m \; \
+		split-window -v \; \
+		send-keys './bin/client'
