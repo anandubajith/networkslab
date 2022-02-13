@@ -14,7 +14,7 @@ $(BIN)/%: $(SOURCE)%.c
 	$(CC) $(INC) $< $(CFLAGS) -o $@ $(LIBS)
 
 clean:
-	rm -rf $(BIN)
+	rm -rf $(BIN) stats.dat output
 
 dummy:
 	seq 10000000 > file.bin
