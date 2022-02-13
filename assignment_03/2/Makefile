@@ -23,5 +23,5 @@ dummy:
 demo:
 	tmux new-session \; \
 		send-keys './bin/server' C-m \; \
-		split-window -v \; \
+		split-window -h \; \
 		send-keys './bin/client'

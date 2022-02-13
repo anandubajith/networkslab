@@ -22,12 +22,12 @@ clean:
 demo-tcp:
 	tmux new-session \; \
 		send-keys './bin/tcp_server' C-m \; \
-		split-window \; \
+		split-window -h \; \
 		send-keys './bin/tcp_client'
 
 
 demo-udp:
 	tmux new-session \; \
 		send-keys './bin/udp_server' C-m \; \
-		split-window \; \
+		split-window -h \; \
 		send-keys './bin/udp_client'

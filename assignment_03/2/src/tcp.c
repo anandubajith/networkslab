@@ -2,40 +2,40 @@
 
 void recv_file(char *filename, int sock) {
     Message *m = malloc(sizeof(Message));
+
     FILE *fptr = fopen(filename, "w");
 
     int packet_count = 0;
+
     int current_seq_no = 0;
+    int current_ack_no = -1;
 
     while (1) {
         memset(m, 0, sizeof(*m));
-        recv(sock, m, sizeof(*m), 0);
+        int recv_size = recv(sock, m, sizeof(*m), 0);
         packet_count++;
 
         printf("received packet=%d seq_no=%d ack_no=%d size=%d\n", packet_count,m->seq_no,  m->ack_no, m->size);
 
-        if ( m->seq_no != current_seq_no) {
-            // ack we sent was not received
+        if ( recv_size > 0 && m->seq_no == current_seq_no ) {
+            fwrite(m->data, sizeof(char), m->size, fptr);
+            current_ack_no = m->ack_no;
+            m->ack_no = current_seq_no;
+            current_seq_no++;
+        } else {
             printf("ACK was not received on server\n");
-            fseek(fptr, -(current_seq_no-m->seq_no+1)*PACKET_SIZE,SEEK_CUR);
-            current_seq_no = m->seq_no;
+            // we will atmost drop 1 packet
+            fseek(fptr, -PACKET_SIZE, SEEK_CUR);
         }
-
-        fwrite(m->data, sizeof(char), m->size, fptr);
 
         bzero(m->data,PACKET_SIZE);
         // START: Simulating packet loss
-        /* int jitter = (rand()%1000); */
-        /* m->ack_no = current_seq_no; */
-        /* if ( jitter > 0 ) { */
-        /*     m->ack_no -= 1; */
-        /* } */
         // END: Simulating packet loss
 
         printf("sending packet=%d seq_no=%d ack_no=%d size=%d\n", packet_count, m->seq_no,  m->ack_no, m->size);
         send(sock, m, sizeof(*m), 0);
+        /* getc(stdin); */
 
-        current_seq_no++;
         // this would be the last packet
         if ( m->size < PACKET_SIZE ) {
             break;
@@ -52,6 +52,7 @@ void send_file(char *filename, int client_socket) {
 
     int packet_count =0;
     int current_seq_no = 0;
+    int current_ack_no = 0;
 
     memset(m, 0, sizeof(*m));
 
@@ -60,6 +61,7 @@ void send_file(char *filename, int client_socket) {
         packet_count++;
         m->size = count;
         m->seq_no = current_seq_no;
+        m->ack_no = current_ack_no;
 
         printf("sending packet=%d seq_no=%d ack_no=%d size=%d\n", packet_count,m->seq_no, m->ack_no, m->size);
         send(client_socket, m, sizeof(*m), 0);
@@ -72,12 +74,13 @@ void send_file(char *filename, int client_socket) {
             // move -PACKET_SIZE with fseek and resend packt
             fseek(fptr, -PACKET_SIZE, SEEK_CUR);
         } else {
-            if ( m->ack_no != current_seq_no ) {
-                // received ACK of older packet [ go back to last recv packed ]
-                printf("ACK mismatch\n");
-                fseek(fptr, -(current_seq_no-m->ack_no + 1) * PACKET_SIZE, SEEK_CUR);
-            } else {
+            if ( m->ack_no == current_seq_no) {
+                current_ack_no = m->ack_no;
                 current_seq_no++;
+            } else {
+                printf("ACK mismatch\n");
+                fseek(fptr, -PACKET_SIZE, SEEK_CUR);
+
             }
         }
         bzero(m->data, PACKET_SIZE);

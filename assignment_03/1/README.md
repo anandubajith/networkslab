@@ -1,4 +1,4 @@
-# Question
+# Question 1
 **Implementation of basic Client Server program using both TCP and UDP Socket.**
 Write a client/server program with the socket interface. The server has the list of five
 fruits 'apple', 'mango', 'banana', 'chikoo' and 'papaya' available along with their count
@@ -10,10 +10,7 @@ If the count of the fruit the user needs is more than the available count, the s
 includes all the fruit names along with their count.
 
 
-# Notes/TODO
-- All of them need to take PORT argument
-- Inventory code is abstracted away
-- Need to switch out fixed BUF_SIZE to strlen [ for having smaller packets ]
-- switch to send_all recv_all functions
-
-
+# Instructions
+- The common code for managing fruits is abstracted into `fruits.h` and implemented in `furits.c`
+- `make` command will build and place the binaries in `./bin` folder
+- Screenshots are provided in `screenshots/`folder

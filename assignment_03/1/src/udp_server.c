@@ -44,20 +44,23 @@ int main(){
         if ( buffer[len-1] == '\n') {
             buffer[len-1] = '\0';
         }
+        printf("Received Message: %d \"%s\"\n\n" , len, buffer);
 
         if ( strcmp("Hello", buffer) == 0) {
             memset(buffer, 0, BUF_SIZE);
             strcpy(buffer, "Welcome to store\n" );
         } else if (strcmp("SendInventory", buffer) == 0) {
+            printf("Sending Inventory\n");
             memset(buffer, 0, BUF_SIZE);
             print_inventory(buffer);
         } else if ( strncmp("Buy", buffer, 3) == 0 ) {
-            printf("Two cases: %s\n", buffer);
             int length = strlen(buffer);
             if ( length == 3) {
+                printf("Buy case1:\n");
                 memset(buffer, 0, BUF_SIZE);
                 strcpy(buffer, "Enter FruitName and count\n");
             } else {
+                printf("Buy case2:\n");
                 buffer[length -1] = '\0'; // remove the ]
                 Fruit* f = parse_fruit_string(buffer + 4);
                 memset(buffer, 0, BUF_SIZE);
@@ -76,6 +79,7 @@ int main(){
             }
 
         } else {
+            printf("Invalid message\n");
             memset(buffer, 0, BUF_SIZE);
             strcpy(buffer, "Invalid message\n" );
         }

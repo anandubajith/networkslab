@@ -64,7 +64,7 @@ int main (int argc, char *argv[])
             if ( num == -1) {
                 break;
             }
-            printf("Got Message: %d \"%s\"\n\n" , num, client_message);
+            printf("Received Message: %d \"%s\"\n\n" , num, client_message);
             client_message[num-1] = '\0';
 
             if ( strcmp("Bye", client_message) == 0 ) {
@@ -72,17 +72,18 @@ int main (int argc, char *argv[])
                 printf("Closing the connection\n");
                 close(client_socket);
             } else if ( strcmp(client_message, "SendInventory") == 0 ) {
-                /* printf("Printing inventory\n"); */
+                printf("Sending inventory\n");
                 memset(server_message, 0, BUF_SIZE);
                 print_inventory(server_message);
                 send(client_socket, server_message, strlen(server_message), 0);
             } else if ( strcmp(client_message, "Buy") == 0 ) {
-                printf("Purchase\n");
+                printf("Sending message\n");
                 memset(server_message, 0, BUF_SIZE);
                 strcpy(server_message, "Enter FruitName and count\n");
                 send(client_socket, server_message, strlen(server_message), 0);
                 // recv another line with FruitName + count
                 int num = recv_string(client_message, client_socket);
+                printf("Purchase Fruit\n");
                 if ( num == -1 ) {
                     strcpy(server_message, "Invalid input\n");
                 } else {
@@ -102,6 +103,7 @@ int main (int argc, char *argv[])
                 }
                 send(client_socket, server_message, strlen(server_message), 0);
             } else {
+                printf("Invalid message\n");
                 strcpy(server_message, "Invalid request\n");
                 send(client_socket, server_message, strlen(server_message), 0);
             }
