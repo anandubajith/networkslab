@@ -35,7 +35,6 @@ void* timer_thread() {
 
 void recv_file(char *filename, int sock) {
     Message *m = malloc(sizeof(Message));
-    Message *r = malloc(sizeof(Message));
 
     FILE *fptr = fopen(filename, "w");
     progress_ptr = fopen("stats.dat", "w");
@@ -55,16 +54,17 @@ void recv_file(char *filename, int sock) {
 
         /* printf("received packet=%d seq_no=%d ack_no=%d size=%d\n", packet_count,m->seq_no,  m->ack_no, m->size); */
 
-        if ( recv_size > 0 && m->seq_no == current_seq_no ) {
-            fwrite(m->data, sizeof(char), m->size, fptr);
-            m->ack_no = current_seq_no;
-            current_seq_no++;
-        }
-        bzero(m->data,PACKET_SIZE);
+        /* if ((rand() % 100) < 90) { */
+            if ( recv_size > 0 && m->seq_no == current_seq_no ) {
+                fwrite(m->data, sizeof(char), m->size, fptr);
+                m->ack_no = current_seq_no;
+                current_seq_no++;
+            }
+            bzero(m->data,PACKET_SIZE);
+            send(sock, m, sizeof(*m), 0);
+        /* } */
 
         /* printf("sending packet=%d seq_no=%d ack_no=%d size=%d\n", packet_count, m->seq_no,  m->ack_no, m->size); */
-        send(sock, m, sizeof(*m), 0);
-        /* getc(stdin); */
 
         // this would be the last packet
         if ( m->size < PACKET_SIZE ) {

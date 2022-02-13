@@ -76,10 +76,10 @@ int main (int argc, char *argv[])
 
     struct timeval timeout;
     timeout.tv_sec = 1;
-    timeout.tv_usec = 10000;
+    timeout.tv_usec = 1000;
 
-    /* if (setsockopt (server_sock, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof timeout) < 0) */
-    /*     printf("setsocketopt(SO_RCVTIMEO) failed"); */
+    if (setsockopt (server_sock, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof timeout) < 0)
+        printf("setsocketopt(SO_RCVTIMEO) failed");
 
 
     struct sockaddr_in server_address;
@@ -100,10 +100,17 @@ int main (int argc, char *argv[])
     while (1) {
         printf("Waiting for connection\n");
         int client_socket = accept(server_sock, NULL, NULL);
+        if ( client_socket == -1 ) {
+            continue;
+        }
         printf("Accepted connection\n");
         while (1) {
             memset(buffer, 0, BUF_SIZE);
-            recv(client_socket, buffer,BUF_SIZE , 0);
+            int r = recv(client_socket, buffer,BUF_SIZE , 0);
+            if ( r == -1 ) {
+                continue;
+            }
+
             printf("Received message %s\n", buffer);
             if ( strcmp("Bye", buffer) == 0) {
                 close(client_socket);
