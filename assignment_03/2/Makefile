@@ -27,4 +27,4 @@ demo:
 		send-keys './bin/client'
 
 graph:
-	gnuplot test.plt
+	gnuplot plot.plt

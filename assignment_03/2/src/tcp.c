@@ -117,7 +117,7 @@ void send_file(char *filename, int client_socket) {
             }
         }
         bzero(m->data, PACKET_SIZE);
-        usleep(100);
+        /* usleep(100); */
         count = fread(m->data, sizeof(char), PACKET_SIZE, fptr);
     }
     fclose(fptr);
