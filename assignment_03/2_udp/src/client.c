@@ -113,7 +113,7 @@ int main (int argc, char *argv[])
             sendto(server_sock,buffer, strlen(buffer), 0, (struct sockaddr *)&server_address, size );
             recv_file("./output", server_sock, &server_address, size) ;
         } else {
-            sendto(server_sock,buffer, strlen(buffer), 0, (struct sockaddr *)&server_address, size );
+            sendto(server_sock, buffer, strlen(buffer), 0, (struct sockaddr *)&server_address, size );
             recvfrom(server_sock, buffer, BUF_SIZE-1 , 0, (struct sockaddr *)&server_address, &size);
             printf("%s", buffer);
 
