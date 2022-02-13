@@ -13,7 +13,6 @@
 #define PORT 12356
 
 void send_file(char *filename, int sock, void* their_addr, socklen_t size) {
-    printf("Sending struct over UDP\n");
     Message *m = malloc(sizeof(Message));
     FILE *fptr = fopen(filename, "r");
 
@@ -24,18 +23,16 @@ void send_file(char *filename, int sock, void* their_addr, socklen_t size) {
 
     int count = fread(m->data, sizeof(char), PACKET_SIZE, fptr);
     while ( count ) {
-        printf("Sending packet \n");
         packet_count++;
         m->size = count;
         m->seq_no = current_seq_no;
 
-        printf("sending packet=%d seq_no=%d ack_no=%d size=%d\n", packet_count,m->seq_no, m->ack_no, m->size);
+        /* printf("sending packet=%d seq_no=%d ack_no=%d size=%d\n", packet_count,m->seq_no, m->ack_no, m->size); */
 
         clock_t begin = clock();
         sendto(sock, m, sizeof(*m), 0, (struct sockaddr *)their_addr, size );
         // wait for an ACK
         bzero(m->data, PACKET_SIZE);
-        printf("Wating for ACK\n");
 
         int r = recvfrom(sock, m , sizeof(*m), 0, (struct sockaddr *)their_addr, &size);
         clock_t end = clock();
