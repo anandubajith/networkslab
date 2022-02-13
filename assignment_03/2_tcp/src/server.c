@@ -15,7 +15,6 @@ void send_file(char *filename, int client_socket) {
 
     int packet_count =0;
     int current_seq_no = 0;
-    int current_ack_no = 0;
 
     memset(m, 0, sizeof(*m));
 
@@ -24,10 +23,8 @@ void send_file(char *filename, int client_socket) {
         packet_count++;
         m->size = count;
         m->seq_no = current_seq_no;
-        m->ack_no = current_ack_no;
 
         /* printf("sending packet=%d seq_no=%d ack_no=%d size=%d\n", packet_count,m->seq_no, m->ack_no, m->size); */
-
 
         clock_t begin = clock();
         send(client_socket, m, sizeof(*m), 0);
@@ -43,15 +40,14 @@ void send_file(char *filename, int client_socket) {
             // move -PACKET_SIZE with fseek and resend packt
             fseek(fptr, -PACKET_SIZE, SEEK_CUR);
         } else {
-            printf("\rRound Trip Time: %lf", time_spent);
-            fflush(stdout);
             if ( m->ack_no == current_seq_no) {
-                current_ack_no = m->ack_no;
+                printf("\rRound Trip Time: %lf", time_spent);
+                fflush(stdout);
+                /* printf("\nGotCorrectACK\n"); */
                 current_seq_no++;
             } else {
-                printf("ACK mismatch\n");
+                printf("\nMissed ACK resend\n");
                 fseek(fptr, -PACKET_SIZE, SEEK_CUR);
-
             }
         }
         bzero(m->data, PACKET_SIZE);

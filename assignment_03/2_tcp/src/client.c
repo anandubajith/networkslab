@@ -43,7 +43,6 @@ void recv_file(char *filename, int sock) {
     int packet_count = 0;
 
     current_seq_no = 0;
-    int current_ack_no = -1;
 
     pthread_t timer_t;
     pthread_create(&timer_t, NULL, timer_thread, NULL);
@@ -58,19 +57,10 @@ void recv_file(char *filename, int sock) {
 
         if ( recv_size > 0 && m->seq_no == current_seq_no ) {
             fwrite(m->data, sizeof(char), m->size, fptr);
-            current_ack_no = m->ack_no;
             m->ack_no = current_seq_no;
             current_seq_no++;
-        } else {
-            /* printf("ACK was not received on server\n"); */
-            // we will atmost drop 1 packet
-            fseek(fptr, -PACKET_SIZE, SEEK_CUR);
         }
-
         bzero(m->data,PACKET_SIZE);
-        // START: Simulating packet loss
-        //
-        // END: Simulating packet loss
 
         /* printf("sending packet=%d seq_no=%d ack_no=%d size=%d\n", packet_count, m->seq_no,  m->ack_no, m->size); */
         send(sock, m, sizeof(*m), 0);
