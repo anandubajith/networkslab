@@ -1,7 +1,7 @@
 CC=gcc
 BIN=./bin
 SOURCE=./src/
-CFLAGS=-g
+CFLAGS=-g -lpthread
 
 INC=src/tcp.c
 
@@ -25,3 +25,6 @@ demo:
 		send-keys './bin/server' C-m \; \
 		split-window -h \; \
 		send-keys './bin/client'
+
+graph:
+	gnuplot test.plt
