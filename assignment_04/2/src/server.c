@@ -1,9 +1,42 @@
 #include "common.h"
 
-int evaluate(char *s) {
-    int result = 0;
+void evaluate(char *s) {
+    int l, r;
+    char o;
 
-    return result;
+    int r0 = sscanf(s, "%d %c %d", &l, &o, &r);
+
+    if ( r0 != 3) {
+        memset(s, 0, BUF_SIZE);
+        sprintf(s, "Error: Invalid Expression\n");
+        return;
+    }
+
+
+    memset(s, 0, BUF_SIZE);
+    if ( o == '+' ) {
+        sprintf(s, "%d\n", l+r);
+        return;
+    }
+    if ( o == '-' ) {
+        sprintf(s, "%d\n", l-r);
+        return;
+    }
+    if ( o == '*' ) {
+        sprintf(s, "%d\n", l*r);
+        return;
+    }
+    if ( o == '/' ) {
+        if ( r == 0) {
+            sprintf(s, "Error: Division by zero\n");
+            return;
+        }
+        sprintf(s, "%lf\n", (float)l/r);
+        return;
+    }
+
+    printf("Scanned l=%d, operator=%c, r=%d, retVal = %d\n", l, o, r, r0);
+
 }
 
 void handle_client(int client_socket) {
@@ -16,9 +49,7 @@ void handle_client(int client_socket) {
             close(client_socket);
             free(buffer);
         }
-        int result = evaluate(buffer);
-        memset(buffer, 0, BUF_SIZE);
-        sprintf(buffer, "%d\n", result);
+        evaluate(buffer);
         send(client_socket, buffer, strlen(buffer), 0);
     }
 
