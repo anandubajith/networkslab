@@ -76,7 +76,6 @@ void send_file(char *filename, int sock, void* their_addr, socklen_t size) {
 int main (int argc, char *argv[])
 {
 
-	struct sockaddr_storage their_addr;
     int server_sock = socket(AF_INET, SOCK_DGRAM, 0);
     if (setsockopt(server_sock, SOL_SOCKET, SO_REUSEADDR, &(int){1}, sizeof(int)) < 0)
         printf("setsockopt(SO_REUSEADDR) failed");
