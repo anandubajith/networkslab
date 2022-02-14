@@ -1,7 +1,7 @@
 CC=gcc
 BIN=./bin
 SOURCE=./src/
-CFLAGS=-g -lpthread
+CFLAGS=-g
 
 INC=
 
