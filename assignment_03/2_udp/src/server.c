@@ -15,6 +15,10 @@
 void send_file(char *filename, int sock, void* their_addr, socklen_t size) {
     Message *m = malloc(sizeof(Message));
     FILE *fptr = fopen(filename, "r");
+    if ( fptr == NULL ) {
+        printf("Invalid file name for reading\n");
+        return;
+    }
 
     int packet_count =0;
     int current_seq_no = 0;
@@ -100,7 +104,7 @@ int main (int argc, char *argv[])
 
     struct timeval timeout;
     timeout.tv_sec = 0;
-    timeout.tv_usec = 10000;
+    timeout.tv_usec = 10;
 
     if (setsockopt (server_sock, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof timeout) < 0)
         printf("setsocketopt(SO_RCVTIMEO) failed");

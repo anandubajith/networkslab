@@ -14,6 +14,8 @@ FILE *progress_ptr = NULL;
 
 void* timer_thread() {
     int prev_seq_no = 0;
+    int index = 0;
+
     // current_seq_no - prev_seq_no * 500 bytes
     // was transferred in last 0.1 sec
     // => Transmission speed = (current -prev) * 500 * 10 bytes per second
@@ -23,7 +25,8 @@ void* timer_thread() {
         printf("\rTransmission rate = %d kbps ", bps/1024);
         fflush(stdout);
         prev_seq_no = current_seq_no;
-        fprintf(progress_ptr, "%d\t%d\n",prev_seq_no, bps/1024);
+        fprintf(progress_ptr, "%lf\t%d\n", (float)index/10, bps/1024);
+        index += 1;
         usleep(1e5);
     }
     // TODO better to use mutex, but since only reading int int
