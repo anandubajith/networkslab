@@ -35,18 +35,18 @@ void send_file(char *filename, int client_socket) {
         double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
 
         if ( r == -1 ) {
-            // TODO
-            printf("Waiting for ACK timed out\n");
+            printf("✖ Waiting for ACK Timed out\n");
             // move -PACKET_SIZE with fseek and resend packt
             fseek(fptr, -PACKET_SIZE, SEEK_CUR);
         } else {
             if ( m->ack_no == current_seq_no) {
-                printf("\rRound Trip Time: %lf", time_spent);
+                printf("✔ ACK Received\n");
+                printf("Round Trip Time: %lf\n", time_spent);
                 fflush(stdout);
                 /* printf("\nGotCorrectACK\n"); */
                 current_seq_no++;
             } else {
-                printf("\nMissed ACK resend\n");
+                printf("✖ ACK Invalid\n");
                 fseek(fptr, -PACKET_SIZE, SEEK_CUR);
             }
         }
