@@ -55,7 +55,7 @@ void handle_client(int client_socket) {
 
 }
 
-int main (int argc, char *argv[])
+int main ()
 {
 
     int server_sock = socket(AF_INET, SOCK_STREAM, 0);

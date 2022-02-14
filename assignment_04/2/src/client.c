@@ -15,7 +15,7 @@ void close_handler(int sig) {
     exit(0);
 }
 
-int main (int argc, char *argv[]) {
+int main() {
 
     signal(SIGINT, close_handler);
 
