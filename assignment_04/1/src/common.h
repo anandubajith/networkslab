@@ -27,6 +27,7 @@ typedef struct _packet {
 } Packet;
 
 void add_message(char*, char*);
+Message* new_message(char*, char*);
 void print_message(Message *m);
 void setup_terminal();
 void reset_terminal();

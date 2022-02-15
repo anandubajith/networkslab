@@ -1,11 +1,26 @@
 #include "common.h"
 extern Message* messageHead;
 
+
+void print_all() {
+    Message * t = messageHead;
+    while ( t!= NULL ){
+        print_message(t);
+        t = t->next;
+    }
+}
 int main () {
 
     int server_sock = socket(AF_INET, SOCK_STREAM, 0);
     if (setsockopt(server_sock, SOL_SOCKET, SO_REUSEADDR, &(int){1}, sizeof(int)) < 0)
         printf("setsockopt(SO_REUSEADDR) failed");
+
+
+    struct timeval tv;
+    tv.tv_sec = 0;
+    tv.tv_usec = 1000;
+    setsockopt(server_sock, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof tv);
+
 
     struct sockaddr_in server_address;
     server_address.sin_family = AF_INET;
@@ -19,24 +34,25 @@ int main () {
     }
 
     listen(server_sock, BACKLOG);
-
     setup_terminal();
 
-    int client_socket = accept(server_sock, NULL, NULL);
-    if ( client_socket == -1 ) {
-        printf("Failed to accept\n");
-        return -1;
-    }
-    char* buffer = malloc(sizeof(char) * BUF_SIZE);
     while(1) {
-        bzero(buffer, BUF_SIZE);
-        recv(client_socket, buffer, BUF_SIZE, 0);
-        add_message("server", buffer);
-        print_message(messageHead);
-        bzero(buffer, BUF_SIZE);
-        strcpy(buffer, "Hello from server\n");
-        send(client_socket, buffer, strlen(buffer), 0);
-        /* sleep(10); */
+        int client_socket = accept(server_sock, NULL, NULL);
+        if ( client_socket == -1 ) {
+            continue;
+        }
+        char* buffer = malloc(sizeof(char) * BUF_SIZE);
+        while(1) {
+            bzero(buffer, BUF_SIZE);
+            int r = recv(client_socket, buffer, BUF_SIZE, 0);
+            if (r != -1 ) {
+                Message *m = new_message("server", buffer);
+                print_message(m);
+                bzero(buffer, BUF_SIZE);
+                strcpy(buffer, "Hello from server");
+                send(client_socket, buffer, strlen(buffer), 0);
+            }
+        }
     }
 
     return 0;

@@ -3,13 +3,18 @@
 Message* messageHead = NULL;
 struct termios orig_termios;
 
-void add_message(char* from, char* message) {
+Message *new_message(char*from, char*message) {
     Message *m = malloc(sizeof(Message));
     m->from = malloc(sizeof(char) * strlen(from)+1);
     strcpy(m->from, from);
     m->message = malloc(sizeof(char) * strlen(message)+1);
     strcpy(m->message, message);
     m->time = (unsigned long)time(NULL);
+    return m;
+
+}
+void add_message(char* from, char* message) {
+    Message* m = new_message(from, message);
     if ( messageHead == NULL ) {
         messageHead = m;
         return;

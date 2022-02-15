@@ -1,5 +1,9 @@
 #include "common.h"
 
+extern Message* messageHead;
+char command[BUF_SIZE];
+int command_pos = 0;
+char nick[BUF_SIZE];
 int sock;
 char *buffer;
 
@@ -15,9 +19,53 @@ void close_handler(int sig) {
     exit(0);
 }
 
+void sync_data() {
+    memset(buffer, 0, BUF_SIZE);
+    int r = recv(sock, buffer, BUF_SIZE , 0);
+    if ( r == -1 )
+        return;
+    add_message("server", buffer);
+    /* send(sock,buffer,  strlen(buffer), 0); */
+}
+void draw() {
+    printf("\x1b[2J");
+    printf("\x1b[?25l");
+    printf("\x1b[H");
+    Message *t = messageHead;
+    while ( t != NULL ) {
+        print_message(t);
+        t = t->next;
+    }
+    printf("\x1b[7m");
+    printf("\n#> :\x1b[m %s\n", command);
+    fflush(stdout);
+}
+
+void process_keypress() {
+    char c;
+    if ( read(STDIN_FILENO, &c, 1) == 1) {
+        if ( c == '\n' ) {
+            if (strcmp("Bye", command) == 0 ) {
+                add_message("??", "Bye");
+                close_handler(0);
+            }
+            add_message(nick, command);
+            send(sock, command, strlen(command), 0);
+            bzero(command, sizeof(command));
+            command_pos = 0;
+        } else if ( c == 127) {
+            command[--command_pos] = 0;
+        } else {
+            command[command_pos++] = c;
+        }
+    }
+
+}
+
 int main() {
 
     signal(SIGINT, close_handler);
+
 
     sock = socket(AF_INET, SOCK_STREAM, 0);
     struct sockaddr_in server_address;
@@ -25,29 +73,31 @@ int main() {
     server_address.sin_port = htons(PORT);
     server_address.sin_addr.s_addr = INADDR_ANY;
 
+
+    struct timeval tv;
+    tv.tv_sec = 0;
+    tv.tv_usec = 10000;
+    setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof tv);
+
+
+    printf("Enter NickName: ");
+    scanf("%s", nick);
+
+    setup_terminal();
+
     int r = connect(sock, (struct sockaddr *) &server_address, sizeof(server_address));
     if ( r == -1) {
         printf("Error: " );
         exit(1);
     }
 
-    printf("Connected to server\n");
+    add_message("server", "Connected to server");
     buffer = malloc(sizeof(char) * BUF_SIZE);
 
     while(1) {
-        printf("\nEnter the query: ");
-        fflush(stdout);
-        memset(buffer, 0, BUF_SIZE);
-        scanf("%[^\n]", buffer);
-        char t; scanf("%c", &t);
-        if ( strlen(buffer) == 0){
-            continue;
-        }
-
-        send(sock, buffer, strlen(buffer), 0);
-        memset(buffer, 0, BUF_SIZE);
-        recv(sock, buffer,BUF_SIZE , 0);
-        printf("%s", buffer);
+        sync_data();
+        draw();
+        process_keypress();
     }
 
     return 0;
