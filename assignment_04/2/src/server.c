@@ -34,7 +34,7 @@ void evaluate(char *s) {
         sprintf(s, "%lf\n", (float)l/r);
         return;
     }
-
+    sprintf(s, "Error: Invalid operator\n");
     printf("Scanned l=%d, operator=%c, r=%d, retVal = %d\n", l, o, r, r0);
 
 }
