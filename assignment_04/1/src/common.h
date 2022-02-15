@@ -1,4 +1,5 @@
 #include<stdio.h>
+#include <termios.h>
 #include<signal.h>
 #include<stdlib.h>
 #include<string.h>
@@ -19,13 +20,13 @@ typedef struct _message {
     struct _message *next;
 } Message;
 
-typedef struct _state {
-    Message *messages;
-    char* buffer;
-} State;
+typedef struct _packet {
+    unsigned int time;
+    char from[BUF_SIZE/4];
+    char body[BUF_SIZE];
+} Packet;
 
 void add_message(char*, char*);
 void print_message(Message *m);
-void draw();
 void setup_terminal();
 void reset_terminal();
