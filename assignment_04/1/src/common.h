@@ -11,3 +11,21 @@
 #define PORT 12129
 #define BUF_SIZE 1024
 #define BACKLOG 5
+
+typedef struct _message {
+    char* from;
+    char* message;
+    unsigned long time;
+    struct _message *next;
+} Message;
+
+typedef struct _state {
+    Message *messages;
+    char* buffer;
+} State;
+
+void add_message(char*, char*);
+void print_message(Message *m);
+void draw();
+void setup_terminal();
+void reset_terminal();

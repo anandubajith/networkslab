@@ -10,3 +10,7 @@ MSG {message} => Sends message to everyone
 PM[nick] {message} => Sends message only to that user
 BYE => Leaves the chat [ broadcast to everyone ]
 
+
+when received message => clear the current line => print message => print prompt
+
+
