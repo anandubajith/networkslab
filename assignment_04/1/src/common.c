@@ -5,9 +5,9 @@ struct termios orig_termios;
 
 void add_message(char* from, char* message) {
     Message *m = malloc(sizeof(Message));
-    m->from = malloc(sizeof(char) * 100);
+    m->from = malloc(sizeof(char) * strlen(from)+1);
     strcpy(m->from, from);
-    m->message = malloc(sizeof(char) * 100);
+    m->message = malloc(sizeof(char) * strlen(message)+1);
     strcpy(m->message, message);
     m->time = (unsigned long)time(NULL);
     if ( messageHead == NULL ) {
