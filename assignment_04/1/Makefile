@@ -3,7 +3,7 @@ BIN=./bin
 SOURCE=./src/
 CFLAGS=-Wall -Wextra -g
 
-INC=
+INC=src/common.c
 
 LIST=$(BIN)/server $(BIN)/client
 
