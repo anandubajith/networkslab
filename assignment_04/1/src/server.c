@@ -1,14 +1,5 @@
 #include "common.h"
-extern Message* messageHead;
 
-
-void print_all() {
-    Message * t = messageHead;
-    while ( t!= NULL ){
-        print_message(t);
-        t = t->next;
-    }
-}
 int main () {
 
     int server_sock = socket(AF_INET, SOCK_STREAM, 0);
