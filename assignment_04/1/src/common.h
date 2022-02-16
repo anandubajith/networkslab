@@ -27,11 +27,6 @@ typedef struct _packet {
     char body[BUF_SIZE];
 } Packet;
 
-typedef struct _item {
-    Packet *packet;
-    struct _item *next;
-} Item;
-
 void add_message(char*, char*);
 Message* new_message(char*, char*);
 void print_message(Message *m);
