@@ -187,16 +187,7 @@ int main () {
                             }
                         } else {
                             // process the message
-                            if (strcmp("Bye", buffer) == 0) {
-                                memset(buffer,0, BUF_SIZE);
-                                sprintf(buffer, "%s has left the chat", get_user(poll_fds[i].fd));
-                                close(poll_fds[i].fd);
-                                remove_poll(i);
-                                broadcast("server", buffer);
-                            } else {
-                                // broadcast message to all
-                                broadcast(get_user(poll_fds[i].fd), buffer);
-                            }
+                            broadcast(get_user(poll_fds[i].fd), buffer);
                         }
                     } else {
                         // either connection closed || error
