@@ -73,22 +73,20 @@ int remove_user(int socket) {
 
 
 struct pollfd *poll_fds;
+int* active_clients;
 int fd_count;
 
 
-void add_poll(char *name, int socket) {
-    add_user("server", socket);
-
+void add_poll(int socket) {
     poll_fds[fd_count].fd = socket;
     poll_fds[fd_count].events = POLLIN;
-
+    active_clients[fd_count] = 0;
     fd_count++;
 }
 
 void remove_poll(int index) {
-    // remove user based on socket
-    remove_user(poll_fds[index].fd);
     poll_fds[index] = poll_fds[fd_count-1];
+    active_clients[index] = -1;
     fd_count--;
 }
 
@@ -123,9 +121,14 @@ int main () {
     setup_terminal();
 
     poll_fds = malloc(sizeof(struct pollfd *) * MAX_CLIENTS);
+    active_clients = malloc(sizeof(int) * MAX_CLIENTS);
+    memset(active_clients, 0, sizeof(int)*MAX_CLIENTS);
     fd_count = 0;
 
-    add_poll("server", server_sock);
+    add_poll(server_sock);
+    add_user("server", server_sock);
+
+    // keep map => POLL_FD => VALID
 
     char *buffer = malloc(sizeof(char)*BUF_SIZE);
 
@@ -139,19 +142,31 @@ int main () {
             if ( poll_fds[i].revents & POLLIN ) {
                 memset(buffer, 0, BUF_SIZE);
                 if ( poll_fds[i].fd == server_sock ) {
-                    // handler server
-                    // accept the connection
-                    // recv username from client soccket
-                    // add client socket to poll_fds
+                    // handle 'accept' to server
+                    int client_sock = accept(server_sock, NULL, NULL);
+                    if ( client_sock == -1) {
+                        printf("Failed to accept connection \n");
+                    } else {
+                        add_poll(client_sock);
+                        printf("accepted connection\n");
+                    }
                 } else {
                     int r = recv(poll_fds[i].fd, buffer, BUF_SIZE, 0);
                     if ( r > 0 ) {
-                        // have data to read
-                        // broadcast to all
-                    } else if ( r == 0 ) {
-                        // closed connection
+                        // have read message
+                        if ( active_clients[i] == 0 ) {
+                            // received NICKNAME
+                            active_clients[i] = 1;
+                            // broadcast [server] X has joined
+                        } else {
+                            // broadcast message to all
+                        }
+
                     } else {
-                        // error from this => close
+                        // either connection closed || error
+                        close(poll_fds[i].fd);
+                        remove_poll(i);
+                        // broadcast [server] x has left
                     }
                 }
             }
