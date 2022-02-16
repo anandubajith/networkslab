@@ -40,11 +40,18 @@ void evaluate(char *s) {
 }
 
 void handle_client(int client_socket, int client_id) {
-    printf("Connected with Client %d\n", client_id);
+    printf("Connected to Client %d\n", client_id);
     char* buffer = malloc(sizeof(char) * BUF_SIZE);
     while(1) {
         memset(buffer, 0, BUF_SIZE);
-        recv(client_socket, buffer,BUF_SIZE , 0);
+        int r = recv(client_socket, buffer,BUF_SIZE , 0);
+        if ( r == -1 ) {
+            continue;
+        } 
+        if ( r == 0 ) {
+            printf("Disconnected from Client %d\n", client_id);
+            return;
+        }
         if ( strncmp("Bye", buffer, 3) == 0)  {
             printf("Client closed connection\n");
             close(client_socket);

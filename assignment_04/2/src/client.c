@@ -46,7 +46,11 @@ int main() {
 
         send(sock, buffer, strlen(buffer), 0);
         memset(buffer, 0, BUF_SIZE);
-        recv(sock, buffer,BUF_SIZE , 0);
+        int r = recv(sock, buffer,BUF_SIZE , 0);
+        if ( r == 0 ) {
+            close_handler(0);
+            return 0;
+        }
         printf("[Server] %s", buffer);
     }
 
