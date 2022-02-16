@@ -85,6 +85,7 @@ void remove_poll(int index) {
 
 void broadcast(char *from, char *message){
     // starting from 1 to avoid server
+    printf("Broadcast \"%s\" from \"%s\"\n", message, from);
     memset(&p, 0, sizeof(p));
     strcpy(p.from, from);
     strcpy(p.body, message);
