@@ -19,7 +19,7 @@ input, until the user terminates the client program with Ctrl+C.
 | Connected with client 1 | Connected to the server   |                         |
 |                         | enter the querry: 22 + 44 |                         |
 | [Client1]: 22 + 44      |                           |                         |
-| Server]: 66             | Server]: 66               |                         |
+| [Server]: 66            | [Server]: 66              |                         |
 | Connected with client 2 |                           | Connected to the server |
 |                         |                           | enter the querry: 3 * 4 |
 | [Client2]: 3 * 4        |                           |                         |

@@ -39,7 +39,8 @@ void evaluate(char *s) {
 
 }
 
-void handle_client(int client_socket) {
+void handle_client(int client_socket, int client_id) {
+    printf("Connected with Client %d\n", client_id);
     char* buffer = malloc(sizeof(char) * BUF_SIZE);
     while(1) {
         memset(buffer, 0, BUF_SIZE);
@@ -49,7 +50,9 @@ void handle_client(int client_socket) {
             close(client_socket);
             free(buffer);
         }
+        printf("[Client%d] %s\n", client_id, buffer);
         evaluate(buffer);
+        printf("[Server]: %s\n", buffer);
         send(client_socket, buffer, strlen(buffer), 0);
     }
 
@@ -75,7 +78,7 @@ int main ()
 
     listen(server_sock, BACKLOG);
 
-    int clients = 0;
+    int client_count = 0;
 
     printf("Waiting for connections\n");
     while (1) {
@@ -83,11 +86,10 @@ int main ()
         if ( client_socket == -1 ) {
             continue;
         }
-        clients++;
-        printf("Accepted connection\n");
+        client_count++;
         if (!fork()) {
             close(server_sock);
-            handle_client(client_socket);
+            handle_client(client_socket, client_count);
         }
         close(client_socket);
     }
