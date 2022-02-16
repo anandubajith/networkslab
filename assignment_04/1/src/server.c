@@ -184,9 +184,18 @@ int main () {
                             sprintf(buffer, "%s has joined the chat", get_user(poll_fds[i].fd));
                             broadcast("server", buffer);
                         } else {
+                            // process the message
                             printf("Broadcasing message to all\n");
-                            // broadcast message to all
-                            broadcast(get_user(poll_fds[i].fd), buffer);
+                            if (strcmp("Bye", buffer) == 0) {
+                                memset(buffer,0, BUF_SIZE);
+                                sprintf(buffer, "%s has left the chat", get_user(poll_fds[i].fd));
+                                close(poll_fds[i].fd);
+                                remove_poll(i);
+                                broadcast("server", buffer);
+                            } else {
+                                // broadcast message to all
+                                broadcast(get_user(poll_fds[i].fd), buffer);
+                            }
                         }
                     } else {
                         // either connection closed || error

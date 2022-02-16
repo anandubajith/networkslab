@@ -11,7 +11,7 @@ char *buffer;
 void close_handler(int sig) {
     signal(sig, SIG_IGN);
     printf("\nClosing connection\n");
-    if ( sock != -1 && buffer != NULL) {
+    if ( sock != -1) {
         strcpy(buffer, "Bye");
         send(sock, buffer, strlen(buffer), 0);
         close(sock);
