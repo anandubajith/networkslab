@@ -39,6 +39,19 @@ int add_user(char *name, int socket) {
     return 0; // success
 }
 
+void get_user_string(char*buffer) {
+    User *t = usersHead->next;
+    strcat(buffer, "Connected users are: ");
+    while ( t != NULL) {
+        strcat(buffer, t->name);
+        strcat(buffer, ", ");
+        t = t->next;
+    }
+    int len = strlen(buffer);
+    buffer[len-1] = 0;
+    buffer[len-2] = 0;
+}
+
 char* get_user(int socket) {
     User *t = usersHead;
     while ( t != NULL ) {
@@ -180,6 +193,15 @@ int main () {
                                 memset(buffer,0, BUF_SIZE);
                                 sprintf(buffer, "%s has joined the chat", get_user(poll_fds[i].fd));
                                 broadcast("server", buffer);
+                                // send users currently connected
+                                memset(buffer, 0, BUF_SIZE);
+                                get_user_string(buffer);
+                                memset(&p, 0, sizeof(p));
+                                strcpy(p.from, "server");
+                                strcpy(p.body, buffer);
+                                p.time = time(NULL);
+                                send(poll_fds[i].fd, &p, sizeof(p), 0);
+
                             }
                         } else {
                             // process the message
