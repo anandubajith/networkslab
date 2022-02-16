@@ -15,26 +15,27 @@ typedef struct _user {
 User *usersHead = NULL;
 
 int add_user(char *name, int socket) {
+    User *t = usersHead;
+
+    User *prev = NULL;
+    while ( t != NULL ) {
+        if ( strcmp(t->name, name) == 0 ) {
+            return -1;
+        }
+        prev = t;
+        t = t->next;
+    }
+
     User *u = malloc(sizeof(User));
     u->name = malloc(sizeof(char) * strlen(name)+ 1);
     strcpy(u->name, name);
     u->socket = socket;
     u->next = NULL;
-
-    User *t = usersHead;
-    if ( t == NULL ) {
+    if ( prev == NULL ) {
         usersHead = u;
-        return 0; // success
+    } else {
+        prev->next = u;
     }
-    while ( t->next != NULL ) {
-        if ( strcmp(t->name, name) == 0) {
-            free(u->name);
-            free(u);
-            return -1; // NICK already exists
-        }
-        t = t->next;
-    }
-    t->next = u;
     return 0; // success
 }
 
@@ -75,6 +76,7 @@ int remove_user(int socket) {
 struct pollfd *poll_fds;
 int* active_clients;
 int fd_count;
+Packet p;
 
 
 void add_poll(int socket) {
@@ -93,13 +95,13 @@ void remove_poll(int index) {
 
 void broadcast(char *from, char *message){
     // starting from 1 to avoid server
+    memset(&p, 0, sizeof(p));
+    strcpy(p.from, from);
+    strcpy(p.body, message);
+    p.time = time(NULL);
     for ( int i = 1; i < fd_count; i++) {
         if ( active_clients[i] == 1 ) {
-            Packet *p = malloc(sizeof(Packet));
-            strcpy(p->from, from);
-            strcpy(p->body, message);
-            p->time = time(NULL);
-            send(poll_fds[i].fd,p, sizeof(*p), 0);
+            send(poll_fds[i].fd, &p, sizeof(p), 0);
         }
     }
     /* printf("Broadcasting done\n"); */
@@ -176,7 +178,13 @@ int main () {
                             int rr = add_user(buffer, poll_fds[i].fd);
                             if ( rr == -1 ) {
                                 // todo: tell that username already exists
-                                close(poll_fds[i].fd);
+                                printf("User already exists :(\n");
+                                memset(&p, 0, sizeof(p));
+                                strcpy(p.from, "server");
+                                strcpy(p.body, "Username already in use");
+                                p.time = time(NULL);
+                                send(poll_fds[i].fd, &p, sizeof(p), 0);
+                                shutdown(poll_fds[i].fd, 2);
                                 remove_poll(i);
                             } else {
                                 active_clients[i] = 1;
