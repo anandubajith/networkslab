@@ -28,6 +28,39 @@ char* get_file_contents(char *filename) {
     return file_contents;
 }
 
+char* extract_request_url(char *buffer){
+    char *line1 = malloc(sizeof(char) *BUF_SIZE);
+    sscanf(buffer, "%[^\n]", line1);
+    // skip 4 characters
+    if ( strncmp("GET ", line1, 4) != 0 ) {
+        return "404.html";
+    }
+
+    // go from line+4 until you get space
+    int start = 4;
+    int len = strlen(line1);
+    int pos = start;
+    while( pos < len) {
+        if ( line1[pos] == ' ' ) {
+            break;
+        }
+        pos++;
+    }
+
+    if ( line1[start] == '/' )
+        start++;
+
+    char *filename = malloc(sizeof(char) * 100);
+    strncpy(filename, line1+start,pos-start);
+    printf("Extracted filename: %s %lu\n", filename, strlen(filename));
+
+    if ( strlen(filename) == 0 ) {
+        return "index.html";
+    }
+
+    return filename;
+}
+
 void build_404_response(char *buffer) {
     char* file = get_file_contents("404.html");
     strcat(buffer, "HTTP/1.1 404 Not Found\r\n");
@@ -60,9 +93,10 @@ void handle_client(int client_socket) {
     printf("%s", buffer);
     printf("\n");
     // TODO parse this buffer & extract filename
-
+    //
+    char* filename = extract_request_url(buffer);
     memset(buffer, 0, BUF_SIZE);
-    char filename[] = "index.html";
+
     if( access(filename, F_OK ) == 0 ) {
         build_file_response(buffer, filename);
     } else {
