@@ -8,6 +8,7 @@
 #include<sys/socket.h>
 #include<netinet/in.h>
 #include<time.h>
+#include<poll.h>
 
 #define PORT 12129
 #define BUF_SIZE 1024

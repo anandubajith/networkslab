@@ -50,7 +50,9 @@ void process_keypress() {
                 close_handler(0);
             }
             add_message(nick, command);
-            send(sock, command, strlen(command), 0);
+            if ( strlen(buffer) != 0 ) {
+                send(sock, command, strlen(command), 0);
+            }
             bzero(command, sizeof(command));
             command_pos = 0;
         } else if ( c == 127) {
@@ -90,6 +92,7 @@ int main() {
         printf("Error: " );
         exit(1);
     }
+    send(sock, nick, strlen(nick), 0);
 
     add_message("server", "Connected to server");
     buffer = malloc(sizeof(char) * BUF_SIZE);
