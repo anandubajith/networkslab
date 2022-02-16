@@ -20,8 +20,8 @@ demo: clean all
 	tmux new-session \; \
 		send-keys './bin/server' C-m \; \
 		split-window -h \; \
-		send-keys 'sleep 2 && ./bin/client' C-m \; \
-		split-window -v \; \
-		send-keys 'sleep 2 && ./bin/client' C-m \; \
-		split-window -v \; \
-		send-keys 'sleep 3 && ./bin/client'
+		send-keys './bin/client' C-m \; \
+		split-window -fv \; \
+		send-keys './bin/client' C-m \; \
+		split-window -fv \; \
+		send-keys './bin/client'

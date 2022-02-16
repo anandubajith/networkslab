@@ -9,6 +9,7 @@ void close_handler(int sig) {
     if ( sock != -1 && buffer != NULL) {
         strcpy(buffer, "Bye");
         send(sock, buffer, strlen(buffer), 0);
+        shutdown(sock,2);
         close(sock);
         free(buffer);
     }
@@ -27,7 +28,7 @@ int main() {
 
     int r = connect(sock, (struct sockaddr *) &server_address, sizeof(server_address));
     if ( r == -1) {
-        printf("Error: " );
+        printf("Error: Failed to connect()" );
         exit(1);
     }
 
