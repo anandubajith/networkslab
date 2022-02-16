@@ -1,10 +1,6 @@
 #include "common.h"
-/*
- * Client sends plaintext Message
- * First message from client = NICKNAME
- * Message starts with @ => send to username
- * Server sends message{from, to, time};
- */
+
+#define MAX_CLIENTS 100
 
 typedef struct _user {
     char* name;
@@ -12,6 +8,10 @@ typedef struct _user {
     struct _user *next;
 } User;
 
+struct pollfd *poll_fds;
+int* active_clients;
+int fd_count;
+Packet p;
 User *usersHead = NULL;
 
 int add_user(char *name, int socket) {
@@ -46,7 +46,6 @@ char* get_user(int socket) {
             return t->name;
         t = t->next;
     }
-
     return NULL;
 }
 
@@ -61,7 +60,6 @@ int remove_user(int socket) {
         while ( t->next != NULL && t->next->socket != socket) {
             t = t->next;
         }
-
         u = t->next;
         t->next =  u->next;
     }
@@ -69,14 +67,6 @@ int remove_user(int socket) {
     free(u);
     return 0;
 }
-
-#define MAX_CLIENTS 100
-
-
-struct pollfd *poll_fds;
-int* active_clients;
-int fd_count;
-Packet p;
 
 
 void add_poll(int socket) {
@@ -120,7 +110,6 @@ int main () {
     tv.tv_usec = 100;
     setsockopt(server_sock, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof tv);
 
-
     struct sockaddr_in server_address;
     server_address.sin_family = AF_INET;
     server_address.sin_port = htons(PORT);
@@ -144,9 +133,7 @@ int main () {
     add_poll(server_sock);
     add_user("server", server_sock);
 
-    // keep map => POLL_FD => VALID
-
-    char *buffer = malloc(sizeof(char)*BUF_SIZE);
+    char buffer[BUF_SIZE];
 
     while(1) {
         int r = poll(poll_fds, fd_count, -1);
