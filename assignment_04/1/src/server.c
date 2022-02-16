@@ -153,10 +153,8 @@ int main () {
             printf("Failed to poll\n");
             exit(-3);
         }
-        printf("Polled\n");
         for ( int i = 0; i < fd_count; i++) {
             if ( poll_fds[i].revents & POLLIN ) {
-
                 printf("Have data to read\n");
                 memset(buffer, 0, BUF_SIZE);
                 if ( poll_fds[i].fd == server_sock ) {
@@ -170,14 +168,17 @@ int main () {
                         printf("accepted connection\n");
                     }
                 } else {
-                    printf("Waiting for recv on socket %d %s\n", i, get_user(poll_fds[i].fd));
+                    /* printf("Waiting for recv on socket %d %s\n", i, get_user(poll_fds[i].fd)); */
                     int r = recv(poll_fds[i].fd, buffer, BUF_SIZE, 0);
-                    printf("Read completed\n");
+                    /* printf("Read completed\n"); */
                     if ( r > 0 ) {
                         if ( active_clients[i] == 0 ) {
-                            // received NICKNAME
-                            // TODO handle username already in use
-                            add_user(buffer, poll_fds[i].fd);
+                            // received nitckname
+                            int r = add_user(buffer, poll_fds[i].fd);
+                            if ( r == -1 ) {
+                                // todo: tell that username already exists
+                                close(poll_fds[i].fd);
+                            }
                             active_clients[i] = 1;
                             // broadcast [server] X has joined
                             memset(buffer,0, BUF_SIZE);
@@ -185,7 +186,6 @@ int main () {
                             broadcast("server", buffer);
                         } else {
                             // process the message
-                            printf("Broadcasing message to all\n");
                             if (strcmp("Bye", buffer) == 0) {
                                 memset(buffer,0, BUF_SIZE);
                                 sprintf(buffer, "%s has left the chat", get_user(poll_fds[i].fd));
@@ -202,6 +202,7 @@ int main () {
                         memset(buffer,0, BUF_SIZE);
                         sprintf(buffer, "%s has left the chat", get_user(poll_fds[i].fd));
                         close(poll_fds[i].fd);
+                        remove_user(poll_fds[i].fd);
                         remove_poll(i);
                         broadcast("server", buffer);
                     }

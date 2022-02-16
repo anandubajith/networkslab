@@ -23,10 +23,11 @@ void close_handler(int sig) {
 void sync_data() {
     memset(buffer, 0, BUF_SIZE);
     int r = recv(sock, &p, sizeof(p), 0);
+    if ( r == 0 )
+        close_handler(0);
     if ( r == -1 )
         return;
     add_message(p.from, p.body);
-    /* send(sock,buffer,  strlen(buffer), 0); */
 }
 void draw() {
     printf("\x1b[2J");
