@@ -35,6 +35,8 @@ void setup_terminal() {
     atexit(reset_terminal);
     struct termios raw = orig_termios;
     raw.c_lflag &= ~(ECHO | ICANON);
+    raw.c_cc[VMIN] = 0;
+    raw.c_cc[VTIME] = 1;
     tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
 }
 

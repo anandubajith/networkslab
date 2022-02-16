@@ -5,6 +5,7 @@ char command[BUF_SIZE];
 int command_pos = 0;
 char nick[BUF_SIZE];
 int sock;
+Packet p;
 char *buffer;
 
 void close_handler(int sig) {
@@ -21,10 +22,10 @@ void close_handler(int sig) {
 
 void sync_data() {
     memset(buffer, 0, BUF_SIZE);
-    int r = recv(sock, buffer, BUF_SIZE , 0);
+    int r = recv(sock, &p, sizeof(p), 0);
     if ( r == -1 )
         return;
-    add_message("server", buffer);
+    add_message(p.from, p.body);
     /* send(sock,buffer,  strlen(buffer), 0); */
 }
 void draw() {
@@ -49,8 +50,7 @@ void process_keypress() {
                 add_message("??", "Bye");
                 close_handler(0);
             }
-            add_message(nick, command);
-            if ( strlen(buffer) != 0 ) {
+            if ( strlen(command) != 0 ) {
                 send(sock, command, strlen(command), 0);
             }
             bzero(command, sizeof(command));
@@ -78,7 +78,7 @@ int main() {
 
     struct timeval tv;
     tv.tv_sec = 0;
-    tv.tv_usec = 10000;
+    tv.tv_usec = 1000;
     setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof tv);
 
 

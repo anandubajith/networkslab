@@ -91,6 +91,21 @@ void remove_poll(int index) {
 }
 
 
+void broadcast(char *from, char *message){
+    // starting from 1 to avoid server
+    printf("Broadcassting\n");
+    for ( int i = 1; i < fd_count; i++) {
+        if ( active_clients[i] == 1 ) {
+            Packet *p = malloc(sizeof(Packet));
+            strcpy(p->from, from);
+            strcpy(p->body, message);
+            p->time = time(NULL);
+            send(poll_fds[i].fd,p, sizeof(*p), 0);
+        }
+    }
+    printf("Broadcasting done\n");
+}
+
 
 int main () {
 
@@ -101,7 +116,7 @@ int main () {
 
     struct timeval tv;
     tv.tv_sec = 0;
-    tv.tv_usec = 1000;
+    tv.tv_usec = 100;
     setsockopt(server_sock, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof tv);
 
 
@@ -138,8 +153,11 @@ int main () {
             printf("Failed to poll\n");
             exit(-3);
         }
+        printf("Polled\n");
         for ( int i = 0; i < fd_count; i++) {
             if ( poll_fds[i].revents & POLLIN ) {
+
+                printf("Have data to read\n");
                 memset(buffer, 0, BUF_SIZE);
                 if ( poll_fds[i].fd == server_sock ) {
                     // handle 'accept' to server
@@ -147,26 +165,36 @@ int main () {
                     if ( client_sock == -1) {
                         printf("Failed to accept connection \n");
                     } else {
+                        setsockopt(client_sock, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof tv);
                         add_poll(client_sock);
                         printf("accepted connection\n");
                     }
                 } else {
+                    printf("Waiting for recv on socket %d %s\n", i, get_user(poll_fds[i].fd));
                     int r = recv(poll_fds[i].fd, buffer, BUF_SIZE, 0);
+                    printf("Read completed\n");
                     if ( r > 0 ) {
-                        // have read message
                         if ( active_clients[i] == 0 ) {
                             // received NICKNAME
+                            // TODO handle username already in use
+                            add_user(buffer, poll_fds[i].fd);
                             active_clients[i] = 1;
                             // broadcast [server] X has joined
+                            memset(buffer,0, BUF_SIZE);
+                            sprintf(buffer, "%s has joined the chat", get_user(poll_fds[i].fd));
+                            broadcast("server", buffer);
                         } else {
+                            printf("Broadcasing message to all\n");
                             // broadcast message to all
+                            broadcast(get_user(poll_fds[i].fd), buffer);
                         }
-
                     } else {
                         // either connection closed || error
+                        memset(buffer,0, BUF_SIZE);
+                        sprintf(buffer, "%s has left the chat", get_user(poll_fds[i].fd));
                         close(poll_fds[i].fd);
                         remove_poll(i);
-                        // broadcast [server] x has left
+                        broadcast("server", buffer);
                     }
                 }
             }
