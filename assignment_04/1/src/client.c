@@ -14,7 +14,7 @@ void close_handler(int sig) {
     if ( sock != -1) {
         strcpy(buffer, "Bye");
         send(sock, buffer, strlen(buffer), 0);
-        close(sock);
+        shutdown(sock, 2);
         free(buffer);
     }
     exit(0);
