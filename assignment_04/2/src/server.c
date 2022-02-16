@@ -55,7 +55,7 @@ void handle_client(int client_socket, int client_id) {
             return;
         }
         if ( strncmp("Bye", buffer, 3) == 0)  {
-            printf("Client closed connection\n");
+            printf("Disconnected from Client %d\n", client_id);
             close(client_socket);
             free(buffer);
             return;
