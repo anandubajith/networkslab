@@ -93,7 +93,6 @@ void remove_poll(int index) {
 
 void broadcast(char *from, char *message){
     // starting from 1 to avoid server
-    printf("Broadcassting\n");
     for ( int i = 1; i < fd_count; i++) {
         if ( active_clients[i] == 1 ) {
             Packet *p = malloc(sizeof(Packet));
@@ -103,7 +102,7 @@ void broadcast(char *from, char *message){
             send(poll_fds[i].fd,p, sizeof(*p), 0);
         }
     }
-    printf("Broadcasting done\n");
+    /* printf("Broadcasting done\n"); */
 }
 
 
@@ -174,16 +173,18 @@ int main () {
                     if ( r > 0 ) {
                         if ( active_clients[i] == 0 ) {
                             // received nitckname
-                            int r = add_user(buffer, poll_fds[i].fd);
-                            if ( r == -1 ) {
+                            int rr = add_user(buffer, poll_fds[i].fd);
+                            if ( rr == -1 ) {
                                 // todo: tell that username already exists
                                 close(poll_fds[i].fd);
+                                remove_poll(i);
+                            } else {
+                                active_clients[i] = 1;
+                                // broadcast [server] X has joined
+                                memset(buffer,0, BUF_SIZE);
+                                sprintf(buffer, "%s has joined the chat", get_user(poll_fds[i].fd));
+                                broadcast("server", buffer);
                             }
-                            active_clients[i] = 1;
-                            // broadcast [server] X has joined
-                            memset(buffer,0, BUF_SIZE);
-                            sprintf(buffer, "%s has joined the chat", get_user(poll_fds[i].fd));
-                            broadcast("server", buffer);
                         } else {
                             // process the message
                             if (strcmp("Bye", buffer) == 0) {
