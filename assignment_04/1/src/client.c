@@ -3,7 +3,6 @@
 extern Message* messageHead;
 char command[BUF_SIZE];
 int command_pos = 0;
-char nick[BUF_SIZE];
 int sock;
 Packet p;
 char *buffer;
@@ -82,9 +81,10 @@ int main() {
     tv.tv_usec = 1000;
     setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof tv);
 
+    buffer = malloc(sizeof(char) * BUF_SIZE);
 
     printf("Enter NickName: ");
-    scanf("%s", nick);
+    scanf("%s", buffer);
 
     setup_terminal();
 
@@ -93,10 +93,9 @@ int main() {
         printf("Error: " );
         exit(1);
     }
-    send(sock, nick, strlen(nick), 0);
+    send(sock, buffer, strlen(buffer), 0);
 
     add_message("server", "Connected to server");
-    buffer = malloc(sizeof(char) * BUF_SIZE);
 
     while(1) {
         sync_data();

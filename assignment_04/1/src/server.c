@@ -143,7 +143,7 @@ int main () {
         }
         for ( int i = 0; i < fd_count; i++) {
             if ( poll_fds[i].revents & POLLIN ) {
-                printf("Have data to read\n");
+                /* printf("Have data to read\n"); */
                 memset(buffer, 0, BUF_SIZE);
                 if ( poll_fds[i].fd == server_sock ) {
                     // handle 'accept' to server
