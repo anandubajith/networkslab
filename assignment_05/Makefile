@@ -3,7 +3,7 @@ BIN=./bin
 SOURCE=./src/
 CFLAGS=-Wall -Wextra -g
 
-INC=
+INC=src/graph.c
 
 LIST=$(BIN)/lsr
 
