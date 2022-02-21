@@ -42,12 +42,12 @@ void setup_terminal() {
 
 void print_message(Message* m) {
     if ( strcmp("server", m->from) == 0) {
-        printf("[\x1b[1;33m%lu\x1b[m]",m->time);
+        /* printf("[\x1b[1;33m%lu\x1b[m]",m->time); */
         printf("[\x1b[1;35m%s\x1b[m]",m->from);
         printf("\x1b[3m %s\x1b[m\n", m->message);
         return;
     }
-    printf("[\x1b[1;31m%lu\x1b[m]",m->time);
+    /* printf("[\x1b[1;31m%lu\x1b[m]",m->time); */
     printf("[\x1b[1;34m%s\x1b[m]",m->from);
     printf(" %s\n", m->message);
 }

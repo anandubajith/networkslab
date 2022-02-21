@@ -42,14 +42,23 @@ int add_user(char *name, int socket) {
 void get_user_string(char*buffer) {
     User *t = usersHead->next;
     strcat(buffer, "Connected users are: ");
+    int count = 0;
     while ( t != NULL) {
         strcat(buffer, t->name);
         strcat(buffer, ", ");
         t = t->next;
+        count++;
     }
     int len = strlen(buffer);
     buffer[len-1] = 0;
     buffer[len-2] = 0;
+
+    // todo: ignore self
+    // only 1 user
+    if ( count == 1 ) {
+        memset(buffer, 0, BUF_SIZE);
+        strcpy(buffer, "No other Co-PIs connected");
+    }
 }
 
 char* get_user(int socket) {
@@ -98,7 +107,7 @@ void remove_poll(int index) {
 
 void broadcast(char *from, char *message){
     // starting from 1 to avoid server
-    printf("Broadcast \"%s\" from \"%s\"\n", message, from);
+    /* printf("Broadcast \"%s\" from \"%s\"\n", message, from); */
     memset(&p, 0, sizeof(p));
     strcpy(p.from, from);
     strcpy(p.body, message);
@@ -110,7 +119,6 @@ void broadcast(char *from, char *message){
     }
     /* printf("Broadcasting done\n"); */
 }
-
 
 
 int main (int argc, char* argv[]) {
@@ -147,6 +155,7 @@ int main (int argc, char* argv[]) {
     listen(server_sock, BACKLOG);
 
     setup_terminal();
+    printf("I am listening on port %d\n", PORT);
 
     poll_fds = malloc(sizeof(struct pollfd *) * MAX_CLIENTS);
     active_clients = malloc(sizeof(int) * MAX_CLIENTS);
@@ -176,7 +185,7 @@ int main (int argc, char* argv[]) {
                     } else {
                         setsockopt(client_sock, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof tv);
                         add_poll(client_sock);
-                        printf("accepted connection\n");
+                        /* printf("accepted connection\n"); */
                     }
                 } else {
                     /* printf("Waiting for recv on socket %d %s\n", i, get_user(poll_fds[i].fd)); */
@@ -190,10 +199,22 @@ int main (int argc, char* argv[]) {
                             // process password
                             if ( strcmp(buffer, password) == 0 ) {
                                 // password correct
+                                memset(&p, 0, sizeof(p));
+                                strcpy(p.from, "server");
+                                strcpy(p.body, "Password validated");
+                                p.time = time(NULL);
+                                send(poll_fds[i].fd, &p, sizeof(p), 0);
                                 // broadcast [server] X has joined
                                 memset(buffer,0, BUF_SIZE);
-                                sprintf(buffer, "%s has joined the chat", get_user(poll_fds[i].fd));
+                                sprintf(buffer, "%s connected", get_user(poll_fds[i].fd));
                                 broadcast("server", buffer);
+                                // send welcome message
+                                memset(&p, 0, sizeof(p));
+                                strcpy(p.from, "server");
+                                strcpy(p.body, "Welcome to Project COBRA");
+                                p.time = time(NULL);
+                                send(poll_fds[i].fd, &p, sizeof(p), 0);
+
                                 // send users currently connected
                                 memset(buffer, 0, BUF_SIZE);
                                 get_user_string(buffer);
@@ -202,6 +223,8 @@ int main (int argc, char* argv[]) {
                                 strcpy(p.body, buffer);
                                 p.time = time(NULL);
                                 send(poll_fds[i].fd, &p, sizeof(p), 0);
+
+                                printf("%s connected\n", get_user(poll_fds[i].fd));
                                 active_clients[i] = 2;
                             } else {
                                 // kill the connection
@@ -230,17 +253,23 @@ int main (int argc, char* argv[]) {
                                 remove_poll(i);
                             } else {
                                 active_clients[i] = 1;
+                                memset(&p, 0, sizeof(p));
+                                strcpy(p.from, "server");
+                                strcpy(p.body, "Enter the password");
+                                p.time = time(NULL);
+                                send(poll_fds[i].fd, &p, sizeof(p), 0);
 
                             }
                         }
                     } else {
                         // either connection closed || error
                         memset(buffer,0, BUF_SIZE);
-                        sprintf(buffer, "%s has left the chat", get_user(poll_fds[i].fd));
+                        sprintf(buffer, "%s has left the discussion", get_user(poll_fds[i].fd));
                         close(poll_fds[i].fd);
                         remove_user(poll_fds[i].fd);
                         remove_poll(i);
                         broadcast("server", buffer);
+                        printf("%s\n", buffer);
                     }
                 }
             }
