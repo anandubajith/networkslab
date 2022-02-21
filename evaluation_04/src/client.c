@@ -2,6 +2,7 @@
 
 extern Message* messageHead;
 char command[BUF_SIZE];
+char nickname[BUF_SIZE];
 int command_pos = 0;
 int sock;
 Packet p;
@@ -38,7 +39,7 @@ void draw() {
         t = t->next;
     }
     printf("\x1b[7m");
-    printf("\n#> :\x1b[m %s\n", command);
+    printf("\n#[%s]> :\x1b[m %s\n",nickname, command);
     fflush(stdout);
 }
 
@@ -56,7 +57,7 @@ void process_keypress() {
             bzero(command, sizeof(command));
             command_pos = 0;
         } else if ( c == 127) {
-            if ( command > 0)
+            if ( command_pos > 0)
                 command[--command_pos] = 0;
         } else {
             command[command_pos++] = c;
@@ -85,7 +86,7 @@ int main() {
     buffer = malloc(sizeof(char) * BUF_SIZE);
 
     printf("Enter NickName: ");
-    scanf("%s", buffer);
+    scanf("%s", nickname);
 
     setup_terminal();
 
@@ -94,7 +95,7 @@ int main() {
         printf("Error: " );
         exit(1);
     }
-    send(sock, buffer, strlen(buffer), 0);
+    send(sock, nickname, strlen(nickname), 0);
 
     add_message("server", "Connected to server");
 

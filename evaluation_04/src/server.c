@@ -39,26 +39,26 @@ int add_user(char *name, int socket) {
     return 0; // success
 }
 
-void get_user_string(char*buffer) {
+void get_other_connected_users(char*buffer, char*self) {
     User *t = usersHead->next;
     strcat(buffer, "Connected users are: ");
     int count = 0;
     while ( t != NULL) {
-        strcat(buffer, t->name);
-        strcat(buffer, ", ");
+        if ( strcmp(t->name, self) != 0 ) {
+            strcat(buffer, t->name);
+            strcat(buffer, ", ");
+            count++;
+        }
         t = t->next;
-        count++;
+    }
+    if ( count == 0 ) {
+        memset(buffer, 0, BUF_SIZE);
+        strcpy(buffer, "No other Co-PIs connected");
+        return;
     }
     int len = strlen(buffer);
     buffer[len-1] = 0;
     buffer[len-2] = 0;
-
-    // todo: ignore self
-    // only 1 user
-    if ( count == 1 ) {
-        memset(buffer, 0, BUF_SIZE);
-        strcpy(buffer, "No other Co-PIs connected");
-    }
 }
 
 char* get_user(int socket) {
@@ -217,7 +217,7 @@ int main (int argc, char* argv[]) {
 
                                 // send users currently connected
                                 memset(buffer, 0, BUF_SIZE);
-                                get_user_string(buffer);
+                                get_other_connected_users(buffer, get_user(poll_fds[i].fd));
                                 memset(&p, 0, sizeof(p));
                                 strcpy(p.from, "PI");
                                 strcpy(p.body, buffer);

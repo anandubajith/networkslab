@@ -10,7 +10,7 @@
 #include<time.h>
 #include<poll.h>
 
-#define PORT 12129
+#define PORT 8182
 #define BUF_SIZE 1024
 #define BACKLOG 5
 
