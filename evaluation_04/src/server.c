@@ -163,7 +163,7 @@ int main (int argc, char* argv[]) {
     fd_count = 0;
 
     add_poll(server_sock);
-    add_user("server", server_sock);
+    add_user("PI", server_sock);
 
     char buffer[BUF_SIZE];
 
@@ -200,7 +200,7 @@ int main (int argc, char* argv[]) {
                             if ( strcmp(buffer, password) == 0 ) {
                                 // password correct
                                 memset(&p, 0, sizeof(p));
-                                strcpy(p.from, "server");
+                                strcpy(p.from, "PI");
                                 strcpy(p.body, "Password validated");
                                 p.time = time(NULL);
                                 send(poll_fds[i].fd, &p, sizeof(p), 0);
@@ -210,7 +210,7 @@ int main (int argc, char* argv[]) {
                                 broadcast("server", buffer);
                                 // send welcome message
                                 memset(&p, 0, sizeof(p));
-                                strcpy(p.from, "server");
+                                strcpy(p.from, "PI");
                                 strcpy(p.body, "Welcome to Project COBRA");
                                 p.time = time(NULL);
                                 send(poll_fds[i].fd, &p, sizeof(p), 0);
@@ -219,7 +219,7 @@ int main (int argc, char* argv[]) {
                                 memset(buffer, 0, BUF_SIZE);
                                 get_user_string(buffer);
                                 memset(&p, 0, sizeof(p));
-                                strcpy(p.from, "server");
+                                strcpy(p.from, "PI");
                                 strcpy(p.body, buffer);
                                 p.time = time(NULL);
                                 send(poll_fds[i].fd, &p, sizeof(p), 0);
@@ -228,10 +228,10 @@ int main (int argc, char* argv[]) {
                                 active_clients[i] = 2;
                             } else {
                                 // kill the connection
+                                printf("Invalid password for user %s\n", get_user(poll_fds[i].fd));
                                 remove_user(poll_fds[i].fd);
-                                printf("Invalid password for user\n");
                                 memset(&p, 0, sizeof(p));
-                                strcpy(p.from, "server");
+                                strcpy(p.from, "PI");
                                 strcpy(p.body, "Invalid password");
                                 p.time = time(NULL);
                                 send(poll_fds[i].fd, &p, sizeof(p), 0);
@@ -243,10 +243,10 @@ int main (int argc, char* argv[]) {
                             int rr = add_user(buffer, poll_fds[i].fd);
                             if ( rr == -1 ) {
                                 // todo: tell that username already exists
-                                printf("User already exists :(\n");
+                                printf("User already connected :(\n");
                                 memset(&p, 0, sizeof(p));
-                                strcpy(p.from, "server");
-                                strcpy(p.body, "Username already in use");
+                                strcpy(p.from, "PI");
+                                strcpy(p.body, "User has already connected");
                                 p.time = time(NULL);
                                 send(poll_fds[i].fd, &p, sizeof(p), 0);
                                 shutdown(poll_fds[i].fd, 2);
@@ -254,7 +254,7 @@ int main (int argc, char* argv[]) {
                             } else {
                                 active_clients[i] = 1;
                                 memset(&p, 0, sizeof(p));
-                                strcpy(p.from, "server");
+                                strcpy(p.from, "PI");
                                 strcpy(p.body, "Enter the password");
                                 p.time = time(NULL);
                                 send(poll_fds[i].fd, &p, sizeof(p), 0);
@@ -268,7 +268,7 @@ int main (int argc, char* argv[]) {
                         close(poll_fds[i].fd);
                         remove_user(poll_fds[i].fd);
                         remove_poll(i);
-                        broadcast("server", buffer);
+                        broadcast("PI", buffer);
                         printf("%s\n", buffer);
                     }
                 }
