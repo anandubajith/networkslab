@@ -12,6 +12,11 @@
 #define BUF_SIZE 1024
 #define BACKLOG 5
 
+/*
+ * write a send_file, receive_file
+ * which would be commmon
+ */
+
 void handle_client(int client_socket) {
     printf("Connected to Client\n");
     char* buffer = malloc(sizeof(char) * BUF_SIZE);
