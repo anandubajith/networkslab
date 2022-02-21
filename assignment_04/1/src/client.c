@@ -56,7 +56,8 @@ void process_keypress() {
             bzero(command, sizeof(command));
             command_pos = 0;
         } else if ( c == 127) {
-            command[--command_pos] = 0;
+            if ( command_pos > 0)
+                command[--command_pos] = 0;
         } else {
             command[command_pos++] = c;
         }
