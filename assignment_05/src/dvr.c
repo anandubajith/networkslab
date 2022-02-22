@@ -43,7 +43,7 @@ void bellman_ford(Graph *g, int start){
     printf("\n---\n");
 }
 
-int main (int argc, char *argv[])
+int main ()
 {
     printf("Distance Vecctor Routing => Bellman Ford\n");
     Graph* g= input_graph();
@@ -53,7 +53,6 @@ int main (int argc, char *argv[])
     for ( int i = 0; i < g-> num_nodes; i++) {
         bellman_ford(g, i);
     }
-
 
     /* print_graph(g); */
     return 0;

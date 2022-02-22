@@ -5,7 +5,7 @@ CFLAGS=-Wall -Wextra -g
 
 INC=src/graph.c
 
-LIST=$(BIN)/lsr
+LIST=$(BIN)/lsr $(BIN)/dvr
 
 all: $(LIST)
 

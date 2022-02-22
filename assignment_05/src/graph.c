@@ -25,7 +25,6 @@ void add_edge(Graph* g, int from, int to, int cost) {
         t = t->next;
     }
     t->next = e;
-
 }
 
 
