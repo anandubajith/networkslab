@@ -18,7 +18,7 @@ with open(filename) as f:
 
     lines = [l.strip() for l in f.readlines()]
     num_nodes, num_edges = lines[0].split(' ')
-    print(f"num_nodes={num_nodes} num_edges={num_edges}")
+    # print(f"num_nodes={num_nodes} num_edges={num_edges}")
 
     for line in lines[1:]:
         src, dest, cost = line.split(' ')
