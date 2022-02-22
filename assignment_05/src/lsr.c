@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <stdio.h>
+#define MAX_ITEMS 100
+
 
 typedef struct _edge {
     int from;
@@ -16,6 +18,10 @@ typedef struct _graph {
     int num_nodes;
     int num_edges;
 } Graph;
+
+
+
+
 
 Graph* make_graph(int node_count) {
     Graph *g = malloc(sizeof(Graph));
