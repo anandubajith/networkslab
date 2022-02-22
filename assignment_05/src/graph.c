@@ -1,30 +1,19 @@
 #include "graph.h"
 
-Graph* make_graph(int node_count) {
+Graph* make_graph(int node_count, int edge_count) {
     Graph* g = malloc(sizeof(Graph));
     g->num_nodes = node_count;
-    g->adj_list = malloc(sizeof(Edge*)* node_count);
+    g->edges = malloc(sizeof(Edge) * edge_count*2);
+    g->num_edges = 0;
     return g;
 }
 
 
 void add_edge(Graph* g, int from, int to, int cost) {
-    Edge* e = malloc(sizeof(Edge));
-    e->cost = cost;
-    e->from = from;
-    e->to = to;
-    e->next = NULL;
-
-    Edge *t = g->adj_list[from];
-    if ( t == NULL) {
-        g->adj_list[from] = e;
-        return;
-    }
-
-    while ( t->next != NULL) {
-        t = t->next;
-    }
-    t->next = e;
+    g->edges[g->num_edges].cost = cost;
+    g->edges[g->num_edges].from = from;
+    g->edges[g->num_edges].to = to;
+    g->num_edges++;
 }
 
 
@@ -32,7 +21,7 @@ Graph* input_graph(){
     int num_nodes, num_edges;
     scanf("%d %d", &num_nodes, &num_edges);
 
-    Graph *g = make_graph(num_nodes);
+    Graph *g = make_graph(num_nodes, num_edges);
 
     int from, to, cost;
     for ( int i = 0; i < num_edges; i++) {
@@ -46,15 +35,9 @@ Graph* input_graph(){
 }
 
 void print_graph(Graph *g) {
-    for ( int i =0; i < g->num_nodes; i++) {
-        printf("---\nNode %d\n", i+1);
-        Edge *t = g->adj_list[i];
-        while ( t != NULL ) {
-            printf("\t%d (%d) \n",t->to+1, t->cost);
-            t= t->next;
-        }
-
-        printf("---\n\n");
+    printf("num_nodes = %d, num_edges = %d \n", g->num_nodes, g->num_edges);
+    for (int i = 0; i < g->num_edges; i++) {
+        printf("Edge: %d %d %d\n", g->edges[i].from, g->edges[i].to, g->edges[i].cost);
     }
 }
 

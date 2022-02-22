@@ -10,20 +10,23 @@ void bellman_ford(Graph *g, int start){
         next_hop[i] = INT_MAX;
     }
     dist[start] = 0;
-    next_hop[start] = start; //todo:check
+    next_hop[start] = start;
 
     for ( int i = 0; i < g->num_nodes; i++) {
-        Edge *t = g->adj_list[i];
-        while ( t != NULL) {
-            /* printf("Considering edge from %d to %d with cost %d\n", t->from, t->to, t->cost); */
-            if ( dist[t->from] != INT_MAX && dist[t->from] + t->cost < dist[t->to]) {
-                dist[t->to] = dist[t->from] + t->cost;
-                next_hop[t->to] = t->from;
+        for ( int j = 0; j < g->num_edges; j++) {
+            Edge e = g->edges[j];
+            if ( dist[e.from] != INT_MAX && dist[e.from] + e.cost < dist[e.to]) {
+                dist[e.to] = dist[e.from] + e.cost;
+                // handling special case [ TODO  this needs to be checked ]
+                if ( e.from == start) {
+                    next_hop[e.to] = e.to;
+                } else {
+                    next_hop[e.to] = e.from;
+                }
             }
-            t = t->next;
         }
     }
-    // todo: rerunning the above loop fixes it, so check
+    // todo check for negative weight cycle
 
 
     // print the routing tables for each router

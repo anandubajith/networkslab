@@ -5,16 +5,16 @@ typedef struct _edge {
     int from;
     int to;
     int cost;
-    struct _edge *next;
 } Edge;
 
 typedef struct _graph {
-    Edge **adj_list;
+    Edge *edges;
     int num_nodes;
+    int num_edges;
 } Graph;
 
 
-Graph* make_graph(int);
+Graph* make_graph(int,int);
 Graph* input_graph();
 void add_edge(Graph* g, int, int, int);
 void print_graph(Graph*);
