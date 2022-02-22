@@ -5,6 +5,10 @@
 
 void dijkstra(Graph *g, int start) {
 
+
+
+
+
     printf("\033[1m\033[37m");
     printf("\nLSR at node %d\n", start+1);
     printf("\033[0m");
