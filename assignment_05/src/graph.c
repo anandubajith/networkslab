@@ -3,7 +3,7 @@
 Graph* make_graph(int node_count) {
     Graph* g = malloc(sizeof(Graph));
     g->num_nodes = node_count;
-    g->adj_list = malloc(sizeof(Edge********) * node_count);
+    g->adj_list = malloc(sizeof(Edge*)* node_count);
     return g;
 }
 
@@ -39,6 +39,8 @@ Graph* input_graph(){
     for ( int i = 0; i < num_edges; i++) {
         scanf("%d %d %d", &from, &to, &cost);
         add_edge(g, from-1, to-1, cost);
+        // todo: For undirected
+        add_edge(g, to-1, from-1, cost);
     }
 
     return g;
