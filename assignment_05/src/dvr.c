@@ -30,26 +30,26 @@ void bellman_ford(Graph *g, int start){
     printf("\033[1m\033[37m");
     printf("\nRouting Table at node %d\n", start+1);
     printf("\033[0m");
-    printf("+----+----+----+\n");
-    printf("|dest|next|cost|\n");
-    printf("+----+----+----+\n");
+    printf("+------+------+------+\n");
+    printf("| dest | next | cost |\n");
+    printf("+------+------+------+\n");
     for ( int i = 0; i < g->num_nodes; i++) {
-        printf("|%-4d|", i+1);
+        printf("| %-4d |", i+1);
         if ( dist[i] == INT_MAX) {
             printf("?\t");
             printf("inf\t");
         } else {
-            printf("%-4d|", next_hop[i]+1);
-            printf("%-4d|", dist[i]);
+            printf(" %-4d |", next_hop[i]+1);
+            printf(" %-4d |", dist[i]);
         }
         printf("\n");
     }
-    printf("+----+----+----+\n");
+    printf("+------+------+------+\n");
 }
 
 int main ()
 {
-    printf("\nDistance Vecctor Routing (Bellman Ford)\n");
+    printf("\nDistance Vector Routing (Bellman Ford)\n");
     Graph* g= input_graph();
 
     // do bellman ford here
