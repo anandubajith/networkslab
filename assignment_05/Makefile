@@ -18,3 +18,6 @@ clean:
 
 test: all
 	./bin/$(ALG) < ./test/$(FILE).txt
+	@if [ "$(SHOW)" = "yes" ]; then\
+		python test/graph_helper.py ./test/$(FILE).txt; \
+    fi
