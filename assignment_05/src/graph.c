@@ -10,6 +10,10 @@ Graph* make_graph(int node_count, int edge_count) {
 
 
 void add_edge(Graph* g, int from, int to, int cost) {
+
+    assert(from >= 0);
+    assert(to >= 0);
+
     g->edges[g->num_edges].cost = cost;
     g->edges[g->num_edges].from = from;
     g->edges[g->num_edges].to = to;
@@ -27,7 +31,7 @@ Graph* input_graph(){
     for ( int i = 0; i < num_edges; i++) {
         scanf("%d %d %d", &from, &to, &cost);
         add_edge(g, from-1, to-1, cost);
-        // todo: For undirected
+        // Graphs are undirected
         add_edge(g, to-1, from-1, cost);
     }
 
