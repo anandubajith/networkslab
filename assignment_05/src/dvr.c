@@ -48,8 +48,8 @@ void bellman_ford(Graph *g, int start){
     for ( int i = 0; i < g->num_nodes; i++) {
         printf("| %-4d |", i+1);
         if ( dist[i] == INT_MAX) {
-            printf("?\t");
-            printf("inf\t");
+            printf(" ?    |");
+            printf(" inf  |");
         } else {
             printf(" %-4d |", next_hop[i]+1);
             printf(" %-4d |", dist[i]);
