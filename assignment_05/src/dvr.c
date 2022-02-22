@@ -10,7 +10,7 @@ void bellman_ford(Graph *g, int start){
         next_hop[i] = INT_MAX;
     }
     dist[start] = 0;
-    next_hop[start] = start+1; //todo:check
+    next_hop[start] = start; //todo:check
 
     for ( int i = 0; i < g->num_nodes; i++) {
         Edge *t = g->adj_list[i];
@@ -23,18 +23,19 @@ void bellman_ford(Graph *g, int start){
             t = t->next;
         }
     }
+    // todo: rerunning the above loop fixes it, so check
 
     // print the routing tables for each router
 
-    printf("\n\nRouting Table at node %d\n", start);
+    printf("\n\nRouting Table at node %d\n", start+1);
     printf("dest\tnext\tcost\n");
     for ( int i = 0; i < g->num_nodes; i++) {
-        printf("%d\t", i);
+        printf("%d\t", i+1);
         if ( dist[i] == INT_MAX) {
             printf("?\t");
             printf("inf\t");
         } else {
-            printf("%d\t", next_hop[i]);
+            printf("%d\t", next_hop[i]+1);
             printf("%d\t", dist[i]);
         }
         printf("\n");
