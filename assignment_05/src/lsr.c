@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include "graph.h"
 
-
 // need to implement priorityQ
 
 void dijkstra(Graph *g, int start) {
@@ -26,7 +25,6 @@ int main () {
         dijkstra(g, i);
     }
 
-
-    /* print_graph(g); */
+    print_graph(g);
     return 0;
 }
