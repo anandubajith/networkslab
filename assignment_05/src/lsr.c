@@ -61,13 +61,38 @@ void print_graph(Graph *g) {
         }
         printf("\n");
     }
-
-
 }
+
+
+
+// priorityQUeue
+// isEmpty, extractMin, insert
 
 // need to implement priorityQ
 
 void dijkstra(Graph *g, int start) {
+
+    int dist[g->num_nodes];
+    int prev[g->num_nodes];
+
+    for ( int i = 0; i < g->num_nodes; i++) {
+        dist[i] = INT_MAX;
+        prev[i] = INT_MAX;
+    }
+
+
+    /* PQ.insert( start, 0 )
+     * while ( !pq.empty()) {
+     *   poll the node
+     *   mark visited
+     *   for all edges of current node:
+     *      if ( visited[dest] )
+     *          skip
+     *      relax the edge
+     *
+     * }
+     */
+
 
 
 
@@ -76,9 +101,7 @@ void dijkstra(Graph *g, int start) {
     printf("\033[1m\033[37m");
     printf("\nLSR at node %d\n", start+1);
     printf("\033[0m");
-    printf("+------+------+------+\n");
-    printf("| dest | cost | path |\n");
-    printf("+------+------+------+\n");
+    // print path, cost
 }
 
 int main () {
