@@ -2,8 +2,7 @@ CC=gcc
 BIN=./bin
 SOURCE=./src/
 CFLAGS=-Wall -Wextra -g
-
-INC=src/graph.c
+INC=
 
 LIST=$(BIN)/lsr $(BIN)/dvr
 
