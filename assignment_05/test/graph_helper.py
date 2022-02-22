@@ -25,7 +25,7 @@ with open(filename) as f:
         G.add_edge(src, dest, weight=cost)
 
     pos = nx.spring_layout(G)
-    nx.draw_networkx(G, pos)
+    nx.draw_networkx(G, pos , node_size=400)
     labels = nx.get_edge_attributes(G,'weight')
     nx.draw_networkx_edge_labels(G,pos,edge_labels=labels)
     plt.show()
