@@ -17,16 +17,25 @@ void bellman_ford(Graph *g, int start){
             Edge e = g->edges[j];
             if ( dist[e.from] != INT_MAX && dist[e.from] + e.cost < dist[e.to]) {
                 dist[e.to] = dist[e.from] + e.cost;
-                // handling special case [ TODO  this needs to be checked ]
                 if ( e.from == start) {
+                    // this means it's a direct link
                     next_hop[e.to] = e.to;
                 } else {
-                    next_hop[e.to] = e.from;
+                    // to store the path where we came from
+                    next_hop[e.to] = next_hop[e.from];
                 }
             }
         }
     }
-    // todo check for negative weight cycle
+
+    for ( int i =0; i < g->num_edges; i++) {
+        Edge e = g->edges[i];
+        if ( dist[e.from] != INT_MAX && dist[e.from] + e.cost < dist[e.to]) {
+            // this is impossible in a physical network
+            printf("Negative weight cycle exists in graph\n");
+            return;
+        }
+    }
 
 
     // print the routing tables for each router
@@ -55,7 +64,6 @@ int main ()
     printf("\nDistance Vector Routing (Bellman Ford)\n");
     Graph* g= input_graph();
 
-    // do bellman ford here
     for ( int i = 0; i < g-> num_nodes; i++) {
         bellman_ford(g, i);
     }
