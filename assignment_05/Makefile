@@ -16,8 +16,5 @@ $(BIN)/%: $(SOURCE)%.c
 clean:
 	rm -rf $(BIN)
 
-test-dvr: all
-	./bin/dvr < ./test/$(FILE).txt
-
-test-lsr: all
-	./bin/lsr < ./test/$(FILE).txt
+test: all
+	./bin/$(ALG) < ./test/$(FILE).txt
