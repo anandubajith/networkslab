@@ -107,7 +107,7 @@ void bellman_ford(Graph *g, int start){
 
 int main ()
 {
-    printf("\nDistance Vector Routing (Bellman Ford)\n");
+    printf("Distance Vector Routing (Bellman Ford)\n");
     int num_nodes, num_edges;
     scanf("%d %d", &num_nodes, &num_edges);
 
