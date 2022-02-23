@@ -244,11 +244,6 @@ void dijkstra(Graph *g, int start) {
         free(min);
     }
 
-    /*
-     * i can calculate max size of path box
-     * 3*num_nodes -2
-     */
-
     printf("\033[1m\033[37m");
     printf("\nLSR at node %d\n", start+1);
     printf("\033[0m");
