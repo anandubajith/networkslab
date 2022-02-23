@@ -5,6 +5,7 @@
 #include <assert.h>
 #include <stdio.h>
 #define MAX_ITEMS 100
+#define BUF_SIZE 1000
 
 typedef struct _heap_item {
     int key;
@@ -35,15 +36,6 @@ MinHeap* make_heap() {
     h->size = 0;
     h->items = malloc(sizeof(HeapItem) * MAX_ITEMS);
     return h;
-}
-
-void print_heap(MinHeap *h) {
-    /* printf("\n>>>\n"); */
-    /* printf("HeapSize = %d\n", h->size); */
-    /* for ( int i = 0; i < h->size; i++) { */
-    /*     printf("(%d,%d)\t", h->items[i].key, h->items[i].value); */
-    /* } */
-    /* printf("\n>>>\n"); */
 }
 
 void heap_swap_items(HeapItem *x, HeapItem *y) {
@@ -166,37 +158,45 @@ void print_graph(Graph *g) {
 }
 
 
+void heap_free(MinHeap *h) {
+    free(h);
+}
 
-// priorityQUeue
-// isEmpty, extractMin, insert
+void build_path(char *s, int* prev, int* dist, int dest) {
+    memset(s, 0, BUF_SIZE);
 
-// need to implement priorityQ
-//
-char* build_path(int* prev, int* dist, int dest) {
-    char* s = malloc(sizeof(char) * 1000);
-    char tmp[100];
-    memset(s, 0, 1000);
+    // going to same node
+    if ( dist[dest] == 0 ) {
+        sprintf(s, "%d->%d", dest+1, dest+1);
+        return;
+    }
 
-    if ( dist[dest] == INT_MAX ) {
-        strcat(s, "inf");
-    } else {
-        int start = dest;
+    if (dist[dest] == INT_MAX) {
+        sprintf(s, "Unreachable");
+        return;
+    }
+
+    char tmp[BUF_SIZE];
+    int start = dest;
+    memset(tmp, 0, 100);
+    sprintf(tmp, "%d>-", start+1);
+    strcat(s, tmp);
+
+    while ( prev[start] != INT_MAX) {
         memset(tmp, 0, 100);
-        sprintf(tmp, "%d<-", start+1);
+        sprintf(tmp, "%d>-", prev[start]+1);
         strcat(s, tmp);
-        while ( prev[start] != INT_MAX) {
-            memset(tmp, 0, 100);
-            sprintf(tmp, "%d<-", prev[start]+1);
-            strcat(s, tmp);
-            start = prev[start];
-        }
+        start = prev[start];
     }
     int l = strlen(s);
-    s[l-1] = 0;
-    s[l-2] = 0;
+    s[--l] = 0;
+    s[--l] = 0;
 
-
-    return s;
+    for ( int i = 0; i < l/2;i++) {
+        char t= s[i];
+        s[i] = s[l-i-1];
+        s[l-i-1]= t;
+    }
 }
 
 void dijkstra(Graph *g, int start) {
@@ -223,7 +223,6 @@ void dijkstra(Graph *g, int start) {
 
         Edge* t = g->adj_list[min->key];
         while ( t != NULL ) {
-            print_heap(h);
             if ( visited[t->to] == 1 ) {
                 t= t->next;
                 continue;
@@ -239,20 +238,34 @@ void dijkstra(Graph *g, int start) {
         free(min);
     }
 
+    /*
+     * i can calculate max size of path box
+     * 3*num_nodes -2
+     */
+
     printf("\033[1m\033[37m");
     printf("\nLSR at node %d\n", start+1);
     printf("\033[0m");
+    char *s = malloc(sizeof(char)* BUF_SIZE);
+
+
+    printf("+------+------------+\n");
+    printf("| path | cost       |\n");
+    printf("+------+------------+\n");
+
+
+
+    printf("Cost\tPath\n");
     for ( int i = 0; i < g->num_nodes; i++) {
-        printf("Destination: %d\n", i+1);
-        printf("Cost: %d\n", dist[i]);
-
-        printf("Path: %s\n", build_path(prev, dist, i));
-
-
-        printf("---\n");
+        /* printf("Destination: %d\n", i+1); */
+        printf("%d\t", dist[i]);
+        build_path(s, prev, dist, i);
+        printf("%s\n", s);
     }
     printf("\n");
-    // print path, cost
+
+    free(s);
+    heap_free(h);
 }
 
 int main () {
