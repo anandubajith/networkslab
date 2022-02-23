@@ -17,7 +17,7 @@ typedef struct _graph {
 } Graph;
 
 
-Graph* make_graph(int node_count, int edge_count) {
+Graph* graph_create(int node_count, int edge_count) {
     Graph* g = malloc(sizeof(Graph));
     g->num_nodes = node_count;
     g->edges = malloc(sizeof(Edge) * edge_count*2);
@@ -25,8 +25,12 @@ Graph* make_graph(int node_count, int edge_count) {
     return g;
 }
 
+void graph_destroy(Graph*g) {
+    free(g->edges);
+    free(g);
+}
 
-void add_edge(Graph* g, int from, int to, int cost) {
+void graph_add_edge(Graph* g, int from, int to, int cost) {
 
     assert(from >= 0);
     assert(to >= 0);
@@ -37,7 +41,7 @@ void add_edge(Graph* g, int from, int to, int cost) {
     g->num_edges++;
 }
 
-void print_graph(Graph *g) {
+void graph_print(Graph *g) {
     printf("num_nodes = %d, num_edges = %d \n", g->num_nodes, g->num_edges);
     for (int i = 0; i < g->num_edges; i++) {
         printf("Edge: %d %d %d\n", g->edges[i].from, g->edges[i].to, g->edges[i].cost);
@@ -107,20 +111,21 @@ int main ()
     int num_nodes, num_edges;
     scanf("%d %d", &num_nodes, &num_edges);
 
-    Graph *g = make_graph(num_nodes, num_edges);
+    Graph *g = graph_create(num_nodes, num_edges);
 
     int from, to, cost;
     for ( int i = 0; i < num_edges; i++) {
         scanf("%d %d %d", &from, &to, &cost);
-        add_edge(g, from-1, to-1, cost);
+        graph_add_edge(g, from-1, to-1, cost);
         // Graphs are undirected
-        add_edge(g, to-1, from-1, cost);
+        graph_add_edge(g, to-1, from-1, cost);
     }
 
     for ( int i = 0; i < g-> num_nodes; i++) {
         bellman_ford(g, i);
     }
 
-    /* print_graph(g); */
+    graph_destroy(g);
+
     return 0;
 }

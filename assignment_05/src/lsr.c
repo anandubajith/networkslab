@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <stdio.h>
+
 #define MAX_ITEMS 100
 #define BUF_SIZE 1000
 
@@ -31,11 +32,16 @@ typedef struct _graph {
 } Graph;
 
 
-MinHeap* make_heap() {
+MinHeap* heap_create() {
     MinHeap* h = malloc(sizeof(MinHeap));
     h->size = 0;
     h->items = malloc(sizeof(HeapItem) * MAX_ITEMS);
     return h;
+}
+
+void heap_destroy(MinHeap *h) {
+    free(h->items);
+    free(h);
 }
 
 void heap_swap_items(HeapItem *x, HeapItem *y) {
@@ -109,16 +115,19 @@ HeapItem* heap_extract_min(MinHeap *h) {
     return root;
 }
 
-
-
-Graph* make_graph(int node_count) {
+Graph* graph_create(int node_count) {
     Graph *g = malloc(sizeof(Graph));
     g->num_nodes = node_count;
     g->adj_list = malloc(sizeof(Edge*) * node_count);
     return g;
 }
 
-void add_edge(Graph *g, int from, int to, int cost) {
+void graph_destroy(Graph* g) {
+    free(g->adj_list);
+    free(g);
+}
+
+void graph_add_edge(Graph *g, int from, int to, int cost) {
 
     assert(from >= 0);
     assert(to >= 0);
@@ -143,7 +152,7 @@ void add_edge(Graph *g, int from, int to, int cost) {
 
 }
 
-void print_graph(Graph *g) {
+void graph_print(Graph *g) {
     printf("num_nodes = %d, num_edges = %d\n", g->num_nodes, g->num_edges);
 
     for ( int i = 0; i < g->num_nodes; i++) {
@@ -158,9 +167,6 @@ void print_graph(Graph *g) {
 }
 
 
-void heap_free(MinHeap *h) {
-    free(h);
-}
 
 void build_path(char *s, int* prev, int* dist, int dest) {
     memset(s, 0, BUF_SIZE);
@@ -213,7 +219,7 @@ void dijkstra(Graph *g, int start) {
 
     dist[start] = 0;
 
-    MinHeap *h = make_heap();
+    MinHeap *h = heap_create();
     heap_insert(h, start, 0);
 
     while (h->size > 0 ) {
@@ -248,24 +254,20 @@ void dijkstra(Graph *g, int start) {
     printf("\033[0m");
     char *s = malloc(sizeof(char)* BUF_SIZE);
 
-
-    printf("+------+------------+\n");
-    printf("| path | cost       |\n");
-    printf("+------+------------+\n");
-
-
-
-    printf("Cost\tPath\n");
+    printf("+---------------------+------+\n");
+    printf("| path                | cost |\n");
+    printf("+---------------------+------+\n");
     for ( int i = 0; i < g->num_nodes; i++) {
         /* printf("Destination: %d\n", i+1); */
-        printf("%d\t", dist[i]);
         build_path(s, prev, dist, i);
-        printf("%s\n", s);
+
+        printf("| %-20s", s);
+        printf("| %-4d |\n", dist[i]);
     }
-    printf("\n");
+    printf("+---------------------+------+\n");
 
     free(s);
-    heap_free(h);
+    heap_destroy(h);
 }
 
 int main () {
@@ -273,20 +275,20 @@ int main () {
     int num_nodes, num_edges;
     scanf("%d %d", &num_nodes, &num_edges);
 
-    Graph *g = make_graph(num_nodes);
+    Graph *g = graph_create(num_nodes);
 
     int from, to, cost;
     for ( int i = 0; i < num_edges; i++) {
         scanf("%d %d %d", &from, &to, &cost);
-        add_edge(g, from-1, to-1, cost);
+        graph_add_edge(g, from-1, to-1, cost);
         // Graphs are undirected
-        add_edge(g, to-1, from-1, cost);
+        graph_add_edge(g, to-1, from-1, cost);
     }
 
     for ( int i = 0; i < g-> num_nodes; i++) {
         dijkstra(g, i);
     }
+    graph_destroy(g);
 
-    /* print_graph(g); */
     return 0;
 }
