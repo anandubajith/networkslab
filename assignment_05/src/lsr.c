@@ -228,7 +228,6 @@ void dijkstra(Graph *g, int start) {
                 t= t->next;
                 continue;
             }
-            visited[t->to] = 1;
             int new_dist = dist[min->key] + t->cost;
             if ( new_dist < dist[t->to] ) {
                 prev[t->to] = min->key;
