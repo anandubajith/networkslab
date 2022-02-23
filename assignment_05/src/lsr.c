@@ -37,6 +37,15 @@ MinHeap* make_heap() {
     return h;
 }
 
+void print_heap(MinHeap *h) {
+    /* printf("\n>>>\n"); */
+    /* printf("HeapSize = %d\n", h->size); */
+    /* for ( int i = 0; i < h->size; i++) { */
+    /*     printf("(%d,%d)\t", h->items[i].key, h->items[i].value); */
+    /* } */
+    /* printf("\n>>>\n"); */
+}
+
 void heap_swap_items(HeapItem *x, HeapItem *y) {
     int t1 = x->key;
     int t2 = x->value;
@@ -55,12 +64,13 @@ void heap_insert(MinHeap *h, int key, int value) {
         exit(0);
     }
 
+
     h->items[h->size].key = key;
     h->items[h->size].value = value;
     h->size++;
 
     int i = h->size -1;
-    while ( i != 0 && h->items[(i-1)/2].key > h->items[i].key ) {
+    while ( i != 0 && h->items[(i-1)/2].value > h->items[i].value) {
         heap_swap_items(&(h->items[(i-1)/2]), &(h->items[i]));
         i = (i-1)/2;
     }
@@ -72,10 +82,10 @@ void heap_heapify(MinHeap *h, int pos) {
 
     int smallest = pos;
 
-    if ( left < h->size && h->items[left].key < h->items[smallest].key ) {
+    if ( left < h->size && h->items[left].value < h->items[smallest].value) {
         smallest = left;
     }
-    if ( right < h->size && h->items[right].key < h->items[smallest].key ) {
+    if ( right < h->size && h->items[right].value < h->items[smallest].value ) {
         smallest = right;
     }
     if ( smallest != pos) {
@@ -88,15 +98,22 @@ void heap_heapify(MinHeap *h, int pos) {
 HeapItem* heap_extract_min(MinHeap *h) {
     if ( h->size <= 0)
         return NULL;
-    if ( h->size == 1)
-        return &(h->items[--h->size]);
+
 
     HeapItem* root = malloc(sizeof(HeapItem));
+    root->key = root->value = 0;
+
+    if ( h->size == 1) {
+        heap_swap_items(root,&(h->items[0]));
+        h->size--;
+        return root;
+    }
 
     heap_swap_items(root,&(h->items[0]));
-    heap_swap_items(&(h->items[0]), &(h->items[--h->size]));
-    heap_heapify(h, 0);
+    heap_swap_items(&(h->items[0]), &(h->items[h->size-1]));
+    h->size--;
 
+    heap_heapify(h, 0);
     return root;
 }
 
@@ -197,28 +214,30 @@ void dijkstra(Graph *g, int start) {
     dist[start] = 0;
 
     MinHeap *h = make_heap();
-    heap_insert(h, 0, start);
+    heap_insert(h, start, 0);
 
     while (h->size > 0 ) {
         HeapItem *min = heap_extract_min(h);
-        visited[min->value] = 1;
-        if ( dist[min->value] < min->key) continue;
+        visited[min->key] = 1;
+        if ( dist[min->key] < min->value) continue;
 
-        Edge* t = g->adj_list[min->value];
+        Edge* t = g->adj_list[min->key];
         while ( t != NULL ) {
+            print_heap(h);
             if ( visited[t->to] == 1 ) {
                 t= t->next;
                 continue;
             }
-            int new_dist = dist[min->value] + t->cost;
+            visited[t->to] = 1;
+            int new_dist = dist[min->key] + t->cost;
             if ( new_dist < dist[t->to] ) {
-                prev[t->to] = min->value;
+                prev[t->to] = min->key;
                 dist[t->to] = new_dist;
-                heap_insert(h, new_dist, t->to);
+                heap_insert(h, t->to, new_dist);
             }
             t = t->next;
         }
-        /* free(min); */
+        free(min);
     }
 
     printf("\033[1m\033[37m");
