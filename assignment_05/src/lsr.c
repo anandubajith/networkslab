@@ -178,7 +178,7 @@ void build_path(char *s, int* prev, int* dist, int dest) {
     }
 
     if (dist[dest] == INT_MAX) {
-        sprintf(s, "Unreachable");
+        sprintf(s, "No path");
         return;
     }
 
@@ -262,7 +262,11 @@ void dijkstra(Graph *g, int start) {
         build_path(s, prev, dist, i);
 
         printf("| %-20s", s);
-        printf("| %-4d |\n", dist[i]);
+        if ( dist[i] == INT_MAX ) {
+            printf("| inf  |\n");
+        } else {
+            printf("| %-4d |\n", dist[i]);
+        }
     }
     printf("+---------------------+------+\n");
 
