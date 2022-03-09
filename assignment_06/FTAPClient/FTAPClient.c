@@ -79,7 +79,7 @@ void send_file(int socket, char *filename) {
 int main() {
 
     int sock = -1;
-
+    Packet* p = malloc(sizeof(Packet));
     char* buffer = malloc(sizeof(char) * BUF_SIZE);
 
     while(1) {
@@ -97,6 +97,7 @@ int main() {
                 sock = setup_connection();
             }
         } else if ( sock != -1) {
+            send(sock, buffer, strlen(buffer), 0);
             // we already have active connection
             // send the message
             // do recv of the packet
@@ -108,6 +109,9 @@ int main() {
                 // send 602
             } else if ( strncmp("GetFile", buffer, 7) == 0 ) {
                 // receive 600, 601, 602
+            } else {
+                recv(sock, p, sizeof(*p), 0);
+                printf("Received packet %d %d %s\n", p->code, p->size, p->data);
             }
         } else {
             printf("Connect to server with START\n");

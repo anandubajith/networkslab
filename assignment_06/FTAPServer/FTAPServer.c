@@ -219,7 +219,7 @@ void handle_client(int client_socket) {
             strcpy(p->data, "OK Connection is setup");
             send(client_socket, p, sizeof(*p), 0);
         } else if ( strncmp("USERN", message, 5) == 0) {
-            if ( check_username(message+6)  == 0 ) {
+            if ( check_username(message+6)  == 1 ) {
                 // valid username
                 p->code = 300;
                 strcpy(p->data, "Correct Username; Need password");
@@ -230,6 +230,7 @@ void handle_client(int client_socket) {
             }
             send(client_socket, p, sizeof(*p), 0);
         } else if ( strncmp("PASSWD", message, 6) == 0) {
+            printf("Checkcing username \"%s\" \n", message+7);
             if ( strlen(username) == 0 ) {
                 // todo: handle username not set case
             }
