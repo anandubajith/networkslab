@@ -122,11 +122,6 @@ int load_usersfile() {
     return 0;
 }
 
-typedef struct _packet {
-    int type;
-    int size;
-    char data[BUF_SIZE];
-} Packet;
 
 /*
  * type_1 -> file data
@@ -150,8 +145,68 @@ void handle_list_dir() {
 
 }
 
+typedef struct _packet {
+    int code;
+    int size;
+    char data[504];
+} Packet;
+
+void receive_file(int socket, char* filename) {
+    Packet *p = malloc(sizeof(Packet));
+    FILE* fp = fopen(filename, "wb");
+
+    memset(p, 0, sizeof(*p));
+    int recv_size = recv(socket, p, sizeof(*p), 0);
+    if ( recv_size <= 0 ) {
+        printf("Server closed connection\n");
+        return;
+    }
+
+        printf("Received packet with code = %d\n", p->code);
+    if ( p->code != 601) {
+        printf("INvalid FileInfoPacket\n");
+        return;
+    }
+    // read file_info packet and
+    int total_size = 0;
+    sscanf(p->data, "%d", &total_size);
+
+
+
+    while (1) {
+        memset(p, 0, sizeof(*p));
+        int recv_size = recv(socket, p, sizeof(*p), 0);
+        printf("recv_size = %d\n" , recv_size);
+        if ( recv_size <= 0 ) {
+            printf("Server closed connection");
+            return;
+        }
+        /* printf("%s", p->data); */
+        fwrite(p->data, sizeof(char), p->size, fp);
+        // todo: print progress
+
+        printf("Received packet with code = %d size = %d \n", p->code, p->size);
+        if ( p->code == 603) {
+            break;
+        }
+    }
+
+    fclose(fp);
+    recv_size = recv(socket, p, sizeof(*p), 0);
+    if ( recv_size <= 0 ) {
+        printf("Server closed connection\n");
+        return;
+    }
+
+    free(p);
+
+}
 
 void handle_client(int client_socket) {
+    printf("Received client\n");
+
+    receive_file(client_socket, "example");
+    return;
     while (1) {
         /* int r = recv(client_socket, &p, sizeof(Packet), 0); */
         int r = 99;
@@ -218,11 +273,11 @@ int main ()
         if ( client_socket == -1 ) {
             continue;
         }
-        if (!fork()) {
-            close(server_sock);
+        /* if (!fork()) { */
+            /* close(server_sock); */
             handle_client(client_socket);
-        }
-        close(client_socket);
+        /* } */
+        /* close(client_socket); */
     }
 
     close(server_sock);

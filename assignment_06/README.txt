@@ -1,0 +1,23 @@
+
+
+
+## Status codes
+
+200 OK Connection is set up
+300 Correct Username; Need password
+301 Incorrect Username
+305 User Authenticated with password
+310 Incorrect password
+505 Command not supported
+
+600 FileStart
+    contains filename
+
+601 FileInfo
+    Contains total bytes
+
+602 FileEnd
+
+610 Invalid file
+611 File locked by user
+
