@@ -6,6 +6,7 @@
 200 OK Connection is set up
 300 Correct Username; Need password
 301 Incorrect Username
+302 Missing username
 305 User Authenticated with password
 310 Incorrect password
 505 Command not supported

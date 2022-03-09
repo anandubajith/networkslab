@@ -123,27 +123,6 @@ int load_usersfile() {
 }
 
 
-/*
- * type_1 -> file data
- * type_2 -> file end marker
- * while ( ! type2) receive data and append to file
- */
-
-void handle_store_file() {
-    // Sends the file
-    // Sends end marker
-}
-void handle_get_file(){
-    // receive file until you get end marker
-}
-
-void handle_create_file(){
-    // touch the file
-}
-
-void handle_list_dir() {
-
-}
 
 typedef struct _packet {
     int code;
@@ -151,7 +130,7 @@ typedef struct _packet {
     char data[504];
 } Packet;
 
-void receive_file(int socket, char* filename) {
+void handle_get_file(int socket, char* filename) {
     Packet *p = malloc(sizeof(Packet));
     FILE* fp = fopen(filename, "wb");
 
@@ -199,17 +178,32 @@ void receive_file(int socket, char* filename) {
     }
 
     free(p);
+}
+
+void handle_send_file(int socket, char *filename) {
+
+}
+
+void handle_create_file(int socket, char *filename){
+    // touch the file
+}
+
+void handle_list_dir(int socket) {
+
+}
+
+void handle_close(int socket) {
 
 }
 
 void handle_client(int client_socket) {
     printf("Received client\n");
+    Packet *p = malloc(sizeof(Packet));
+    char* message = malloc(sizeof(char) * BUF_SIZE);
+    char* username = malloc(sizeof(char) * BUF_SIZE);
 
-    receive_file(client_socket, "example");
-    return;
     while (1) {
-        /* int r = recv(client_socket, &p, sizeof(Packet), 0); */
-        int r = 99;
+        int r = recv(client_socket, message, BUF_SIZE, 0);
         if ( r == -1) {
             continue;
         }
@@ -218,28 +212,51 @@ void handle_client(int client_socket) {
             return;
         }
 
-        char * message = "";
-
+        memset(p, 0, sizeof(*p));
         if ( strncmp("START", message, 5) == 0 ) {
             // Directly reply with 200 Connection is setup
+            p->code = 200;
+            strcpy(p->data, "OK Connection is setup");
+            send(client_socket, p, sizeof(*p), 0);
         } else if ( strncmp("USERN", message, 5) == 0) {
-            // - Validate the username 301 if invaid
-            // - store, and reply 300
+            if ( check_username(message+6)  == 0 ) {
+                // valid username
+                p->code = 300;
+                strcpy(p->data, "Correct Username; Need password");
+                strcpy(username, message+5);
+            } else {
+                p->code = 301;
+                strcpy(p->data, "Incorrect Username");
+            }
+            send(client_socket, p, sizeof(*p), 0);
         } else if ( strncmp("PASSWD", message, 6) == 0) {
-            // - 305 if success , else 310
-
+            if ( strlen(username) == 0 ) {
+                // todo: handle username not set case
+            }
+            if ( check_password(username, message + 7) == 0) {
+                p->code = 310;
+                strcpy(p->data, "User authenticated with password");
+                // todo: welcome username
+            } else {
+                p->code = 310;
+                strcpy(p->data, "Incorrect password");
+            }
+            send(client_socket, p, sizeof(*p), 0);
         } else if ( strncmp("StoreFile", message ,9) == 0) {
-
+            handle_get_file(client_socket,message+10);
         } else if ( strncmp("GetFile", message, 7) == 0 ) {
-
+            // todo: extract the filename
+            /* handle_send_file(); */
         } else if ( strncmp("CreateFile", message, 10) == 0) {
-            // Do touch on that filename
+            handle_create_file(client_socket, message+11);
         } else if ( strncmp("ListDir", message, 7) == 0) {
-            // use ls as shell
+            handle_list_dir(client_socket);
         } else if ( strncmp("QUIT", message, 4) == 0) {
-
+            handle_close(client_socket);
         } else {
-
+            p->code = 505;
+            strcpy(p->data, "Command not supported");
+            send(client_socket, p, sizeof(*p), 0);
         }
     }
 }
@@ -247,7 +264,6 @@ void handle_client(int client_socket) {
 int main ()
 {
     load_usersfile();
-    /* print_users(); */
 
     int server_sock = socket(AF_INET, SOCK_STREAM, 0);
     if (setsockopt(server_sock, SOL_SOCKET, SO_REUSEADDR, &(int){1}, sizeof(int)) < 0)

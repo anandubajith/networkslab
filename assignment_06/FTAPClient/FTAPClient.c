@@ -9,6 +9,13 @@
 
 #define PORT 4035
 #define BUF_SIZE 1024
+#define PACKET_SIZE 504
+
+typedef struct _packet {
+    int code;
+    int size;
+    char data[PACKET_SIZE];
+} Packet;
 
 int setup_connection() {
     int sock = socket(AF_INET, SOCK_STREAM, 0);
@@ -25,12 +32,6 @@ int setup_connection() {
 
     return sock;
 }
-
-typedef struct _packet {
-    int code;
-    int size;
-    char data[504];
-} Packet;
 
 void send_file(int socket, char *filename) {
 
@@ -50,7 +51,7 @@ void send_file(int socket, char *filename) {
     send(socket, p, sizeof(*p), 0);
 
     memset(p, 0, sizeof(*p));
-    int count = fread(p->data, sizeof(char), 504, fp);
+    int count = fread(p->data, sizeof(char), PACKET_SIZE, fp);
     while ( count ) {
         // to decide FileData , or FileEnd
         p->code = ftell(fp) == file_size ? 603 : 602;
@@ -62,29 +63,20 @@ void send_file(int socket, char *filename) {
          */
         usleep(100);
 
-        printf("Sending packet with size ; size = %d; send_size = %d,  code = %d %d\n", count ,send_size, p->code,  count);
+        /* printf("Sending packet with size ; size = %d; send_size = %d,  code = %d %d\n", count ,send_size, p->code,  count); */
 
         // print progress + remaining time
 
         memset(p, 0, sizeof(*p));
-        count = fread(p->data, sizeof(char), 504, fp);
+        count = fread(p->data, sizeof(char), PACKET_SIZE, fp);
     }
 
     fclose(fp);
-
     free(p);
-
 }
 
 
 int main() {
-    int sock = setup_connection();
-    /* send_file(sock, "sintel.mkv"); */
-    send_file(sock, "m.txt");
-}
-
-
-int xmain() {
 
     int sock = -1;
 
@@ -106,29 +98,16 @@ int xmain() {
             }
         } else if ( sock != -1) {
             // we already have active connection
-            if ( strncmp("USERN", buffer, 5) == 0) {
-                // send to server and get reply
-            } else if ( strncmp("PASSWD", buffer, 6) == 0) {
-                // send to server and get reply
-            } else if ( strncmp("StoreFile", buffer ,9) == 0) {
+            // send the message
+            // do recv of the packet
+            // everything would be text exccept for store/get File
+            if ( strncmp("StoreFile", buffer ,9) == 0) {
                 // check for error -> File Already exists
                 // send 600 FileStart
                 // send 601
                 // send 602
             } else if ( strncmp("GetFile", buffer, 7) == 0 ) {
                 // receive 600, 601, 602
-            } else if ( strncmp("CreateFile", buffer, 10) == 0) {
-                // check for error -> File Already exists
-                // send 600 FileStart
-                // send 601 with 0
-                // send 602
-            } else if ( strncmp("ListDir", buffer, 7) == 0) {
-                // send message and get output back
-            } else if ( strncmp("QUIT", buffer, 4) == 0) {
-                // shutdown the connection
-            } else {
-                // invalid command
-                // todo: decide if we have to send to server first?
             }
         } else {
             printf("Connect to server with START\n");
