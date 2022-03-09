@@ -7,16 +7,22 @@
 #include<netinet/in.h>
 #include<time.h>
 
-#define PORT 4305
+#define PORT 4035
 #define BUF_SIZE 1024
 
-int sock;
-char *buffer;
+void receive_file() {
+
+}
+
+void send_file() {
+
+}
+
 
 int main() {
 
 
-    sock = socket(AF_INET, SOCK_STREAM, 0);
+    int sock = socket(AF_INET, SOCK_STREAM, 0);
     struct sockaddr_in server_address;
     server_address.sin_family = AF_INET;
     server_address.sin_port = htons(PORT);
@@ -29,22 +35,8 @@ int main() {
     }
 
     printf("Connected to server\n");
-    buffer = malloc(sizeof(char) * BUF_SIZE);
 
     while(1) {
-/*         printf("\nEnter the query: "); */
-/*         fflush(stdout); */
-/*         memset(buffer, 0, BUF_SIZE); */
-/*         scanf("%[^\n]", buffer); */
-/*         char t; scanf("%c", &t); */
-/*         if ( strlen(buffer) == 0){ */
-/*             continue; */
-/*         } */
-
-/*         send(sock, buffer, strlen(buffer), 0); */
-/*         memset(buffer, 0, BUF_SIZE); */
-/*         int r = recv(sock, buffer,BUF_SIZE , 0); */
-/*         printf("[Server] %s", buffer); */
     }
 
     return 0;

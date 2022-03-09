@@ -128,33 +128,65 @@ typedef struct _packet {
     char data[BUF_SIZE];
 } Packet;
 
-
-
 /*
  * type_1 -> file data
  * type_2 -> file end marker
  * while ( ! type2) receive data and append to file
  */
 
+void handle_store_file() {
+    // Sends the file
+    // Sends end marker
+}
+void handle_get_file(){
+    // receive file until you get end marker
+}
+
+void handle_create_file(){
+    // touch the file
+}
+
+void handle_list_dir() {
+
+}
+
+
 void handle_client(int client_socket) {
-    // handle indivdiual client
-    // Messages
-    // - START
-    //      - Directly reply with 200 Connection is setup
-    // - USERN
-    //      - Validate the username 301 if invaid
-    //      - store, and reply 300
-    // - PASSWD
-    //      - 305 if success , else 310
-    // - CreateFile
-    //      - Do touch on that filename
-    // - ListDir
-    //      - use ls as shell
-    // - StoreFile
-    //      - ?
-    // - GetFile
-    //      - ?
-    // - QUIT
+    while (1) {
+        /* int r = recv(client_socket, &p, sizeof(Packet), 0); */
+        int r = 99;
+        if ( r == -1) {
+            continue;
+        }
+        if ( r == 0) {
+            printf("Client closed connection");
+            return;
+        }
+
+        char * message = "";
+
+        if ( strncmp("START", message, 5) == 0 ) {
+            // Directly reply with 200 Connection is setup
+        } else if ( strncmp("USERN", message, 5) == 0) {
+            // - Validate the username 301 if invaid
+            // - store, and reply 300
+        } else if ( strncmp("PASSWD", message, 6) == 0) {
+            // - 305 if success , else 310
+
+        } else if ( strncmp("StoreFile", message ,9) == 0) {
+
+        } else if ( strncmp("GetFile", message, 7) == 0 ) {
+
+        } else if ( strncmp("CreateFile", message, 10) == 0) {
+            // Do touch on that filename
+        } else if ( strncmp("ListDir", message, 7) == 0) {
+            // use ls as shell
+        } else if ( strncmp("QUIT", message, 4) == 0) {
+
+        } else {
+
+        }
+    }
 }
 
 int main ()
