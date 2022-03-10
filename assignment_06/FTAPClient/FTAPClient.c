@@ -66,6 +66,9 @@ void handle_store_file(int socket, char *filename) {
         /* printf("Sending packet with size ; size = %d; send_size = %d,  code = %d %d\n", count ,send_size, p->code,  count); */
 
         // print progress + remaining time
+        //
+        //
+        printf("\r %d done - %d s remaining\n", (int)ftell(fp)*100/file_size, 0);
 
         memset(p, 0, sizeof(*p));
         count = fread(p->data, sizeof(char), PACKET_SIZE, fp);
