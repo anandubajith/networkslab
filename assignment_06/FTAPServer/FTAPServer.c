@@ -72,7 +72,7 @@ int check_password(char* username, char* password) {
                 // successful authentication
                 return 0;
             }
-            // incorrect username
+            // incorrect password
             return 1;
         }
         t = t->next;
@@ -113,8 +113,8 @@ int load_usersfile() {
             continue;
         }
         strncpy(username, line, i);
-        password[strlen(password)-1] = '\0';
         strcpy(password, line+i+1);
+        password[strlen(password)-1] = '\0';
         add_user(username, password);
         /* printf("%s:%s\n", username, password); */
     }
@@ -203,6 +203,7 @@ void handle_client(int client_socket) {
     char* username = malloc(sizeof(char) * BUF_SIZE);
 
     while (1) {
+        memset(message, 0, BUF_SIZE);
         int r = recv(client_socket, message, BUF_SIZE, 0);
         if ( r == -1) {
             continue;
@@ -219,21 +220,23 @@ void handle_client(int client_socket) {
             strcpy(p->data, "OK Connection is setup");
             send(client_socket, p, sizeof(*p), 0);
         } else if ( strncmp("USERN", message, 5) == 0) {
-            if ( check_username(message+6)  == 1 ) {
+            if ( check_username(message+6)  == 0 ) {
                 // valid username
                 p->code = 300;
                 strcpy(p->data, "Correct Username; Need password");
-                strcpy(username, message+5);
+                memset(username, 0, BUF_SIZE);
+                strcpy(username, message+6);
             } else {
                 p->code = 301;
                 strcpy(p->data, "Incorrect Username");
             }
             send(client_socket, p, sizeof(*p), 0);
         } else if ( strncmp("PASSWD", message, 6) == 0) {
-            printf("Checkcing username \"%s\" \n", message+7);
             if ( strlen(username) == 0 ) {
                 // todo: handle username not set case
             }
+
+            printf("USERNAME RESULT '%s' '%s' = %d\n",username, message+7, check_password(username, message + 7) );
             if ( check_password(username, message + 7) == 0) {
                 p->code = 310;
                 strcpy(p->data, "User authenticated with password");
