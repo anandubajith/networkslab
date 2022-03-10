@@ -1,6 +1,7 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<string.h>
+#include<pthread.h>
 #include<unistd.h>
 #include<sys/types.h>
 #include<sys/socket.h>
@@ -33,9 +34,28 @@ int setup_connection() {
     return sock;
 }
 
+int current_bytes = 0;
+int total_bytes = 0;
+
+void* timer_thread() {
+    int prev_bytes = 0;
+    while (1) {
+        int bps = (current_bytes-prev_bytes) * PACKET_SIZE * 10;
+        printf("\rTransmission rate = %d kbps ", bps/1024);
+        fflush(stdout);
+        prev_bytes = current_bytes;
+        usleep(1e5);
+    }
+}
+
+
 void handle_store_file(int socket, char *filename) {
 
     Packet *p = malloc(sizeof(Packet));
+
+    pthread_t timer_t;
+    pthread_create(&timer_t, NULL, timer_thread, NULL);
+
 
     FILE* fp = fopen(filename, "rb");
 
@@ -73,6 +93,7 @@ void handle_store_file(int socket, char *filename) {
         memset(p, 0, sizeof(*p));
         count = fread(p->data, sizeof(char), PACKET_SIZE, fp);
     }
+    pthread_cancel(timer_t);
 
     fclose(fp);
     free(p);
