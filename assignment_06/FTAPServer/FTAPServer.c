@@ -193,12 +193,17 @@ void handle_list_dir(int socket) {
     // build the packet
 
     Packet *p = malloc(sizeof(Packet));
+    memset(p->data, 0, 504);
+    // memset?
     p->code = 1213;
     struct dirent *dir;
     DIR* d = opendir(".");
     if (d) {
+        printf("%s\n", dir->d_name);
         while ((dir = readdir(d)) != NULL) {
-            sprintf(p->data + strlen(p->data), "%s\n", dir->d_name);
+            if (dir->d_type == DT_REG) {
+                sprintf(p->data + strlen(p->data), "%s\n", dir->d_name);
+            }
         }
         closedir(d);
     }
