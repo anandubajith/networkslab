@@ -6,7 +6,7 @@ gcc -Wall -Wextra -g FTAPServer/FTAPServer.c -o FTAPServer/FTAPServer
 
 
 tmux new-session \; \
-    send-keys './FTAPServer/FTAPServer' C-m \; \
+    send-keys 'cd FTAPServer && ./FTAPServer' C-m \; \
     split-window -h \; \
     send-keys './FTAPClient/FTAPClient' C-m \;
 

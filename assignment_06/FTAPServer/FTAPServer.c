@@ -2,6 +2,7 @@
 #include<signal.h>
 #include<stdlib.h>
 #include<string.h>
+#include<dirent.h>
 #include<unistd.h>
 #include<sys/types.h>
 #include<sys/socket.h>
@@ -189,6 +190,23 @@ void handle_create_file(int socket, char *filename){
 }
 
 void handle_list_dir(int socket) {
+    // build the packet
+
+    Packet *p = malloc(sizeof(Packet));
+    p->code = 1213;
+    struct dirent *dir;
+    DIR* d = opendir(".");
+    if (d) {
+        while ((dir = readdir(d)) != NULL) {
+            sprintf(p->data + strlen(p->data), "%s\n", dir->d_name);
+        }
+        closedir(d);
+    }
+
+    send(socket, p, sizeof(*p), 0);
+
+    //todo: should we have to break this into file
+    free(p);
 
 }
 
@@ -220,6 +238,7 @@ void handle_client(int client_socket) {
             strcpy(p->data, "OK Connection is setup");
             send(client_socket, p, sizeof(*p), 0);
         } else if ( strncmp("USERN", message, 5) == 0) {
+            printf("USERNAME RESULT '%s' = %d\n",message+6, check_username(message +6) );
             if ( check_username(message+6)  == 0 ) {
                 // valid username
                 p->code = 300;
@@ -236,7 +255,7 @@ void handle_client(int client_socket) {
                 // todo: handle username not set case
             }
 
-            printf("USERNAME RESULT '%s' '%s' = %d\n",username, message+7, check_password(username, message + 7) );
+            printf("PASSWORD RESULT '%s' '%s' = %d\n",username, message+7, check_password(username, message + 7) );
             if ( check_password(username, message + 7) == 0) {
                 p->code = 310;
                 strcpy(p->data, "User authenticated with password");
@@ -268,6 +287,7 @@ void handle_client(int client_socket) {
 int main ()
 {
     load_usersfile();
+    print_users();
 
     int server_sock = socket(AF_INET, SOCK_STREAM, 0);
     if (setsockopt(server_sock, SOL_SOCKET, SO_REUSEADDR, &(int){1}, sizeof(int)) < 0)
