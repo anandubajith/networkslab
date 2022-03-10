@@ -216,8 +216,17 @@ void handle_close(int socket) {
 void handle_client(int client_socket) {
     printf("Received client\n");
     Packet *p = malloc(sizeof(Packet));
+
     char* message = malloc(sizeof(char) * BUF_SIZE);
     char* username = malloc(sizeof(char) * BUF_SIZE);
+
+    int status = 0;
+    /*
+     * 0 => waiting for username
+     * 1 => waiting for password
+     * 2 => Authenticated
+     */
+
 
     while (1) {
         memset(message, 0, BUF_SIZE);
@@ -244,6 +253,7 @@ void handle_client(int client_socket) {
                 strcpy(p->data, "Correct Username; Need password");
                 memset(username, 0, BUF_SIZE);
                 strcpy(username, message+6);
+                status = 1;
             } else {
                 p->code = 301;
                 strcpy(p->data, "Incorrect Username");
@@ -252,19 +262,25 @@ void handle_client(int client_socket) {
         } else if ( strncmp("PASSWD", message, 6) == 0) {
             if ( strlen(username) == 0 ) {
                 // todo: handle username not set case
-            }
-
-            printf("PASSWORD RESULT '%s' '%s' = %d\n",username, message+7, check_password(username, message + 7) );
-            if ( check_password(username, message + 7) == 0) {
+                p->code = 222;
+                strcpy(p->data, "Provide username with USERN");
+            } else if ( check_password(username, message + 7) == 0) {
                 p->code = 310;
                 strcpy(p->data, "User authenticated with password");
+                status = 2;
                 // todo: welcome username
             } else {
                 p->code = 310;
                 strcpy(p->data, "Incorrect password");
             }
             send(client_socket, p, sizeof(*p), 0);
-        } else if ( strncmp("StoreFile", message ,9) == 0) {
+        } else if ( strncmp("QUIT", message, 4) == 0  ) {
+            handle_close(client_socket);
+        } else if ( status != 2 ) {
+            p->code = 999;
+            strcpy(p->data, "Authentication required");
+            send(client_socket, p, sizeof(*p), 0);
+        }else if ( strncmp("StoreFile", message ,9) == 0) {
             handle_get_file(client_socket,message+10);
         } else if ( strncmp("GetFile", message, 7) == 0 ) {
             // todo: extract the filename
@@ -273,8 +289,6 @@ void handle_client(int client_socket) {
             handle_create_file(client_socket, message+11);
         } else if ( strncmp("ListDir", message, 7) == 0) {
             handle_list_dir(client_socket);
-        } else if ( strncmp("QUIT", message, 4) == 0) {
-            handle_close(client_socket);
         } else {
             p->code = 505;
             strcpy(p->data, "Command not supported");
