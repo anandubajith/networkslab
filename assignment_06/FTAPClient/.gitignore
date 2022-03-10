@@ -1,3 +1,2 @@
-file.bin
-m.txt
-sintel.mkv
+*
+!*.c
