@@ -172,12 +172,6 @@ void handle_get_file(int socket, char* filename) {
     }
 
     fclose(fp);
-    recv_size = recv(socket, p, sizeof(*p), 0);
-    if ( recv_size <= 0 ) {
-        printf("Server closed connection\n");
-        return;
-    }
-
     free(p);
 }
 

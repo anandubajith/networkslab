@@ -33,7 +33,7 @@ int setup_connection() {
     return sock;
 }
 
-void send_file(int socket, char *filename) {
+void handle_store_file(int socket, char *filename) {
 
     Packet *p = malloc(sizeof(Packet));
 
@@ -103,12 +103,9 @@ int main() {
             // do recv of the packet
             // everything would be text exccept for store/get File
             if ( strncmp("StoreFile", buffer ,9) == 0) {
-                // check for error -> File Already exists
-                // send 600 FileStart
-                // send 601
-                // send 602
+                handle_store_file(sock, buffer+10);
             } else if ( strncmp("GetFile", buffer, 7) == 0 ) {
-                // receive 600, 601, 602
+                /* handle_get_file(socket, buffer+10); */
             } else {
                 recv(sock, p, sizeof(*p), 0);
                 printf("Received packet %d %d %s\n", p->code, p->size, p->data);
