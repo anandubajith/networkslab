@@ -40,8 +40,13 @@ int total_bytes = 0;
 void* timer_thread() {
     int prev_bytes = 0;
     while (1) {
-        int bps = (current_bytes-prev_bytes) * PACKET_SIZE * 10;
-        printf("\r\rTransmission rate = %d kbps", bps/1024);
+
+        int bytes_transferred = (current_bytes-prev_bytes); // bytes transferred in 1e5 seconds
+        int speed = bytes_transferred *10;
+        int remaining_bytes = total_bytes-current_bytes;
+
+        int remaining_time = remaining_bytes / speed;
+        printf("\r\rTransmission rate = %d kbps %d s remaining", speed/1024, remaining_time);
         fflush(stdout);
         prev_bytes = current_bytes;
         usleep(1e5);
@@ -59,7 +64,7 @@ void handle_store_file(int socket, char *filename) {
     Packet *p = malloc(sizeof(Packet));
     FILE* fp = fopen(filename, "rb");
 
-    // send FileInfo packet
+    // send FileInfo packet99069
     memset(p, 0, sizeof(*p));
     fseek(fp, 0L, SEEK_END);
     p->code = 601;
@@ -79,6 +84,7 @@ void handle_store_file(int socket, char *filename) {
 
     memset(p, 0, sizeof(*p));
 
+
     int count = fread(p->data, sizeof(char), PACKET_SIZE, fp);
     while ( count ) {
         // to decide FileData , or FileEnd
@@ -95,10 +101,11 @@ void handle_store_file(int socket, char *filename) {
         count = fread(p->data, sizeof(char), PACKET_SIZE, fp);
     }
     pthread_cancel(timer_t);
-    printf("\nFile Transfer done\n");
-
     fclose(fp);
     free(p);
+
+    // todo: display avg speed + duration after overwriting
+    printf("\rFile Transfer done\n");
 }
 
 
