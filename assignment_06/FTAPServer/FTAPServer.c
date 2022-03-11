@@ -13,6 +13,7 @@
 #define BUF_SIZE 1024
 #define BACKLOG 5
 #define MAX_SIZE 100
+#define PACKET_SIZE 504
 #define USER_FILE "../logincred.txt"
 
 typedef struct _user {
@@ -128,10 +129,11 @@ int load_usersfile() {
 typedef struct _packet {
     int code;
     int size;
-    char data[504];
+    char data[PACKET_SIZE];
 } Packet;
 
 void handle_store_file(int socket, char* filename) {
+    // todo send file already exists
     Packet *p = malloc(sizeof(Packet));
     FILE* fp = fopen(filename, "wb");
 
@@ -142,7 +144,7 @@ void handle_store_file(int socket, char* filename) {
         return;
     }
 
-        printf("Received packet with code = %d\n", p->code);
+    /* printf("Received packet with code = %d\n", p->code); */
     if ( p->code != 601) {
         printf("INvalid FileInfoPacket\n");
         return;
@@ -150,8 +152,6 @@ void handle_store_file(int socket, char* filename) {
     // read file_info packet and
     int total_size = 0;
     sscanf(p->data, "%d", &total_size);
-
-
 
     while (1) {
         memset(p, 0, sizeof(*p));
@@ -163,9 +163,7 @@ void handle_store_file(int socket, char* filename) {
         }
         /* printf("%s", p->data); */
         fwrite(p->data, sizeof(char), p->size, fp);
-        // todo: print progress
-
-        printf("Received packet with code = %d size = %d \n", p->code, p->size);
+        /* printf("Received packet with code = %d size = %d \n", p->code, p->size); */
         if ( p->code == 603) {
             break;
         }
@@ -173,9 +171,46 @@ void handle_store_file(int socket, char* filename) {
 
     fclose(fp);
     free(p);
+    printf("Transferring %s complete\n", filename);
 }
 
 void handle_get_file(int socket, char *filename) {
+    // todo send file does not exist packet
+
+    Packet *p = malloc(sizeof(Packet));
+    FILE* fp = fopen(filename, "rb");
+
+    // send FileInfo packet99069
+    memset(p, 0, sizeof(*p));
+    fseek(fp, 0L, SEEK_END);
+    p->code = 601;
+    int file_size = ftell(fp);
+
+    sprintf(p->data, "%d", file_size);
+    p->size = strlen(p->data);
+    printf("Total File Size = %s\n", p->data);
+    fseek(fp, 0L, SEEK_SET);
+    send(socket, p, sizeof(*p), 0);
+
+
+    memset(p, 0, sizeof(*p));
+
+    int count = fread(p->data, sizeof(char), PACKET_SIZE, fp);
+    while ( count ) {
+        // to decide FileData , or FileEnd
+        p->code = ftell(fp) == file_size ? 603 : 602;
+        p->size = count;
+        int send_size = send(socket, p, sizeof(*p), 0);
+
+        /*
+         * it seems the issue is window size, and breaking up of packets
+         */
+        usleep(100);
+        memset(p, 0, sizeof(*p));
+        count = fread(p->data, sizeof(char), PACKET_SIZE, fp);
+    }
+    fclose(fp);
+    free(p);
 
 }
 
@@ -183,7 +218,7 @@ void handle_create_file(int socket, char *filename){
     Packet *p = malloc(sizeof(Packet));
     FILE* fp = fopen(filename, "w");
     p->code = 123;
-    memset(p->data, 0, 504);
+    memset(p->data, 0, PACKET_SIZE);
     strcpy(p->data, "File Created successfully");
     // file already exists
     fwrite(NULL, 0, 0, fp);
@@ -192,10 +227,8 @@ void handle_create_file(int socket, char *filename){
 }
 
 void handle_list_dir(int socket) {
-    // build the packet
-
     Packet *p = malloc(sizeof(Packet));
-    memset(p->data, 0, 504);
+    memset(p->data, 0, PACKET_SIZE);
     // memset?
     p->code = 1213;
     struct dirent *dir;
@@ -218,7 +251,7 @@ void handle_list_dir(int socket) {
 
 void handle_close(int socket) {
     Packet *p = malloc(sizeof(Packet));
-    memset(p->data, 0, 504);
+    memset(p->data, 0, PACKET_SIZE);
     strcpy(p->data, "GoodBye");
     p->code = 495;
     send(socket, p, sizeof(*p), 0);

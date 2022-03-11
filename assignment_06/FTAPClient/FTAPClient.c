@@ -54,8 +54,45 @@ void* timer_thread() {
 }
 
 void handle_get_file(int socket, char *filename) {
-    printf("TODO\n");
-    return;
+
+    Packet *p = malloc(sizeof(Packet));
+    FILE* fp = fopen(filename, "wb");
+
+    memset(p, 0, sizeof(*p));
+    int recv_size = recv(socket, p, sizeof(*p), 0);
+    if ( recv_size <= 0 ) {
+        printf("Server closed connection\n");
+        return;
+    }
+
+    /* printf("Received packet with code = %d\n", p->code); */
+    if ( p->code != 601) {
+        printf("INvalid FileInfoPacket\n");
+        return;
+    }
+    // read file_info packet and
+    int total_size = 0;
+    sscanf(p->data, "%d", &total_size);
+
+    while (1) {
+        memset(p, 0, sizeof(*p));
+        int recv_size = recv(socket, p, sizeof(*p), 0);
+        printf("recv_size = %d\n" , recv_size);
+        if ( recv_size <= 0 ) {
+            printf("Server closed connection");
+            return;
+        }
+        /* printf("%s", p->data); */
+        fwrite(p->data, sizeof(char), p->size, fp);
+        /* printf("Received packet with code = %d size = %d \n", p->code, p->size); */
+        if ( p->code == 603) {
+            break;
+        }
+    }
+
+    fclose(fp);
+    free(p);
+    printf("Download %s complete\n", filename);
 }
 
 void handle_store_file(int socket, char *filename) {
@@ -105,7 +142,7 @@ void handle_store_file(int socket, char *filename) {
     free(p);
 
     // todo: display avg speed + duration after overwriting
-    printf("\rFile Transfer done\n");
+    printf("\rUpload %s complete\n", filename);
 }
 
 
