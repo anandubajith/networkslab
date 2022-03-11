@@ -57,10 +57,6 @@ void handle_store_file(int socket, char *filename) {
     // todo: check if file exists
 
     Packet *p = malloc(sizeof(Packet));
-
-    pthread_t timer_t;
-    pthread_create(&timer_t, NULL, timer_thread, NULL);
-
     FILE* fp = fopen(filename, "rb");
 
     // send FileInfo packet
@@ -68,17 +64,26 @@ void handle_store_file(int socket, char *filename) {
     fseek(fp, 0L, SEEK_END);
     p->code = 601;
     int file_size = ftell(fp);
+
+    current_bytes = 0;
+    total_bytes = file_size;
+
     sprintf(p->data, "%d", file_size);
     p->size = strlen(p->data);
     printf("Total File Size = %s\n", p->data);
     fseek(fp, 0L, SEEK_SET);
     send(socket, p, sizeof(*p), 0);
 
+    pthread_t timer_t;
+    pthread_create(&timer_t, NULL, timer_thread, NULL);
+
     memset(p, 0, sizeof(*p));
+
     int count = fread(p->data, sizeof(char), PACKET_SIZE, fp);
     while ( count ) {
         // to decide FileData , or FileEnd
         p->code = ftell(fp) == file_size ? 603 : 602;
+        current_bytes = ftell(fp);
         p->size = count;
         int send_size = send(socket, p, sizeof(*p), 0);
 
@@ -90,6 +95,7 @@ void handle_store_file(int socket, char *filename) {
         count = fread(p->data, sizeof(char), PACKET_SIZE, fp);
     }
     pthread_cancel(timer_t);
+    printf("\nFile Transfer done\n");
 
     fclose(fp);
     free(p);
@@ -119,9 +125,19 @@ int main() {
             }
         } else if ( sock != -1) {
             if ( authenticated == 1 && strncmp("StoreFile", buffer ,9) == 0) {
-                handle_store_file(sock, buffer+10);
+                if( access( buffer+10, F_OK ) == 0 ) {
+                    send(sock, buffer, strlen(buffer), 0);
+                    handle_store_file(sock, buffer+10);
+                } else {
+                    printf("Invalid filename \n");
+                }
             } else if (authenticated == 1 &&  strncmp("GetFile", buffer, 7) == 0 ) {
-                handle_get_file(sock, buffer+10);
+                if( access( buffer+10, F_OK ) == 0 ) {
+                    send(sock, buffer, strlen(buffer), 0);
+                    handle_get_file(sock, buffer+10);
+                } else {
+                    printf("Invalid filename \n");
+                }
             } else {
                 send(sock, buffer, strlen(buffer), 0);
                 recv(sock, p, sizeof(*p), 0);
