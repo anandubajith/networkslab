@@ -41,21 +41,25 @@ void* timer_thread() {
     int prev_bytes = 0;
     while (1) {
         int bps = (current_bytes-prev_bytes) * PACKET_SIZE * 10;
-        printf("\rTransmission rate = %d kbps ", bps/1024);
+        printf("\r\rTransmission rate = %d kbps", bps/1024);
         fflush(stdout);
         prev_bytes = current_bytes;
         usleep(1e5);
     }
 }
 
+void handle_get_file(int socket, char *filename) {
+    printf("TODO\n");
+    return;
+}
 
 void handle_store_file(int socket, char *filename) {
+    // todo: check if file exists
 
     Packet *p = malloc(sizeof(Packet));
 
     pthread_t timer_t;
     pthread_create(&timer_t, NULL, timer_thread, NULL);
-
 
     FILE* fp = fopen(filename, "rb");
 
@@ -82,14 +86,6 @@ void handle_store_file(int socket, char *filename) {
          * it seems the issue is window size, and breaking up of packets
          */
         usleep(100);
-
-        /* printf("Sending packet with size ; size = %d; send_size = %d,  code = %d %d\n", count ,send_size, p->code,  count); */
-
-        // print progress + remaining time
-        //
-        //
-        printf("\r %d done - %d s remaining\n", (int)ftell(fp)*100/file_size, 0);
-
         memset(p, 0, sizeof(*p));
         count = fread(p->data, sizeof(char), PACKET_SIZE, fp);
     }
@@ -105,6 +101,7 @@ int main() {
     int sock = -1;
     Packet* p = malloc(sizeof(Packet));
     char* buffer = malloc(sizeof(char) * BUF_SIZE);
+    int authenticated = 0;
 
     while(1) {
         fflush(stdout);
@@ -121,17 +118,19 @@ int main() {
                 sock = setup_connection();
             }
         } else if ( sock != -1) {
-            send(sock, buffer, strlen(buffer), 0);
-            // we already have active connection
-            // send the message
-            // do recv of the packet
-            // everything would be text exccept for store/get File
-            if ( strncmp("StoreFile", buffer ,9) == 0) {
+            if ( authenticated == 1 && strncmp("StoreFile", buffer ,9) == 0) {
                 handle_store_file(sock, buffer+10);
-            } else if ( strncmp("GetFile", buffer, 7) == 0 ) {
-                /* handle_get_file(socket, buffer+10); */
+            } else if (authenticated == 1 &&  strncmp("GetFile", buffer, 7) == 0 ) {
+                handle_get_file(sock, buffer+10);
             } else {
+                send(sock, buffer, strlen(buffer), 0);
                 recv(sock, p, sizeof(*p), 0);
+                if ( p->code == 305)
+                    authenticated = 1;
+                else if (p->code == 495) {
+                    shutdown(sock, 2);
+                    return 0;
+                }
                 printf("Received packet %d %d %s\n", p->code, p->size, p->data);
             }
         } else {

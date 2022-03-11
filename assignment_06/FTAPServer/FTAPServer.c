@@ -131,7 +131,7 @@ typedef struct _packet {
     char data[504];
 } Packet;
 
-void handle_get_file(int socket, char* filename) {
+void handle_store_file(int socket, char* filename) {
     Packet *p = malloc(sizeof(Packet));
     FILE* fp = fopen(filename, "wb");
 
@@ -175,12 +175,20 @@ void handle_get_file(int socket, char* filename) {
     free(p);
 }
 
-void handle_send_file(int socket, char *filename) {
+void handle_get_file(int socket, char *filename) {
 
 }
 
 void handle_create_file(int socket, char *filename){
-    // touch the file
+    Packet *p = malloc(sizeof(Packet));
+    FILE* fp = fopen(filename, "w");
+    p->code = 123;
+    memset(p->data, 0, 504);
+    strcpy(p->data, "File Created successfully");
+    // file already exists
+    fwrite(NULL, 0, 0, fp);
+    fclose(fp);
+    send(socket, p, sizeof(*p), 0);
 }
 
 void handle_list_dir(int socket) {
@@ -193,7 +201,6 @@ void handle_list_dir(int socket) {
     struct dirent *dir;
     DIR* d = opendir(".");
     if (d) {
-        printf("%s\n", dir->d_name);
         while ((dir = readdir(d)) != NULL) {
             if (dir->d_type == DT_REG) {
                 sprintf(p->data + strlen(p->data), "%s\n", dir->d_name);
@@ -210,7 +217,12 @@ void handle_list_dir(int socket) {
 }
 
 void handle_close(int socket) {
-
+    Packet *p = malloc(sizeof(Packet));
+    memset(p->data, 0, 504);
+    strcpy(p->data, "GoodBye");
+    p->code = 495;
+    send(socket, p, sizeof(*p), 0);
+    shutdown(socket, 2);
 }
 
 void handle_client(int client_socket) {
@@ -240,6 +252,8 @@ void handle_client(int client_socket) {
         }
 
         memset(p, 0, sizeof(*p));
+
+
         if ( strncmp("START", message, 5) == 0 ) {
             // Directly reply with 200 Connection is setup
             p->code = 200;
@@ -265,7 +279,7 @@ void handle_client(int client_socket) {
                 p->code = 222;
                 strcpy(p->data, "Provide username with USERN");
             } else if ( check_password(username, message + 7) == 0) {
-                p->code = 310;
+                p->code = 305;
                 strcpy(p->data, "User authenticated with password");
                 status = 2;
                 // todo: welcome username
@@ -281,10 +295,9 @@ void handle_client(int client_socket) {
             strcpy(p->data, "Authentication required");
             send(client_socket, p, sizeof(*p), 0);
         }else if ( strncmp("StoreFile", message ,9) == 0) {
-            handle_get_file(client_socket,message+10);
+            handle_store_file(client_socket,message+10);
         } else if ( strncmp("GetFile", message, 7) == 0 ) {
-            // todo: extract the filename
-            /* handle_send_file(); */
+            handle_get_file(client_socket,message+10);
         } else if ( strncmp("CreateFile", message, 10) == 0) {
             handle_create_file(client_socket, message+11);
         } else if ( strncmp("ListDir", message, 7) == 0) {
