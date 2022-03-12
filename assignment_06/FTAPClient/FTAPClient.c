@@ -11,7 +11,7 @@
 
 #define PORT 4035
 #define BUF_SIZE 1024
-#define PACKET_SIZE 504
+#define PACKET_SIZE 1024
 
 typedef struct _packet {
     int code;
@@ -195,7 +195,7 @@ int main() {
         }
         if (strncmp("START", buffer, 5) == 0) {
             if (sock != -1) {
-                printf("Already connected\n");
+                printf("\x1b[1;31mAlready connected to server\x1b[m\n");
             } else {
                 sock = setup_connection();
                 send(sock, buffer, strlen(buffer), 0);
@@ -208,11 +208,11 @@ int main() {
                     send(sock, buffer, strlen(buffer), 0);
                     handle_store_file(sock, buffer + 10);
                 } else {
-                    printf("Invalid filename \n");
+                    printf("\x1b[1;31mInvalid filename\x1b[m\n");
                 }
             } else if (authenticated == 1 && strncmp("GetFile", buffer, 7) == 0) {
-                if (access(buffer + 10, F_OK) == 0) {
-                    printf("File already exists on Client\n");
+                if (access(buffer + 8, F_OK) == 0) {
+                    printf("\x1b[1;31mFile already exists on client\x1b[m\n");
                 } else {
                     send(sock, buffer, strlen(buffer), 0);
                     handle_get_file(sock, buffer + 8);
@@ -229,7 +229,7 @@ int main() {
                 print_packet(p);
             }
         } else {
-            printf("Connect to server with START\n");
+            printf("\x1b[1;31mConnect to server with 'START'\x1b[m\n");
         }
     }
 

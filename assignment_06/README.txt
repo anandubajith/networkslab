@@ -18,19 +18,17 @@
 601 FileInfo
 602 FileData
 603 FileEnd
+604 File create success
+
 
 610 Invalid file
 611 File already exists
 
 
 700 ListDir response
-    %d files
-701 ListDirItem
-    asdf %d
-    asdf
-
+710 ListDir error
 
 todo:
 - stress testing
 - to fork or not to fork
-- splitting listDir resposne?
+- sanitize all buffers

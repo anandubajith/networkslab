@@ -13,7 +13,7 @@
 #define BUF_SIZE 1024
 #define BACKLOG 5
 #define MAX_SIZE 100
-#define PACKET_SIZE 504
+#define PACKET_SIZE 1024
 #define USER_FILE "../logincred.txt"
 
 typedef struct _user {
@@ -229,34 +229,50 @@ void handle_get_file(int socket, char *filename) {
 
 void handle_create_file(int socket, char *filename) {
     Packet *p = malloc(sizeof(Packet));
+
+    if (access(filename, F_OK) == 0) {
+        // Trying to store a file which already exists on server
+        p->code = 611;
+        strcpy(p->data, "File already exists");
+        send(socket, p, sizeof(*p), 0);
+        return;
+    }
     FILE *fp = fopen(filename, "w");
-    p->code = 123;
+
+    p->code = 604;
     memset(p->data, 0, PACKET_SIZE);
-    strcpy(p->data, "File Created successfully");
-    // todo: file already exists
-    fclose(fp);
+    sprintf(p->data, "File '%s' Created successfully", filename);
     send(socket, p, sizeof(*p), 0);
+    fclose(fp);
+    free(p);
 }
 
 void handle_list_dir(int socket) {
+
     Packet *p = malloc(sizeof(Packet));
     memset(p->data, 0, PACKET_SIZE);
-    // memset?
     p->code = 700;
-    struct dirent *dir;
     DIR *d = opendir(".");
     if (d) {
+        struct dirent *dir;
+        int file_count = 0;
         while ((dir = readdir(d)) != NULL) {
             if (dir->d_type == DT_REG) {
+                file_count++;
                 sprintf(p->data + strlen(p->data), "%s\n", dir->d_name);
             }
         }
         closedir(d);
+        p->size = file_count;
+        send(socket, p, sizeof(*p), 0);
+    } else {
+        // todo: send error packet
+        memset(p->data, 0, PACKET_SIZE);
+        p->code = 710;
+        send(socket, p, sizeof(*p), 0);
     }
 
-    send(socket, p, sizeof(*p), 0);
 
-    // todo: should we have to break this into file
     free(p);
 }
 
@@ -334,7 +350,7 @@ void handle_client(int client_socket) {
         } else if (strncmp("QUIT", message, 4) == 0) {
             handle_close(client_socket);
         } else if (status != 2) {
-            p->code = 999;
+            p->code = 333;
             strcpy(p->data, "Authentication required");
             send(client_socket, p, sizeof(*p), 0);
         } else if (strncmp("StoreFile", message, 9) == 0) {
