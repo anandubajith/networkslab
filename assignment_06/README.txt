@@ -14,15 +14,19 @@
 333 Authentication required
 
 
-602 FileInfo
-    Contains total bytes
-
+600 Ready for File
+601 FileInfo
+602 FileData
 603 FileEnd
 
-610 Invalid file/File already exists
-
-611 File locked by user
-
+610 Invalid file
+611 File already exists
 
 
-1213 ListDir response
+700 ListDir response
+
+
+todo:
+- stress testing
+- to fork or not to fork
+- splitting listDir resposne?

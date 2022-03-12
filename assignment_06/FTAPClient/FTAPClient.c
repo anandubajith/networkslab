@@ -117,12 +117,20 @@ void handle_get_file(int socket, char *filename) {
 }
 
 void handle_store_file(int socket, char *filename) {
-    // todo: check if file exists
-
     Packet *p = malloc(sizeof(Packet));
+
+    // check if it's okay to send?
+    memset(p, 0, sizeof(*p));
+    recv(socket, p, sizeof(*p), 0);
+    // check file error from server;
+    if ( p->code != 600 ) {
+        print_packet(p);
+        return;
+    }
+
     FILE *fp = fopen(filename, "rb");
 
-    // send FileInfo packet99069
+    // send FileInfo packet
     memset(p, 0, sizeof(*p));
     fseek(fp, 0L, SEEK_END);
     p->code = 601;

@@ -128,11 +128,23 @@ typedef struct _packet {
 } Packet;
 
 void handle_store_file(int socket, char *filename) {
-    // todo send file already exists
     Packet *p = malloc(sizeof(Packet));
+    memset(p, 0, sizeof(*p));
+
+    if (access(filename, F_OK) == 0) {
+        // Trying to store a file which already exists on server
+        p->code = 611;
+        strcpy(p->data, "File already exists");
+        send(socket, p, sizeof(*p), 0);
+        return;
+    }
+    // send ready packet?
+    p->code = 600;
+    strcpy(p->data, "Sending file");
+    send(socket, p, sizeof(*p), 0);
+
     FILE *fp = fopen(filename, "wb");
 
-    memset(p, 0, sizeof(*p));
     int recv_size = recv(socket, p, sizeof(*p), 0);
     if (recv_size <= 0) {
         printf("Server closed connection\n");
@@ -141,7 +153,7 @@ void handle_store_file(int socket, char *filename) {
 
     /* printf("Received packet with code = %d\n", p->code); */
     if (p->code != 601) {
-        printf("INvalid FileInfoPacket\n");
+        printf("Invalid file info packet");
         return;
     }
     // read file_info packet and
