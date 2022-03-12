@@ -1,5 +1,32 @@
 
+# FLow
+- enter wrong Command
+- enter start 200
+- enter wrong username 301
+- enter correct username 300
+- worng password
+- enter correct password 305
+- QUIT 493
+- enter STart
+- enter PASSWD 302
+- enter username
+- enter username again 332
+- enter correct password
+- QUIT
 
+- Login
+- ListDir
+- create File
+- CreateFile again
+- ListDir
+
+- LOgin
+- ListDir
+- storefile invalid 610
+- StoreLarge File
+- ListDir
+- GetFile invalid 610
+- Quit
 
 
 ## Status codes

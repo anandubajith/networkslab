@@ -321,7 +321,7 @@ void handle_client(int client_socket) {
             strcpy(p->data, "OK Connection is setup");
             send(client_socket, p, sizeof(*p), 0);
         } else if (strncmp("USERN", message, 5) == 0) {
-            if ( status > 1) {
+            if ( status >= 1) {
                 p->code = 332;
                 strcpy(p->data, "Username already provided");
             } else if (check_username(message + 6) == 0) {
