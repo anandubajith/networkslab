@@ -38,6 +38,7 @@ int setup_connection() {
 
 int current_bytes = 0;
 int total_bytes = 0;
+int is_transferring = 0;
 
 void *timer_thread() {
     int prev_bytes = 0;
@@ -88,6 +89,7 @@ void handle_get_file(int socket, char *filename) {
 
     if (total_bytes != 0) {
         pthread_t timer_t;
+        is_transferring = 1;
         pthread_create(&timer_t, NULL, timer_thread, NULL);
         while (1) {
             memset(p, 0, sizeof(*p));
@@ -105,6 +107,7 @@ void handle_get_file(int socket, char *filename) {
             }
         }
 
+        is_transferring = 0;
         pthread_cancel(timer_t);
     }
 
@@ -144,6 +147,7 @@ void handle_store_file(int socket, char *filename) {
 
     pthread_t timer_t;
     pthread_create(&timer_t, NULL, timer_thread, NULL);
+    is_transferring = 1;
 
     memset(p, 0, sizeof(*p));
 
@@ -163,6 +167,7 @@ void handle_store_file(int socket, char *filename) {
         count = fread(p->data, sizeof(char), PACKET_SIZE, fp);
     }
     pthread_cancel(timer_t);
+    is_transferring = 0;
     fclose(fp);
     free(p);
 
@@ -171,11 +176,12 @@ void handle_store_file(int socket, char *filename) {
 
 
 void close_handler() {
-
+    if ( !is_transferring ) {
+        exit(0);
+    }
 }
 
 int main() {
-
     signal(SIGINT, close_handler);
     int sock = -1;
     Packet *p = malloc(sizeof(Packet));
