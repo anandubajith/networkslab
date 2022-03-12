@@ -225,6 +225,7 @@ int main() {
                 if (p->code == 305)
                     authenticated = 1;
                 else if (p->code == 495) {
+                    print_packet(p);
                     shutdown(sock, 2);
                     return 0;
                 }

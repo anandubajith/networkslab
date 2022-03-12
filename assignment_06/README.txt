@@ -14,6 +14,8 @@
 333 Authentication required
 332 Username already provided
 
+493 GoodBye
+
 505 Command not supported
 
 600 Ready for File

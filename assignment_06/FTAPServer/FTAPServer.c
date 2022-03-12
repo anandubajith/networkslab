@@ -132,6 +132,7 @@ void handle_store_file(int socket, char *filename) {
     memset(p, 0, sizeof(*p));
 
     if (access(filename, F_OK) == 0) {
+        printf("File %s', already exists\n", filename);
         // Trying to store a file which already exists on server
         p->code = 611;
         strcpy(p->data, "File already exists");
@@ -179,7 +180,7 @@ void handle_store_file(int socket, char *filename) {
 
     fclose(fp);
     free(p);
-    printf("Transferring %s complete\n", filename);
+    printf("Uploading '%s' complete\n", filename);
 }
 
 void handle_get_file(int socket, char *filename) {
@@ -189,7 +190,8 @@ void handle_get_file(int socket, char *filename) {
     if (access(filename, F_OK) != 0) {
         // send file does not exist packet
         p->code = 610;
-        strcpy(p->data, "Invalid filename");
+        sprintf(p->data, "File '%s' does not exist", filename);
+        printf("%s\n", p->data);
         send(socket, p, sizeof(*p), 0);
         return;
     }
@@ -225,6 +227,7 @@ void handle_get_file(int socket, char *filename) {
     }
     fclose(fp);
     free(p);
+    printf("Downloading '%s' complete\n", filename);
 }
 
 void handle_create_file(int socket, char *filename) {
@@ -233,7 +236,8 @@ void handle_create_file(int socket, char *filename) {
     if (access(filename, F_OK) == 0) {
         // Trying to store a file which already exists on server
         p->code = 611;
-        strcpy(p->data, "File already exists");
+        sprintf(p->data, "File '%s' already exists", filename);
+        printf("%s\n", p->data);
         send(socket, p, sizeof(*p), 0);
         return;
     }
@@ -243,12 +247,13 @@ void handle_create_file(int socket, char *filename) {
     memset(p->data, 0, PACKET_SIZE);
     sprintf(p->data, "File '%s' Created successfully", filename);
     send(socket, p, sizeof(*p), 0);
+    printf("%s\n", p->data);
     fclose(fp);
     free(p);
 }
 
 void handle_list_dir(int socket) {
-
+    printf("Sending directory listing\n");
     Packet *p = malloc(sizeof(Packet));
     memset(p->data, 0, PACKET_SIZE);
     p->code = 700;
@@ -313,7 +318,6 @@ void handle_client(int client_socket) {
         memset(p, 0, sizeof(*p));
 
         if (strncmp("START", message, 5) == 0) {
-            // Directly reply with 200 Connection is setup
             p->code = 200;
             strcpy(p->data, "OK Connection is setup");
             send(client_socket, p, sizeof(*p), 0);
@@ -375,8 +379,7 @@ int main() {
     load_usersfile();
 
     int server_sock = socket(AF_INET, SOCK_STREAM, 0);
-    if (setsockopt(server_sock, SOL_SOCKET, SO_REUSEADDR, &(int){1},
-                sizeof(int)) < 0)
+    if (setsockopt(server_sock, SOL_SOCKET, SO_REUSEADDR, &(int){1}, sizeof(int)) < 0)
         printf("setsockopt(SO_REUSEADDR) failed");
 
     struct sockaddr_in server_address;
@@ -384,8 +387,7 @@ int main() {
     server_address.sin_port = htons(PORT);
     server_address.sin_addr.s_addr = INADDR_ANY;
 
-    int success = bind(server_sock, (struct sockaddr *)&server_address,
-            sizeof(server_address));
+    int success = bind(server_sock, (struct sockaddr *)&server_address, sizeof(server_address));
     if (success != 0) {
         printf("Bind failed");
         exit(-1);
@@ -399,11 +401,11 @@ int main() {
         if (client_socket == -1) {
             continue;
         }
-        /* if (!fork()) { */
-        /* close(server_sock); */
-        handle_client(client_socket);
-        /* } */
-        /* close(client_socket); */
+        if (!fork()) {
+            close(server_sock);
+            handle_client(client_socket);
+        }
+        close(client_socket);
     }
 
     close(server_sock);
