@@ -70,9 +70,13 @@ void handle_get_file(int socket, char *filename) {
         printf("INvalid FileInfoPacket\n");
         return;
     }
+
+    sscanf(p->data, "%d", &total_bytes);
+    current_bytes = 0;
+
+    pthread_t timer_t;
+    pthread_create(&timer_t, NULL, timer_thread, NULL);
     // read file_info packet and
-    int total_size = 0;
-    sscanf(p->data, "%d", &total_size);
 
     while (1) {
         memset(p, 0, sizeof(*p));
@@ -82,6 +86,7 @@ void handle_get_file(int socket, char *filename) {
             printf("Server closed connection");
             return;
         }
+        current_bytes = ftell(fp);
         /* printf("%s", p->data); */
         fwrite(p->data, sizeof(char), p->size, fp);
         /* printf("Received packet with code = %d size = %d \n", p->code, p->size); */
@@ -90,6 +95,7 @@ void handle_get_file(int socket, char *filename) {
         }
     }
 
+    pthread_cancel(timer_t);
     fclose(fp);
     free(p);
     printf("Download %s complete\n", filename);
@@ -120,7 +126,6 @@ void handle_store_file(int socket, char *filename) {
     pthread_create(&timer_t, NULL, timer_thread, NULL);
 
     memset(p, 0, sizeof(*p));
-
 
     int count = fread(p->data, sizeof(char), PACKET_SIZE, fp);
     while ( count ) {
