@@ -177,10 +177,10 @@ int main() {
                 }
             } else if (authenticated == 1 &&  strncmp("GetFile", buffer, 7) == 0 ) {
                 if( access( buffer+10, F_OK ) == 0 ) {
+                    printf("File already exists on Client\n");
+                } else {
                     send(sock, buffer, strlen(buffer), 0);
                     handle_get_file(sock, buffer+10);
-                } else {
-                    printf("Invalid filename \n");
                 }
             } else {
                 send(sock, buffer, strlen(buffer), 0);
@@ -191,7 +191,11 @@ int main() {
                     shutdown(sock, 2);
                     return 0;
                 }
-                printf("Received packet %d %d %s\n", p->code, p->size, p->data);
+                printf("\x1b[1;34m\x1b[3m");
+                printf("status_code = %d\n", p->code);
+                printf("\x1b[1;35m\x1b[3m");
+                printf("%s\n", p->data);
+                printf("\x1b[m\x1b[23m");
             }
         } else {
             printf("Connect to server with START\n");

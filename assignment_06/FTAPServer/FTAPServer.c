@@ -156,7 +156,7 @@ void handle_store_file(int socket, char* filename) {
     while (1) {
         memset(p, 0, sizeof(*p));
         int recv_size = recv(socket, p, sizeof(*p), 0);
-        printf("recv_size = %d\n" , recv_size);
+        /* printf("recv_size = %d\n" , recv_size); */
         if ( recv_size <= 0 ) {
             printf("Server closed connection");
             return;

@@ -11,6 +11,7 @@
 310 Incorrect password
 505 Command not supported
 
+
 600 FileStart
     contains filename
 
@@ -19,6 +20,7 @@
 
 602 FileEnd
 
-610 Invalid file
+610 Invalid file/File already exists
+
 611 File locked by user
 
