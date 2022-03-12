@@ -192,6 +192,9 @@ int main() {
                 printf("Already connected\n");
             } else {
                 sock = setup_connection();
+                send(sock, buffer, strlen(buffer), 0);
+                recv(sock, p, sizeof(*p), 0);
+                print_packet(p);
             }
         } else if (sock != -1) {
             if (authenticated == 1 && strncmp("StoreFile", buffer, 9) == 0) {

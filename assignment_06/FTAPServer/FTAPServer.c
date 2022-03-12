@@ -311,9 +311,9 @@ void handle_client(int client_socket) {
                 strcpy(p->data, "Provide username with USERN");
             } else if (check_password(username, message + 7) == 0) {
                 p->code = 305;
-                strcpy(p->data, "User authenticated with password");
+                sprintf(p->data, "User Authenticated with password\nWelcome, %s!", username);
+
                 status = 2;
-                // todo: welcome username
             } else {
                 p->code = 310;
                 strcpy(p->data, "Incorrect password");
