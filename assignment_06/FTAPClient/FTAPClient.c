@@ -69,7 +69,6 @@ void print_packet(Packet *p) {
 void handle_get_file(int socket, char *filename) {
 
     Packet *p = malloc(sizeof(Packet));
-    FILE *fp = fopen(filename, "wb");
 
     memset(p, 0, sizeof(*p));
     int recv_size = recv(socket, p, sizeof(*p), 0);
@@ -83,6 +82,7 @@ void handle_get_file(int socket, char *filename) {
         return;
     }
 
+    FILE *fp = fopen(filename, "wb");
     sscanf(p->data, "%d", &total_bytes);
     current_bytes = 0;
 
