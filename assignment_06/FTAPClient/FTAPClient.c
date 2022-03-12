@@ -26,8 +26,7 @@ int setup_connection() {
     server_address.sin_port = htons(PORT);
     server_address.sin_addr.s_addr = INADDR_ANY;
 
-    int r =
-        connect(sock, (struct sockaddr *)&server_address, sizeof(server_address));
+    int r = connect(sock, (struct sockaddr *)&server_address, sizeof(server_address));
     if (r == -1) {
         printf("Error: Failed to connect()");
         exit(1);
@@ -43,7 +42,7 @@ int is_transferring = 0;
 void *timer_thread() {
     int prev_bytes = 0;
     while (1) {
-        // bytes transferred in 1e5 seconds
+        // bytes transferred in 0.1 seconds
         int bytes_transferred = (current_bytes - prev_bytes);
         int speed = bytes_transferred * 10;
         if (speed != 0) {
@@ -119,7 +118,6 @@ void handle_get_file(int socket, char *filename) {
 void handle_store_file(int socket, char *filename) {
     Packet *p = malloc(sizeof(Packet));
 
-    // check if it's okay to send?
     memset(p, 0, sizeof(*p));
     recv(socket, p, sizeof(*p), 0);
     // check file error from server;
