@@ -43,12 +43,15 @@ void* timer_thread() {
 
         int bytes_transferred = (current_bytes-prev_bytes); // bytes transferred in 1e5 seconds
         int speed = bytes_transferred *10;
-        int remaining_bytes = total_bytes-current_bytes;
+        if ( speed != 0 ) {
 
-        int remaining_time = remaining_bytes / speed;
-        printf("\r\rTransmission rate = %d kbps %d s remaining", speed/1024, remaining_time);
-        fflush(stdout);
-        prev_bytes = current_bytes;
+            int remaining_bytes = total_bytes-current_bytes;
+
+            int remaining_time = remaining_bytes / speed;
+            printf("\r\rTransmission rate = %d kbps %d s remaining", speed/1024, remaining_time);
+            fflush(stdout);
+            prev_bytes = current_bytes;
+        }
         usleep(1e5);
     }
 }
