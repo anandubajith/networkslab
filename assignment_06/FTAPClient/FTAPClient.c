@@ -180,7 +180,7 @@ int main() {
                     printf("File already exists on Client\n");
                 } else {
                     send(sock, buffer, strlen(buffer), 0);
-                    handle_get_file(sock, buffer+10);
+                    handle_get_file(sock, buffer+8);
                 }
             } else {
                 send(sock, buffer, strlen(buffer), 0);

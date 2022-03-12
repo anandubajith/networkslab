@@ -330,7 +330,7 @@ void handle_client(int client_socket) {
         }else if ( strncmp("StoreFile", message ,9) == 0) {
             handle_store_file(client_socket,message+10);
         } else if ( strncmp("GetFile", message, 7) == 0 ) {
-            handle_get_file(client_socket,message+10);
+            handle_get_file(client_socket,message+8);
         } else if ( strncmp("CreateFile", message, 10) == 0) {
             handle_create_file(client_socket, message+11);
         } else if ( strncmp("ListDir", message, 7) == 0) {
@@ -346,7 +346,7 @@ void handle_client(int client_socket) {
 int main ()
 {
     load_usersfile();
-    print_users();
+    /* print_users(); */
 
     int server_sock = socket(AF_INET, SOCK_STREAM, 0);
     if (setsockopt(server_sock, SOL_SOCKET, SO_REUSEADDR, &(int){1}, sizeof(int)) < 0)
