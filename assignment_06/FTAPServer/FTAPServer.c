@@ -171,13 +171,20 @@ void handle_store_file(int socket, char *filename) {
 }
 
 void handle_get_file(int socket, char *filename) {
-    // todo send file does not exist packet
-
     Packet *p = malloc(sizeof(Packet));
+    memset(p, 0, sizeof(*p));
+
+    if (access(filename, F_OK) != 0) {
+        // send file does not exist packet
+        p->code = 610;
+        strcpy(p->data, "Invalid filename");
+        send(socket, p, sizeof(*p), 0);
+        return;
+    }
+
     FILE *fp = fopen(filename, "rb");
 
     // send FileInfo packet99069
-    memset(p, 0, sizeof(*p));
     fseek(fp, 0L, SEEK_END);
     p->code = 601;
     int file_size = ftell(fp);

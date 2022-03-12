@@ -11,14 +11,13 @@
 310 Incorrect password
 505 Command not supported
 
+333 Authentication required
 
-600 FileStart
-    contains filename
 
-601 FileInfo
+602 FileInfo
     Contains total bytes
 
-602 FileEnd
+603 FileEnd
 
 610 Invalid file/File already exists
 

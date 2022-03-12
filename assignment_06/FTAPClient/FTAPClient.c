@@ -60,6 +60,14 @@ void *timer_thread() {
     }
 }
 
+void print_packet(Packet *p) {
+    printf("\x1b[1;34m\x1b[3m");
+    printf("status_code = %d\n", p->code);
+    printf("\x1b[1;35m\x1b[3m");
+    printf("%s\n", p->data);
+    printf("\x1b[m\x1b[23m");
+}
+
 void handle_get_file(int socket, char *filename) {
 
     Packet *p = malloc(sizeof(Packet));
@@ -72,9 +80,8 @@ void handle_get_file(int socket, char *filename) {
         return;
     }
 
-    /* printf("Received packet with code = %d\n", p->code); */
     if (p->code != 601) {
-        printf("INvalid FileInfoPacket\n");
+        print_packet(p);
         return;
     }
 
@@ -158,6 +165,7 @@ void handle_store_file(int socket, char *filename) {
     printf("\rUpload %s complete\n", filename);
 }
 
+
 void close_handler() {
 
 }
@@ -209,11 +217,7 @@ int main() {
                     shutdown(sock, 2);
                     return 0;
                 }
-                printf("\x1b[1;34m\x1b[3m");
-                printf("status_code = %d\n", p->code);
-                printf("\x1b[1;35m\x1b[3m");
-                printf("%s\n", p->data);
-                printf("\x1b[m\x1b[23m");
+                print_packet(p);
             }
         } else {
             printf("Connect to server with START\n");
