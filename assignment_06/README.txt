@@ -5,12 +5,12 @@
     gcc -lpthread FTAPClient/FTAPClient.c -o FTAPClient/FTAPClient
     gcc -lpthread FTAPServer/FTAPServer.c -o FTAPServer/FTAPServer
     ```
+- Screenshots are provided in OUTPUT/ directory
 
 
 ## Status codes
 
-The configured status codes and their meanings
-are as follows
+The configured status codes and their meanings are as follows
 
 200 OK Connection is set up
 
