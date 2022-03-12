@@ -200,7 +200,7 @@ void handle_get_file(int socket, char *filename) {
         // to decide FileData , or FileEnd
         p->code = ftell(fp) == file_size ? 603 : 602;
         p->size = count;
-        int send_size = send(socket, p, sizeof(*p), 0);
+        send(socket, p, sizeof(*p), 0);
 
         /*
          * it seems the issue is window size, and breaking up of packets
@@ -220,8 +220,7 @@ void handle_create_file(int socket, char *filename){
     p->code = 123;
     memset(p->data, 0, PACKET_SIZE);
     strcpy(p->data, "File Created successfully");
-    // file already exists
-    fwrite(NULL, 0, 0, fp);
+    // todo: file already exists
     fclose(fp);
     send(socket, p, sizeof(*p), 0);
 }

@@ -77,28 +77,28 @@ void handle_get_file(int socket, char *filename) {
     sscanf(p->data, "%d", &total_bytes);
     current_bytes = 0;
 
-    pthread_t timer_t;
-    pthread_create(&timer_t, NULL, timer_thread, NULL);
-    // read file_info packet and
+    if ( total_bytes != 0 ) {
+        pthread_t timer_t;
+        pthread_create(&timer_t, NULL, timer_thread, NULL);
+        while (1) {
+            memset(p, 0, sizeof(*p));
+            int recv_size = recv(socket, p, sizeof(*p), 0);
+            if ( recv_size <= 0 ) {
+                printf("Server closed connection");
+                return;
+            }
+            current_bytes = ftell(fp);
+            /* printf("%s", p->data); */
+            fwrite(p->data, sizeof(char), p->size, fp);
+            /* printf("Received packet with code = %d size = %d \n", p->code, p->size); */
+            if ( p->code == 603) {
+                break;
+            }
+        }
 
-    while (1) {
-        memset(p, 0, sizeof(*p));
-        int recv_size = recv(socket, p, sizeof(*p), 0);
-        printf("recv_size = %d\n" , recv_size);
-        if ( recv_size <= 0 ) {
-            printf("Server closed connection");
-            return;
-        }
-        current_bytes = ftell(fp);
-        /* printf("%s", p->data); */
-        fwrite(p->data, sizeof(char), p->size, fp);
-        /* printf("Received packet with code = %d size = %d \n", p->code, p->size); */
-        if ( p->code == 603) {
-            break;
-        }
+        pthread_cancel(timer_t);
     }
 
-    pthread_cancel(timer_t);
     fclose(fp);
     free(p);
     printf("Download %s complete\n", filename);
@@ -136,7 +136,7 @@ void handle_store_file(int socket, char *filename) {
         p->code = ftell(fp) == file_size ? 603 : 602;
         current_bytes = ftell(fp);
         p->size = count;
-        int send_size = send(socket, p, sizeof(*p), 0);
+        send(socket, p, sizeof(*p), 0);
 
         /*
          * it seems the issue is window size, and breaking up of packets
