@@ -10,9 +10,11 @@
 302 Missing username
 305 User Authenticated with password
 310 Incorrect password
-505 Command not supported
 
 333 Authentication required
+332 Username already provided
+
+505 Command not supported
 
 600 Ready for File
 601 FileInfo

@@ -273,7 +273,6 @@ void handle_list_dir(int socket) {
         send(socket, p, sizeof(*p), 0);
     }
 
-
     free(p);
 }
 
@@ -319,9 +318,10 @@ void handle_client(int client_socket) {
             strcpy(p->data, "OK Connection is setup");
             send(client_socket, p, sizeof(*p), 0);
         } else if (strncmp("USERN", message, 5) == 0) {
-            printf("USERNAME RESULT '%s' = %d\n", message + 6,
-                    check_username(message + 6));
-            if (check_username(message + 6) == 0) {
+            if ( status > 1) {
+                p->code = 332;
+                strcpy(p->data, "Username already provided");
+            } else if (check_username(message + 6) == 0) {
                 // valid username
                 p->code = 300;
                 strcpy(p->data, "Correct Username; Need password");
@@ -334,14 +334,15 @@ void handle_client(int client_socket) {
             }
             send(client_socket, p, sizeof(*p), 0);
         } else if (strncmp("PASSWD", message, 6) == 0) {
-            if (strlen(username) == 0) {
-                // todo: handle username not set case
-                p->code = 222;
-                strcpy(p->data, "Provide username with USERN");
+            if ( status == 2 ) {
+                p->code = 305;
+                strcpy(p->data, "Already authenticated");
+            } if (strlen(username) == 0) {
+                p->code = 302;
+                strcpy(p->data, "Missing username;provide username with USERN");
             } else if (check_password(username, message + 7) == 0) {
                 p->code = 305;
                 sprintf(p->data, "User Authenticated with password\nWelcome, %s!", username);
-
                 status = 2;
             } else {
                 p->code = 310;
@@ -372,7 +373,6 @@ void handle_client(int client_socket) {
 
 int main() {
     load_usersfile();
-    /* print_users(); */
 
     int server_sock = socket(AF_INET, SOCK_STREAM, 0);
     if (setsockopt(server_sock, SOL_SOCKET, SO_REUSEADDR, &(int){1},
