@@ -132,10 +132,10 @@ void handle_store_file(int socket, char *filename) {
     memset(p, 0, sizeof(*p));
 
     if (access(filename, F_OK) == 0) {
-        printf("File %s', already exists\n", filename);
         // Trying to store a file which already exists on server
         p->code = 611;
-        strcpy(p->data, "File already exists");
+        sprintf(p->data, "File %s', already exists", filename);
+        printf("%s\n", p->data);
         send(socket, p, sizeof(*p), 0);
         return;
     }
@@ -154,7 +154,7 @@ void handle_store_file(int socket, char *filename) {
 
     /* printf("Received packet with code = %d\n", p->code); */
     if (p->code != 601) {
-        printf("Invalid file info packet");
+        printf("Invalid file info packet\n");
         return;
     }
     // read file_info packet and
@@ -166,7 +166,7 @@ void handle_store_file(int socket, char *filename) {
         int recv_size = recv(socket, p, sizeof(*p), 0);
         /* printf("recv_size = %d\n" , recv_size); */
         if (recv_size <= 0) {
-            printf("Server closed connection");
+            printf("Server closed connection\n");
             return;
         }
         /* printf("%s", p->data); */
@@ -205,7 +205,7 @@ void handle_get_file(int socket, char *filename) {
 
     sprintf(p->data, "%d", file_size);
     p->size = strlen(p->data);
-    printf("Total File Size = %s\n", p->data);
+    /* printf("Total File Size = %s\n", p->data); */
     fseek(fp, 0L, SEEK_SET);
     send(socket, p, sizeof(*p), 0);
 
@@ -347,6 +347,7 @@ void handle_client(int client_socket) {
             } else if (check_password(username, message + 7) == 0) {
                 p->code = 305;
                 sprintf(p->data, "User Authenticated with password\nWelcome, %s!", username);
+                printf("User '%s' Authenticated\n", username);
                 status = 2;
             } else {
                 p->code = 310;
@@ -354,6 +355,7 @@ void handle_client(int client_socket) {
             }
             send(client_socket, p, sizeof(*p), 0);
         } else if (strncmp("QUIT", message, 4) == 0) {
+            printf("User '%s' Disconnected\n", username);
             handle_close(client_socket);
         } else if (status != 2) {
             p->code = 333;
