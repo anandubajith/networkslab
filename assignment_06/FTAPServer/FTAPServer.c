@@ -242,7 +242,7 @@ void handle_list_dir(int socket) {
     Packet *p = malloc(sizeof(Packet));
     memset(p->data, 0, PACKET_SIZE);
     // memset?
-    p->code = 1213;
+    p->code = 700;
     struct dirent *dir;
     DIR *d = opendir(".");
     if (d) {

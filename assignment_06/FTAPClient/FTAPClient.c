@@ -42,9 +42,8 @@ int total_bytes = 0;
 void *timer_thread() {
     int prev_bytes = 0;
     while (1) {
-
-        int bytes_transferred =
-            (current_bytes - prev_bytes); // bytes transferred in 1e5 seconds
+        // bytes transferred in 1e5 seconds
+        int bytes_transferred = (current_bytes - prev_bytes);
         int speed = bytes_transferred * 10;
         if (speed != 0) {
 
@@ -101,8 +100,7 @@ void handle_get_file(int socket, char *filename) {
             current_bytes = ftell(fp);
             /* printf("%s", p->data); */
             fwrite(p->data, sizeof(char), p->size, fp);
-            /* printf("Received packet with code = %d size = %d \n", p->code,
-             * p->size); */
+            /* printf("Received packet with code = %d size = %d \n", p->code, p->size); */
             if (p->code == 603) {
                 break;
             }

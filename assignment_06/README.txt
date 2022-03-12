@@ -1,6 +1,7 @@
 
 
 
+
 ## Status codes
 
 200 OK Connection is set up
@@ -13,7 +14,6 @@
 
 333 Authentication required
 
-
 600 Ready for File
 601 FileInfo
 602 FileData
@@ -24,6 +24,10 @@
 
 
 700 ListDir response
+    %d files
+701 ListDirItem
+    asdf %d
+    asdf
 
 
 todo:
