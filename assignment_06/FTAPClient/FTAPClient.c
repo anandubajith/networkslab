@@ -50,8 +50,7 @@ void *timer_thread() {
             int remaining_bytes = total_bytes - current_bytes;
 
             int remaining_time = remaining_bytes / speed;
-            printf("\r\rTransmission rate = %d kbps %d s remaining", speed / 1024,
-                    remaining_time);
+            printf("\r\r\x1b[2K\x1b[1;34mTransmission rate = %d kbps %d s remaining\x1b[m", speed / 1024, remaining_time);
             fflush(stdout);
             prev_bytes = current_bytes;
         }
@@ -111,7 +110,7 @@ void handle_get_file(int socket, char *filename) {
 
     fclose(fp);
     free(p);
-    printf("Download %s complete\n", filename);
+    printf("\n\x1b[1;35mDownload %s complete\x1b[m\n", filename);
 }
 
 void handle_store_file(int socket, char *filename) {
@@ -139,7 +138,7 @@ void handle_store_file(int socket, char *filename) {
 
     sprintf(p->data, "%d", file_size);
     p->size = strlen(p->data);
-    printf("Total File Size = %s\n", p->data);
+    /* printf("Total File Size = %s\n", p->data); */
     fseek(fp, 0L, SEEK_SET);
     send(socket, p, sizeof(*p), 0);
 
@@ -167,8 +166,7 @@ void handle_store_file(int socket, char *filename) {
     fclose(fp);
     free(p);
 
-    // todo: display avg speed + duration after overwriting
-    printf("\rUpload %s complete\n", filename);
+    printf("\n\x1b[1;35mUpload %s complete\x1b[m\n", filename);
 }
 
 

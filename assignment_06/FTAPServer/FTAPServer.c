@@ -262,6 +262,7 @@ void handle_list_dir(int socket) {
                 sprintf(p->data + strlen(p->data), "%s\n", dir->d_name);
             }
         }
+        p->data[strlen(p->data) -1] = '\0';
         closedir(d);
         p->size = file_count;
         send(socket, p, sizeof(*p), 0);
