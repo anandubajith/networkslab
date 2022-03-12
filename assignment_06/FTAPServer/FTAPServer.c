@@ -1,13 +1,13 @@
-#include<stdio.h>
-#include<signal.h>
-#include<stdlib.h>
-#include<string.h>
-#include<dirent.h>
-#include<unistd.h>
-#include<sys/types.h>
-#include<sys/socket.h>
-#include<netinet/in.h>
-#include<time.h>
+#include <dirent.h>
+#include <netinet/in.h>
+#include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <time.h>
+#include <unistd.h>
 
 #define PORT 4035
 #define BUF_SIZE 1024
@@ -17,29 +17,28 @@
 #define USER_FILE "../logincred.txt"
 
 typedef struct _user {
-    char*name;
-    char*password;
-    struct _user* next;
+    char *name;
+    char *password;
+    struct _user *next;
 } User;
 
+User *usersHead = NULL;
 
-User* usersHead = NULL;
-
-int add_user(char *username, char *password){
-    User* u = malloc(sizeof(User));
+int add_user(char *username, char *password) {
+    User *u = malloc(sizeof(User));
     u->name = malloc(sizeof(char) * MAX_SIZE);
     strcpy(u->name, username);
     u->password = malloc(sizeof(char) * MAX_SIZE);
-    strcpy(u->password , password);
+    strcpy(u->password, password);
 
-    if ( usersHead == NULL ) {
+    if (usersHead == NULL) {
         usersHead = u;
         return 0;
     }
 
     User *t = usersHead;
-    while ( t->next != NULL) {
-        if ( strcmp(t->name, username) == 0) {
+    while (t->next != NULL) {
+        if (strcmp(t->name, username) == 0) {
             // username already exists
             free(u->name);
             free(u->password);
@@ -56,8 +55,8 @@ int add_user(char *username, char *password){
 
 int check_username(char *username) {
     User *t = usersHead;
-    while ( t != NULL && t->next != NULL) {
-        if ( strcmp(t->name, username) == 0) {
+    while (t != NULL && t->next != NULL) {
+        if (strcmp(t->name, username) == 0) {
             // username already exists
             return 0;
         }
@@ -66,11 +65,11 @@ int check_username(char *username) {
     return 1;
 }
 
-int check_password(char* username, char* password) {
+int check_password(char *username, char *password) {
     User *t = usersHead;
-    while ( t != NULL && t->next != NULL) {
-        if ( strcmp(t->name, username) == 0) {
-            if ( strcmp(t->password, password) == 0 ) {
+    while (t != NULL && t->next != NULL) {
+        if (strcmp(t->name, username) == 0) {
+            if (strcmp(t->password, password) == 0) {
                 // successful authentication
                 return 0;
             }
@@ -81,13 +80,11 @@ int check_password(char* username, char* password) {
     }
     // invalid username
     return 2;
-
-
 }
 
 void print_users() {
     User *t = usersHead;
-    while ( t != NULL ) {
+    while (t != NULL) {
         printf("username:%s password:%s\n", t->name, t->password);
         t = t->next;
     }
@@ -95,7 +92,7 @@ void print_users() {
 
 int load_usersfile() {
     FILE *fp = fopen(USER_FILE, "r");
-    if ( fp == NULL)
+    if (fp == NULL)
         return -1;
 
     char line[2 * MAX_SIZE + 1]; // username + , + password
@@ -107,7 +104,7 @@ int load_usersfile() {
         memset(username, 0, MAX_SIZE);
         memset(password, 0, MAX_SIZE);
         int i = 0;
-        while ( line[i] != EOF && line[i] != ',' ) {
+        while (line[i] != EOF && line[i] != ',') {
             i++;
         }
         if (line[i] == EOF) {
@@ -115,8 +112,8 @@ int load_usersfile() {
             continue;
         }
         strncpy(username, line, i);
-        strcpy(password, line+i+1);
-        password[strlen(password)-1] = '\0';
+        strcpy(password, line + i + 1);
+        password[strlen(password) - 1] = '\0';
         add_user(username, password);
         /* printf("%s:%s\n", username, password); */
     }
@@ -124,28 +121,26 @@ int load_usersfile() {
     return 0;
 }
 
-
-
 typedef struct _packet {
     int code;
     int size;
     char data[PACKET_SIZE];
 } Packet;
 
-void handle_store_file(int socket, char* filename) {
+void handle_store_file(int socket, char *filename) {
     // todo send file already exists
     Packet *p = malloc(sizeof(Packet));
-    FILE* fp = fopen(filename, "wb");
+    FILE *fp = fopen(filename, "wb");
 
     memset(p, 0, sizeof(*p));
     int recv_size = recv(socket, p, sizeof(*p), 0);
-    if ( recv_size <= 0 ) {
+    if (recv_size <= 0) {
         printf("Server closed connection\n");
         return;
     }
 
     /* printf("Received packet with code = %d\n", p->code); */
-    if ( p->code != 601) {
+    if (p->code != 601) {
         printf("INvalid FileInfoPacket\n");
         return;
     }
@@ -157,14 +152,15 @@ void handle_store_file(int socket, char* filename) {
         memset(p, 0, sizeof(*p));
         int recv_size = recv(socket, p, sizeof(*p), 0);
         /* printf("recv_size = %d\n" , recv_size); */
-        if ( recv_size <= 0 ) {
+        if (recv_size <= 0) {
             printf("Server closed connection");
             return;
         }
         /* printf("%s", p->data); */
         fwrite(p->data, sizeof(char), p->size, fp);
-        /* printf("Received packet with code = %d size = %d \n", p->code, p->size); */
-        if ( p->code == 603) {
+        /* printf("Received packet with code = %d size = %d \n", p->code, p->size);
+        */
+        if (p->code == 603) {
             break;
         }
     }
@@ -178,7 +174,7 @@ void handle_get_file(int socket, char *filename) {
     // todo send file does not exist packet
 
     Packet *p = malloc(sizeof(Packet));
-    FILE* fp = fopen(filename, "rb");
+    FILE *fp = fopen(filename, "rb");
 
     // send FileInfo packet99069
     memset(p, 0, sizeof(*p));
@@ -192,11 +188,10 @@ void handle_get_file(int socket, char *filename) {
     fseek(fp, 0L, SEEK_SET);
     send(socket, p, sizeof(*p), 0);
 
-
     memset(p, 0, sizeof(*p));
 
     int count = fread(p->data, sizeof(char), PACKET_SIZE, fp);
-    while ( count ) {
+    while (count) {
         // to decide FileData , or FileEnd
         p->code = ftell(fp) == file_size ? 603 : 602;
         p->size = count;
@@ -211,12 +206,11 @@ void handle_get_file(int socket, char *filename) {
     }
     fclose(fp);
     free(p);
-
 }
 
-void handle_create_file(int socket, char *filename){
+void handle_create_file(int socket, char *filename) {
     Packet *p = malloc(sizeof(Packet));
-    FILE* fp = fopen(filename, "w");
+    FILE *fp = fopen(filename, "w");
     p->code = 123;
     memset(p->data, 0, PACKET_SIZE);
     strcpy(p->data, "File Created successfully");
@@ -231,7 +225,7 @@ void handle_list_dir(int socket) {
     // memset?
     p->code = 1213;
     struct dirent *dir;
-    DIR* d = opendir(".");
+    DIR *d = opendir(".");
     if (d) {
         while ((dir = readdir(d)) != NULL) {
             if (dir->d_type == DT_REG) {
@@ -243,9 +237,8 @@ void handle_list_dir(int socket) {
 
     send(socket, p, sizeof(*p), 0);
 
-    //todo: should we have to break this into file
+    // todo: should we have to break this into file
     free(p);
-
 }
 
 void handle_close(int socket) {
@@ -261,8 +254,8 @@ void handle_client(int client_socket) {
     printf("Received client\n");
     Packet *p = malloc(sizeof(Packet));
 
-    char* message = malloc(sizeof(char) * BUF_SIZE);
-    char* username = malloc(sizeof(char) * BUF_SIZE);
+    char *message = malloc(sizeof(char) * BUF_SIZE);
+    char *username = malloc(sizeof(char) * BUF_SIZE);
 
     int status = 0;
     /*
@@ -271,46 +264,45 @@ void handle_client(int client_socket) {
      * 2 => Authenticated
      */
 
-
     while (1) {
         memset(message, 0, BUF_SIZE);
         int r = recv(client_socket, message, BUF_SIZE, 0);
-        if ( r == -1) {
+        if (r == -1) {
             continue;
         }
-        if ( r == 0) {
+        if (r == 0) {
             printf("Client closed connection");
             return;
         }
 
         memset(p, 0, sizeof(*p));
 
-
-        if ( strncmp("START", message, 5) == 0 ) {
+        if (strncmp("START", message, 5) == 0) {
             // Directly reply with 200 Connection is setup
             p->code = 200;
             strcpy(p->data, "OK Connection is setup");
             send(client_socket, p, sizeof(*p), 0);
-        } else if ( strncmp("USERN", message, 5) == 0) {
-            printf("USERNAME RESULT '%s' = %d\n",message+6, check_username(message +6) );
-            if ( check_username(message+6)  == 0 ) {
+        } else if (strncmp("USERN", message, 5) == 0) {
+            printf("USERNAME RESULT '%s' = %d\n", message + 6,
+                    check_username(message + 6));
+            if (check_username(message + 6) == 0) {
                 // valid username
                 p->code = 300;
                 strcpy(p->data, "Correct Username; Need password");
                 memset(username, 0, BUF_SIZE);
-                strcpy(username, message+6);
+                strcpy(username, message + 6);
                 status = 1;
             } else {
                 p->code = 301;
                 strcpy(p->data, "Incorrect Username");
             }
             send(client_socket, p, sizeof(*p), 0);
-        } else if ( strncmp("PASSWD", message, 6) == 0) {
-            if ( strlen(username) == 0 ) {
+        } else if (strncmp("PASSWD", message, 6) == 0) {
+            if (strlen(username) == 0) {
                 // todo: handle username not set case
                 p->code = 222;
                 strcpy(p->data, "Provide username with USERN");
-            } else if ( check_password(username, message + 7) == 0) {
+            } else if (check_password(username, message + 7) == 0) {
                 p->code = 305;
                 strcpy(p->data, "User authenticated with password");
                 status = 2;
@@ -320,19 +312,19 @@ void handle_client(int client_socket) {
                 strcpy(p->data, "Incorrect password");
             }
             send(client_socket, p, sizeof(*p), 0);
-        } else if ( strncmp("QUIT", message, 4) == 0  ) {
+        } else if (strncmp("QUIT", message, 4) == 0) {
             handle_close(client_socket);
-        } else if ( status != 2 ) {
+        } else if (status != 2) {
             p->code = 999;
             strcpy(p->data, "Authentication required");
             send(client_socket, p, sizeof(*p), 0);
-        }else if ( strncmp("StoreFile", message ,9) == 0) {
-            handle_store_file(client_socket,message+10);
-        } else if ( strncmp("GetFile", message, 7) == 0 ) {
-            handle_get_file(client_socket,message+8);
-        } else if ( strncmp("CreateFile", message, 10) == 0) {
-            handle_create_file(client_socket, message+11);
-        } else if ( strncmp("ListDir", message, 7) == 0) {
+        } else if (strncmp("StoreFile", message, 9) == 0) {
+            handle_store_file(client_socket, message + 10);
+        } else if (strncmp("GetFile", message, 7) == 0) {
+            handle_get_file(client_socket, message + 8);
+        } else if (strncmp("CreateFile", message, 10) == 0) {
+            handle_create_file(client_socket, message + 11);
+        } else if (strncmp("ListDir", message, 7) == 0) {
             handle_list_dir(client_socket);
         } else {
             p->code = 505;
@@ -342,13 +334,13 @@ void handle_client(int client_socket) {
     }
 }
 
-int main ()
-{
+int main() {
     load_usersfile();
     /* print_users(); */
 
     int server_sock = socket(AF_INET, SOCK_STREAM, 0);
-    if (setsockopt(server_sock, SOL_SOCKET, SO_REUSEADDR, &(int){1}, sizeof(int)) < 0)
+    if (setsockopt(server_sock, SOL_SOCKET, SO_REUSEADDR, &(int){1},
+                sizeof(int)) < 0)
         printf("setsockopt(SO_REUSEADDR) failed");
 
     struct sockaddr_in server_address;
@@ -356,24 +348,24 @@ int main ()
     server_address.sin_port = htons(PORT);
     server_address.sin_addr.s_addr = INADDR_ANY;
 
-    int success = bind(server_sock, (struct sockaddr*) &server_address, sizeof(server_address));
-    if ( success != 0 ) {
+    int success = bind(server_sock, (struct sockaddr *)&server_address,
+            sizeof(server_address));
+    if (success != 0) {
         printf("Bind failed");
         exit(-1);
     }
 
     listen(server_sock, BACKLOG);
 
-
     printf("Waiting for connections\n");
     while (1) {
         int client_socket = accept(server_sock, NULL, NULL);
-        if ( client_socket == -1 ) {
+        if (client_socket == -1) {
             continue;
         }
         /* if (!fork()) { */
-            /* close(server_sock); */
-            handle_client(client_socket);
+        /* close(server_sock); */
+        handle_client(client_socket);
         /* } */
         /* close(client_socket); */
     }
