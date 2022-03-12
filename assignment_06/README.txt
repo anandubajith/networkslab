@@ -34,5 +34,4 @@
 
 todo:
 - stress testing
-- to fork or not to fork
 - sanitize all buffers
