@@ -17,7 +17,6 @@ typedef struct _user {
     struct _user* next;
 } User;
 
-
 User* usersHead = NULL;
 
 int add_user(char *username, char *password){
@@ -51,7 +50,7 @@ int add_user(char *username, char *password){
 
 int check_username(char *username) {
     User *t = usersHead;
-    while ( t != NULL && t->next != NULL) {
+    while ( t != NULL) {
         if ( strcmp(t->name, username) == 0) {
             // username already exists
             return 0;
@@ -63,7 +62,7 @@ int check_username(char *username) {
 
 int check_password(char* username, char* password) {
     User *t = usersHead;
-    while ( t != NULL && t->next != NULL) {
+    while ( t != NULL) {
         if ( strcmp(t->name, username) == 0) {
             if ( strcmp(t->password, password) == 0 ) {
                 // successful authentication
@@ -124,8 +123,8 @@ int load_usersfile() {
             continue;
         }
         strncpy(username, line, i);
-        password[strlen(password)-1] = '\0';
         strcpy(password, line+i+1);
+        password[strlen(password)-1] = '\0';
         add_user(username, password);
         /* printf("%s:%s\n", username, password); */
     }
@@ -141,6 +140,10 @@ int main (int argc, char *argv[])
         return 0;
     }
     load_usersfile();
+
+
+
+
 
     return 0;
 }
