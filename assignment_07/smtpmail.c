@@ -7,9 +7,11 @@
 #include <unistd.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
+#include <assert.h>
 
 #define BACKLOG 5
 #define MAX_SIZE 100
+#define BUF_SIZE 512
 
 typedef struct _user {
     char*name;
@@ -127,9 +129,52 @@ int load_usersfile() {
     }
     return 0;
 }
+
+int starts_with(char *string, char *marker) {
+    assert( string != NULL );
+    assert( marker != NULL );
+    return strncmp(string, marker, strlen(marker));
+}
+
+
 void handle_client(int socket) {
     printf("Handling client with socket %d\n", socket);
-    // do SMTP Stuff
+
+    User *current_user = NULL;
+    char *message = malloc(sizeof(char) * BUF_SIZE);
+
+    while(1) {
+        memset(message, 0, BUF_SIZE);
+        int r = recv(socket, message, BUF_SIZE, 0);
+        if ( r == -1) continue;
+        if ( r == 0) {
+            printf("Client closed connection");
+            return;
+        }
+
+        if ( starts_with(message, "HELO") ) {
+
+        } else if ( starts_with(message, "QUIT") ) {
+
+        } else if ( starts_with(message, "MAIL") ) {
+
+        } else if ( starts_with(message, "RCPT") ) {
+
+        } else if ( starts_with(message, "DATA") ) {
+
+        } else if ( starts_with(message, "RSET" ) ) {
+
+        } else if ( starts_with(message, "SEND" ) ) {
+
+        } else if ( starts_with(message, "VRFY" ) ) {
+
+        } else {
+            // reply with 505 command not implemented
+            printf(">> Invalid command %s\n" , message);
+            return;
+        }
+    }
+
 }
 
 int main (int argc, char *argv[]) {
