@@ -13,7 +13,7 @@
 int main (int argc, char *argv[])
 {
     if ( argc < 2 ) {
-        printf("./smtpmail PORT\n");
+        printf("./mailclient PORT\n");
         return 1;
     }
 

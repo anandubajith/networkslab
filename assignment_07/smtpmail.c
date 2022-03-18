@@ -1,6 +1,3 @@
-/*
- * THIS IS THE SMTP MAIL SERVER
- */
 #include <stdio.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -47,7 +44,6 @@ int add_user(char *username, char *password){
     }
 
     t->next = u;
-
     return 0;
 }
 
@@ -78,8 +74,6 @@ int check_password(char* username, char* password) {
     }
     // invalid username
     return 2;
-
-
 }
 
 void print_users() {
@@ -138,8 +132,7 @@ void handle_client(int socket) {
     // do SMTP Stuff
 }
 
-int main (int argc, char *argv[])
-{
+int main (int argc, char *argv[]) {
     if ( argc < 2 ) {
         printf("./smtpmail PORT\n");
         return 1;
