@@ -12,6 +12,7 @@
 #define BACKLOG 5
 #define MAX_SIZE 100
 #define BUF_SIZE 512
+#define HOSTNAME "anandu.local"
 
 typedef struct _user {
     char*name;
@@ -136,42 +137,103 @@ int starts_with(char *string, char *marker) {
     return strncmp(string, marker, strlen(marker));
 }
 
+void send_reply(int socket, int code, char*message) {
+    char *temp = malloc(sizeof(char) * BUF_SIZE);
+    memset(temp, 0, BUF_SIZE);
+    sprintf(temp, "%d %s\n", code, message);
+    send(socket, temp, strlen(temp), 0);
+    free(temp);
+}
+
+typedef struct _state{
+    char *from;
+    char *to;
+    char *body;
+} State;
+
+void handle_cmd_helo(char *args, int socket, State *state) {
+    // clear state
+    memset(state, 0 , sizeof(State) );
+    send_reply(socket, 250, HOSTNAME);
+}
+void handle_cmd_mail(char *command, int socket, State *state) {
+    assert(state != NULL);
+    if ( !starts_with("MAIL FROM:", command) ) {
+        // invlaid command reply
+        /* send_reply(socket) */
+    }
+
+    state->from = malloc(sizeof(char) * MAX_SIZE);
+
+    strncpy(state->from, command+10, strlen(command)-10-1);
+    printf(">> Received from '%s'\n", state->from);
+    assert(strlen(state->from) != 0);
+
+
+
+    send_reply(socket, 250, "OK");
+}
+void handle_cmd_rcpt(char *command, int socket, State *state) {
+    assert(state != NULL);
+    if ( !starts_with("RCPT TO:", command) ) {
+        // invlaid command reply
+        /* send_reply(socket) */
+    }
+
+    state->to = malloc(sizeof(char) * MAX_SIZE);
+    strncpy(state->to , command+10, strlen(command)-10-1);
+
+    // CHECK IF USER EXISTS ETC
+    printf(">> Received to '%s'\n", state->to);
+    assert(strlen(state->to) != 0);
+
+
+    send_reply(socket, 250, "OK");
+}
+
+void handle_cmd_data(char *command, int socket, State *state) {
+
+}
+
+void handle_cmd_rset(char *command, int socket, State *state) {
+    memset(state, 0 , sizeof(State) );
+    send_reply(socket, 250, HOSTNAME);
+}
 
 void handle_client(int socket) {
     printf("Handling client with socket %d\n", socket);
 
-    User *current_user = NULL;
-    char *message = malloc(sizeof(char) * BUF_SIZE);
+    char *command = malloc(sizeof(char) * BUF_SIZE);
+
+    State *state = malloc(sizeof(State));
+    // what all state do need to keep?
 
     while(1) {
-        memset(message, 0, BUF_SIZE);
-        int r = recv(socket, message, BUF_SIZE, 0);
+        memset(command, 0, BUF_SIZE);
+        int r = recv(socket, command, BUF_SIZE, 0);
         if ( r == -1) continue;
         if ( r == 0) {
             printf("Client closed connection");
             return;
         }
-
-        if ( starts_with(message, "HELO") ) {
-
-        } else if ( starts_with(message, "QUIT") ) {
-
-        } else if ( starts_with(message, "MAIL") ) {
-
-        } else if ( starts_with(message, "RCPT") ) {
-
-        } else if ( starts_with(message, "DATA") ) {
-
-        } else if ( starts_with(message, "RSET" ) ) {
-
-        } else if ( starts_with(message, "SEND" ) ) {
-
-        } else if ( starts_with(message, "VRFY" ) ) {
-
+        printf("CMD: '%s'\n", command);
+        if ( starts_with(command, "HELO") ) {
+            handle_cmd_helo(command+5, socket, state);
+        } else if ( starts_with(command, "QUIT") ) {
+            /* handle_cmd_quit(command+5, socket); */
+        } else if ( starts_with(command, "MAIL") ) {
+            handle_cmd_mail(command, socket, state);
+        } else if ( starts_with(command, "RCPT") ) {
+            handle_cmd_rcpt(command, socket, state);
+        } else if ( starts_with(command, "DATA") ) {
+            handle_cmd_data(command,socket, state);
+        } else if ( starts_with(command, "RSET" ) ) {
+            handle_cmd_rset(command, socket, state);
+        } else if ( starts_with(command, "NOOP" ) ) {
+            send_reply(socket, 250, "NOOP");
         } else {
+            send_reply(socket, 502, "not implemented");
             // reply with 505 command not implemented
-            printf(">> Invalid command %s\n" , message);
-            return;
         }
     }
 
