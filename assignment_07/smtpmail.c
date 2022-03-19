@@ -134,13 +134,14 @@ int load_usersfile() {
 int starts_with(char *string, char *marker) {
     assert( string != NULL );
     assert( marker != NULL );
-    return strncmp(string, marker, strlen(marker));
+    return strncmp(string, marker, strlen(marker)) == 0;
 }
 
 void send_reply(int socket, int code, char*message) {
     char *temp = malloc(sizeof(char) * BUF_SIZE);
     memset(temp, 0, BUF_SIZE);
     sprintf(temp, "%d %s\n", code, message);
+    printf("sending reply '%s'\n", temp);
     send(socket, temp, strlen(temp), 0);
     free(temp);
 }
@@ -149,14 +150,15 @@ typedef struct _state{
     char *from;
     char *to;
     char *body;
+    int current;
 } State;
 
-void handle_cmd_helo(char *args, int socket, State *state) {
+void handle_cmd_helo(int socket, char *command, State *state) {
     // clear state
     memset(state, 0 , sizeof(State) );
     send_reply(socket, 250, HOSTNAME);
 }
-void handle_cmd_mail(char *command, int socket, State *state) {
+void handle_cmd_mail(int socket, char *command , State *state) {
     assert(state != NULL);
     if ( !starts_with("MAIL FROM:", command) ) {
         // invlaid command reply
@@ -169,11 +171,9 @@ void handle_cmd_mail(char *command, int socket, State *state) {
     printf(">> Received from '%s'\n", state->from);
     assert(strlen(state->from) != 0);
 
-
-
     send_reply(socket, 250, "OK");
 }
-void handle_cmd_rcpt(char *command, int socket, State *state) {
+void handle_cmd_rcpt(int socket, char *command, State *state) {
     assert(state != NULL);
     if ( !starts_with("RCPT TO:", command) ) {
         // invlaid command reply
@@ -191,13 +191,29 @@ void handle_cmd_rcpt(char *command, int socket, State *state) {
     send_reply(socket, 250, "OK");
 }
 
-void handle_cmd_data(char *command, int socket, State *state) {
+void handle_cmd_data(int socket, char *command, State *state) {
+
+    char *temp = malloc(sizeof(char) * BUF_SIZE);
+    int has_ended = 0;
+    while ( !has_ended ) {
+        memset(temp, 0, BUF_SIZE);
+        recv(socket, temp, BUF_SIZE,0);
+        printf("DATA recv: '%s'\n", temp);
+        // append to str
+        // compare decide if more
+
+    }
 
 }
 
-void handle_cmd_rset(char *command, int socket, State *state) {
+void handle_cmd_rset(int socket, char *command, State *state) {
     memset(state, 0 , sizeof(State) );
     send_reply(socket, 250, HOSTNAME);
+}
+void handle_cmd_quit(int socket, char*command, State *state) {
+    send_reply(socket, 221, HOSTNAME " Service closing transmission channel");
+    shutdown(socket, 2);
+    exit(0); // todo: find cleaner way
 }
 
 void handle_client(int socket) {
@@ -218,17 +234,17 @@ void handle_client(int socket) {
         }
         printf("CMD: '%s'\n", command);
         if ( starts_with(command, "HELO") ) {
-            handle_cmd_helo(command+5, socket, state);
+            handle_cmd_helo(socket, command,  state);
         } else if ( starts_with(command, "QUIT") ) {
-            /* handle_cmd_quit(command+5, socket); */
+            handle_cmd_quit(socket, command, state);
         } else if ( starts_with(command, "MAIL") ) {
-            handle_cmd_mail(command, socket, state);
+            handle_cmd_mail(socket,command, state);
         } else if ( starts_with(command, "RCPT") ) {
-            handle_cmd_rcpt(command, socket, state);
+            handle_cmd_rcpt(socket, command, state);
         } else if ( starts_with(command, "DATA") ) {
-            handle_cmd_data(command,socket, state);
+            handle_cmd_data(socket,command, state);
         } else if ( starts_with(command, "RSET" ) ) {
-            handle_cmd_rset(command, socket, state);
+            handle_cmd_rset(socket, command, state);
         } else if ( starts_with(command, "NOOP" ) ) {
             send_reply(socket, 250, "NOOP");
         } else {
