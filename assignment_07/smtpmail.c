@@ -148,10 +148,47 @@ void send_reply(int socket, int code, char*message) {
 
 typedef struct _state{
     char *from;
+    char *from_user;
+    char *from_host;
     char *to;
+    char *to_user;
+    char *to_host;
     char *body;
     int current;
 } State;
+
+int validate_address(char *address, char**user, char**host) {
+    // split address into 2
+
+    if ( strlen(address) == 0)
+        return 1;
+
+    int pos = 0;
+    while (address[pos] != 0 && address[pos] != '@')
+        pos++;
+
+    if ( pos == strlen(address) )
+        return 1;
+
+
+    *user = malloc(sizeof(char) * MAX_SIZE);
+    *host = malloc(sizeof(char) * MAX_SIZE);
+
+    strncpy(*user, address, pos);
+    strcpy(*host, address+pos +1);
+
+
+    if ( strlen(*host) == 0 || strlen(*user) == 0)
+        return 1;
+
+    printf("'%s' '%s'\n\n", *user, *host);
+
+    return 0;
+}
+
+void process_state(State *state) {
+
+}
 
 void handle_cmd_helo(int socket, char *command, State *state) {
     // clear state
@@ -160,14 +197,29 @@ void handle_cmd_helo(int socket, char *command, State *state) {
 }
 void handle_cmd_mail(int socket, char *command , State *state) {
     assert(state != NULL);
-    if ( !starts_with("MAIL FROM:", command) ) {
-        // invlaid command reply
-        /* send_reply(socket) */
+    if ( starts_with("MAIL FROM:", command) == 1) {
+        send_reply(socket, 501, "Syntax error in parameters or arguments");
+        return;
     }
 
     state->from = malloc(sizeof(char) * MAX_SIZE);
+    strncpy(state->from , command+11, strlen(command+11)-2);
 
-    strncpy(state->from, command+10, strlen(command)-10-1);
+    if (validate_address(state->from, &state->from_user, &state->from_host) != 0 ) {
+        send_reply(socket, 501, "Syntax error in parameters or arguments");
+        return;
+    }
+
+    if ( strncmp(state->from_host, "localhost", 9) != 0) {
+        send_reply(socket, 551, "User not local;");
+        return;
+    }
+
+    if ( check_username(state->from_user) != 0 ) {
+        send_reply(socket, 550, "Requested action not taken: mailbox unavailable");
+        return;
+    }
+
     printf(">> Received from '%s'\n", state->from);
     assert(strlen(state->from) != 0);
 
@@ -175,13 +227,30 @@ void handle_cmd_mail(int socket, char *command , State *state) {
 }
 void handle_cmd_rcpt(int socket, char *command, State *state) {
     assert(state != NULL);
-    if ( !starts_with("RCPT TO:", command) ) {
-        // invlaid command reply
-        /* send_reply(socket) */
+    if ( starts_with("MAIL FROM:", command) == 1) {
+        send_reply(socket, 501, "Syntax error in parameters or arguments");
+        return;
     }
 
     state->to = malloc(sizeof(char) * MAX_SIZE);
-    strncpy(state->to , command+10, strlen(command)-10-1);
+    strncpy(state->to , command+9, strlen(command+9)-2);
+
+    if (validate_address(state->to, &state->to_user, &state->to_host) != 0 ) {
+        send_reply(socket, 501, "Syntax error in parameters or arguments");
+        return;
+    }
+
+    if ( strncmp(state->to_host, "localhost", 9) != 0) {
+        send_reply(socket, 551, "User not local;");
+        return;
+    }
+
+    if ( check_username(state->to_user) != 0 ) {
+        send_reply(socket, 550, "Requested action not taken: mailbox unavailable");
+        return;
+    }
+
+
 
     // CHECK IF USER EXISTS ETC
     printf(">> Received to '%s'\n", state->to);
@@ -193,16 +262,23 @@ void handle_cmd_rcpt(int socket, char *command, State *state) {
 
 void handle_cmd_data(int socket, char *command, State *state) {
 
+    // todo: refactor this
+    state->body = malloc(sizeof(char) * BUF_SIZE *1000);
     char *temp = malloc(sizeof(char) * BUF_SIZE);
-    int has_ended = 0;
-    while ( !has_ended ) {
+
+    while (1) {
         memset(temp, 0, BUF_SIZE);
         recv(socket, temp, BUF_SIZE,0);
         printf("DATA recv: '%s'\n", temp);
-        // append to str
-        // compare decide if more
 
+        if ( strlen(temp) == 1 && temp[0] == '.' ) {
+            printf("Received end marker\n");
+            break;
+        }
+        strcat(state->body, temp + (temp[0] == '.' && strlen(temp) > 1 ? 1 : 0) );
     }
+
+    process_state(state);
 
 }
 
@@ -285,11 +361,11 @@ int main (int argc, char *argv[]) {
     while(1) {
         int client_sock = accept(server_sock, NULL, NULL);
         if ( client_sock == -1 ) continue;
-        if ( !fork() ) {
-            close(server_sock);
+        /* if ( !fork() ) { */
+            /* close(server_sock); */
             handle_client(client_sock);
-        }
-        close(client_sock);
+        /* } */
+        /* close(client_sock); */
     }
     close(server_sock);
 
