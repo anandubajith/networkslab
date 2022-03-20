@@ -178,8 +178,8 @@ int validate_address(char *address, char**user, char**host) {
         return 1;
 
 
-    *user = malloc(sizeof(char) * MAX_SIZE);
-    *host = malloc(sizeof(char) * MAX_SIZE);
+    *user = malloc(sizeof(char) * pos + 1);
+    *host = malloc(sizeof(char) * strlen(address+pos)+1);
 
     strncpy(*user, address, pos);
     strcpy(*host, address+pos +1);
