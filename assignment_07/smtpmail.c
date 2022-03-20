@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -12,7 +13,7 @@
 #define BACKLOG 5
 #define MAX_SIZE 100
 #define BUF_SIZE 512
-#define HOSTNAME "anandu.local"
+#define HOSTNAME "localhost"
 
 typedef struct _user {
     char*name;
@@ -146,6 +147,12 @@ void send_reply(int socket, int code, char*message) {
     free(temp);
 }
 
+char *get_current_time_str() {
+    time_t t;   // not a primitive datatype
+    time(&t);
+    return ctime(&t);
+}
+
 typedef struct _state{
     char *from;
     char *from_user;
@@ -187,6 +194,22 @@ int validate_address(char *address, char**user, char**host) {
 }
 
 void process_state(State *state) {
+    // we've already validated the user
+    char *path = malloc(sizeof(char) * MAX_SIZE * 2);
+    sprintf(path, "./%s/mymailbox", state->to_user);
+    FILE *fp = fopen(path, "a");
+
+
+    if ( ftell(fp) != 0) {
+        // write the separator
+        fprintf(fp, "\n.\n\n");
+    }
+
+    fprintf(fp, "from: %s@%s\n", state->from_user, state->from_host);
+    fprintf(fp, "to: %s@%s\n", state->to_user, state->to_host);
+    fprintf(fp, "received: %s\n", get_current_time_str() );
+    fprintf(fp, "%s", state->body);
+    fclose(fp);
 
 }
 
@@ -210,7 +233,7 @@ void handle_cmd_mail(int socket, char *command , State *state) {
         return;
     }
 
-    if ( strncmp(state->from_host, "localhost", 9) != 0) {
+    if ( strncmp(state->from_host, HOSTNAME, 9) != 0) {
         send_reply(socket, 551, "User not local;");
         return;
     }
@@ -240,7 +263,7 @@ void handle_cmd_rcpt(int socket, char *command, State *state) {
         return;
     }
 
-    if ( strncmp(state->to_host, "localhost", 9) != 0) {
+    if ( strncmp(state->to_host, HOSTNAME, 9) != 0) {
         send_reply(socket, 551, "User not local;");
         return;
     }
@@ -252,7 +275,6 @@ void handle_cmd_rcpt(int socket, char *command, State *state) {
 
 
 
-    // CHECK IF USER EXISTS ETC
     printf(">> Received to '%s'\n", state->to);
     assert(strlen(state->to) != 0);
 
