@@ -4,8 +4,10 @@
 #include <unistd.h>
 #include <netinet/in.h>
 #include <string.h>
+#include <assert.h>
 #include <stdlib.h>
 
+#define BACKLOG 5
 #define MAX_SIZE 100
 #define BUF_SIZE 512
 
@@ -66,8 +68,9 @@ void delete_email(char*username, Mail** head, Mail *mail) {
     free(mail->body);
     free(mail->body_raw);
     free(mail);
+}
 
-    // writeout updated file
+void update_emails(char*username, Mail**head) {
     char *path = get_mailbox_path(username);
     FILE *fp = fopen(path, "w");
     Mail *iter = *head;
@@ -161,6 +164,49 @@ void list_messages(char *username) {
 
 }
 
+int starts_with(char *string, char *marker) {
+    assert( string != NULL );
+    assert( marker != NULL );
+    return strncmp(string, marker, strlen(marker)) == 0;
+}
+
+void handle_client(int socket) {
+    char *command = malloc(sizeof(char) * BUF_SIZE);
+    while(1) {
+        memset(command, 0, BUF_SIZE);
+        int r = recv(socket, command, BUF_SIZE, 0);
+        if ( r == -1) continue;
+        if ( r == 0) {
+            printf("Client closed connection");
+            return;
+        }
+        printf("CMD: '%s'\n", command);
+        if ( starts_with(command, "USER") ) {
+
+        } else if ( starts_with(command, "PASS") ) {
+
+        } else if ( starts_with(command, "QUIT") ) {
+
+        } else if ( starts_with(command, "STAT") ) {
+
+        } else if ( starts_with(command, "LIST") ) {
+
+        } else if ( starts_with(command, "RETR") ) {
+
+        } else if ( starts_with(command, "DELE") ) {
+
+        } else if ( starts_with(command, "NOOP") ) {
+
+        } else if ( starts_with(command, "RSET") ) {
+
+        } else {
+            // invalid commadn?
+        }
+
+
+    }
+}
+
 int main (int argc, char *argv[])
 {
     if ( argc < 2 ) {
@@ -168,7 +214,7 @@ int main (int argc, char *argv[])
         return 1;
     }
 
-    int sock = socket(AF_INET, SOCK_STREAM, 0);
+    int server_sock = socket(AF_INET, SOCK_STREAM, 0);
 
     struct sockaddr_in server_address;
     server_address.sin_family = AF_INET;
@@ -176,8 +222,25 @@ int main (int argc, char *argv[])
     server_address.sin_addr.s_addr = INADDR_ANY;
 
     printf("Pop server\n");
+    int success = bind(server_sock, (struct sockaddr*)&server_address, sizeof(server_address));
+    if ( success != 0) {
+        printf("bind() failed");
+        return 1;
+    }
+    listen(server_sock, BACKLOG);
+    printf("Listening on port %d\n", atoi(argv[1]));
 
-    list_messages("anandu");
+    while(1) {
+        int client_sock = accept(server_sock, NULL, NULL);
+        if ( client_sock == -1 ) continue;
+        if ( !fork() ) {
+            close(server_sock);
+            handle_client(client_sock);
+        }
+        close(client_sock);
+    }
+    close(server_sock);
+
 
 
     return 0;
