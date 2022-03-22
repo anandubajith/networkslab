@@ -15,29 +15,149 @@ typedef struct _mail {
     char *subject;
     char *received_time;
     char *body;
+    char *body_raw;
+    struct _mail* next;
+    struct _mail* prev;
 } Mail;
 
+void print_mails(Mail *mail) {
+    while ( mail != NULL ) {
+        printf("---\n");
+        printf("to: '%s'\n", mail->to);
+        printf("from: '%s'\n", mail->from);
+        printf("received_time: '%s'\n", mail->received_time);
+        printf("subject: '%s'\n", mail->subject);
+        printf("DATA:\n");
+        printf("%s", mail->body);
+        printf("DATA_RAW:\n");
+        printf("%s", mail->body_raw);
+        printf("---\n");
+        mail = mail->next;
+    }
+}
 
-void list_messages(char *username) {
+char* get_mailbox_path(char*username) {
     char *path = malloc(sizeof(char) * MAX_SIZE * 2);
     sprintf(path, "./%s/mymailbox", username);
-    FILE *fp = fopen(path, "r");
+    return path;
+}
 
-    char * line = NULL;
+void delete_email(char*username, Mail** head, Mail *mail) {
+    
+    if ( *head == NULL || mail == NULL)
+        return;
+
+    if ( *head == mail) {
+        *head = mail->next;
+    }
+
+    if ( mail->next != NULL) {
+        mail->next->prev = mail->prev;
+    }
+
+    if ( mail->prev != NULL ) {
+        mail->prev->next = mail->next;
+    }
+
+    free(mail->to);
+    free(mail->from);
+    free(mail->subject);
+    free(mail->received_time);
+    free(mail->body);
+    free(mail->body_raw);
+    free(mail);
+
+    // writeout updated file
+    char *path = get_mailbox_path(username);
+    FILE *fp = fopen(path, "w");
+    Mail *iter = *head;
+    while( iter != NULL) {
+        fprintf(fp, "from: %s\n", iter->from);
+        fprintf(fp, "to: %s\n", iter->to);
+        fprintf(fp, "received: %s\n", iter->received_time );
+        fprintf(fp, "subject: %s\n", iter->subject);
+        fprintf(fp, "%s", iter->body_raw);
+        fprintf(fp, ".\n");
+        iter = iter->next;
+    }
+    free(path);
+    fclose(fp);
+}
+
+void list_messages(char *username) {
+    char *path = get_mailbox_path(username);
+    FILE *fp = fopen(path, "r");
+    char *line = NULL;
     size_t len = 0;
     ssize_t read;
 
+    int state = 0;
 
-    // three states
-    // - mail start
-    // - headers
-    // - body
+    Mail *mailHead = NULL;
+
+    Mail* currentMail = malloc(sizeof(Mail));
+    memset(currentMail, 0, sizeof(Mail));
 
     while ((read = getline(&line, &len, fp)) != -1) {
-        /* printf(line); */
+        /* printf("'%s'\n",line); */
+        if ( state == 0) {
+            if (strncmp("from: ", line, 6) == 0) {
+                int len = strlen(line+6);
+                currentMail->from = malloc(sizeof(char) * len );
+                memset(currentMail->from, 0, len);
+                strncpy(currentMail->from, line+6, len-1);
+            } else if ( strncmp("to: ", line, 4) == 0) {
+                int len = strlen(line+4);
+                currentMail->to = malloc(sizeof(char) * len );
+                memset(currentMail->to, 0, len);
+                strncpy(currentMail->to, line+4, len-1);
+            } else if ( strncmp("received: ", line, 10) == 0) {
+                int len = strlen(line+10);
+                currentMail->received_time = malloc(sizeof(char) * len );
+                memset(currentMail->received_time, 0, len);
+                strncpy(currentMail->received_time, line+10, len-1);
+            } else if ( strncmp("subject: ", line, 9) == 0) {
+                int len = strlen(line+9);
+                currentMail->subject = malloc(sizeof(char) * len);
+                memset(currentMail->subject, 0, len);
+                strncpy(currentMail->subject, line+9, len-1);
+                state = 1;
+            } else {
+                // data corruption?
+            }
+        } else if ( state == 1) {
+            // append to data follwing transparancy procedure
+            if ( currentMail->body == NULL ) {
+                currentMail->body = malloc(sizeof(char) * strlen(line) + 1);
+                currentMail->body_raw = malloc(sizeof(char) * strlen(line) + 1);
+                memset(currentMail->body, 0, strlen(line)+1);
+                memset(currentMail->body_raw, 0, strlen(line)+1);
+            } else {
+                currentMail->body = realloc(currentMail->body, strlen(currentMail->body) + strlen(line) +1);
+                currentMail->body_raw= realloc(currentMail->body_raw, strlen(currentMail->body_raw) + strlen(line) +1);
+            }
+            if ( strncmp(".", line, 1) == 0 && strlen(line) == 2) {
+                state = 0;
+                currentMail->next = mailHead;
+                if ( mailHead != NULL) mailHead->prev = currentMail;
+                mailHead = currentMail;
+                currentMail = malloc(sizeof(Mail));
+                memset(currentMail, 0, sizeof(Mail));
+            } else {
+                /* printf("Cattign :'%s' with '%s'", mail->body, line); */
+                strcat(currentMail->body, line + (line[0] == '.' ? 1 : 0 ));
+                strcat(currentMail->body_raw, line);
+            }
+        } else {
+            // data corruption?
+        }
     }
 
     if (line) free(line);
+
+    fclose(fp);
+    free(path);
+    print_mails(mailHead);
 
 }
 

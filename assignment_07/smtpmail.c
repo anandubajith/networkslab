@@ -199,12 +199,6 @@ void process_state(State *state) {
     sprintf(path, "./%s/mymailbox", state->to_user);
     FILE *fp = fopen(path, "a");
 
-
-    if ( ftell(fp) != 0) {
-        // write the separator
-        fprintf(fp, "\n.\n\n");
-    }
-
     fprintf(fp, "from: %s@%s\n", state->from_user, state->from_host);
     fprintf(fp, "to: %s@%s\n", state->to_user, state->to_host);
     fprintf(fp, "received: %s\n", get_current_time_str() );
@@ -292,12 +286,12 @@ void handle_cmd_data(int socket, char *command, State *state) {
         memset(temp, 0, BUF_SIZE);
         recv(socket, temp, BUF_SIZE,0);
         printf("DATA recv: '%s'\n", temp);
+        strcat(state->body, temp);
 
         if ( strlen(temp) == 1 && temp[0] == '.' ) {
             printf("Received end marker\n");
             break;
         }
-        strcat(state->body, temp + (temp[0] == '.' && strlen(temp) > 1 ? 1 : 0) );
     }
 
     process_state(state);
