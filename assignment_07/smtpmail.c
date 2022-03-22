@@ -116,7 +116,7 @@ int load_usersfile() {
         memset(username, 0, MAX_SIZE);
         memset(password, 0, MAX_SIZE);
         int i = 0;
-        while ( line[i] != EOF && line[i] != ',' ) {
+        while ( line[i] != EOF && line[i] != ' ' ) {
             i++;
         }
         if (line[i] == EOF) {
