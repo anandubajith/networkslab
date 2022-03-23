@@ -150,10 +150,6 @@ char* get_mailbox_path(char*username) {
     return path;
 }
 
-void delete_email(char*username, Mail** head, Mail *mail) {
-    mail->is_deleted = 1;
-}
-
 void update_emails(char*username, Mail**head) {
     char *path = get_mailbox_path(username);
     FILE *fp = fopen(path, "w");
@@ -347,6 +343,38 @@ void handle_cmd_retr(int socket, int index, Mail*mailHead) {
     free(buffer);
 }
 
+void handle_cmd_dele(int socket, int index, Mail* mailHead) {
+
+    Mail *mail = mailHead;
+    while ( mail != NULL) {
+        if ( mail->index == index && mail->is_deleted == 0) {
+            break;
+        }
+        mail = mail->next;
+    }
+
+    char* buffer = malloc(sizeof(char) * BUF_SIZE);
+    if ( mail == NULL) {
+        // invalid index
+        memset(buffer, 0, BUF_SIZE);
+        sprintf(buffer, "-ERR no such message");
+        send(socket, buffer, strlen(buffer), 0);
+        return;
+    }
+
+    if ( mail->is_deleted == 1) {
+        memset(buffer, 0, BUF_SIZE);
+        sprintf(buffer, "-ERR message %d already deleted", mail->index);
+        send(socket, buffer, strlen(buffer), 0);
+        return;
+    }
+
+    memset(buffer, 0, BUF_SIZE);
+    sprintf(buffer, "+OK message %d deleted", mail->index);
+    send(socket, buffer, strlen(buffer), 0);
+
+}
+
 int starts_with(char *string, char *marker) {
     assert( string != NULL );
     assert( marker != NULL );
@@ -434,9 +462,11 @@ void handle_client(int socket) {
         } else if ( starts_with(command, "RETR") ) {
             handle_cmd_retr(socket, atoi(command+ 4), mailHead);
         } else if ( starts_with(command, "DELE") ) {
-
+            handle_cmd_dele(socket, atoi(command + 4), mailHead);
         } else if ( starts_with(command, "NOOP") ) {
-
+            memset(buffer, 0, BUF_SIZE);
+            sprintf(buffer, "+OK");
+            send(socket, buffer, strlen(buffer), 0);
         } else if ( starts_with(command, "RSET") ) {
 
         } else {
