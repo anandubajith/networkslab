@@ -283,6 +283,7 @@ void handle_client(int socket) {
 	int state = 0;
 	char* username;
 	char* password;
+    Mail* mailHead;
 	/*
 	 * 0 => Authentiation
 	 * 1 => Transaction
@@ -339,13 +340,14 @@ void handle_client(int socket) {
             memset(buffer, 0, BUF_SIZE);
             strcpy(buffer, "+OK Auth successful");
             send(socket, buffer, strlen(buffer), 0);
+            mailHead = load_messages(username);
 			state = 1;
         } else if ( starts_with(command, "QUIT") ) {
 
         } else if ( starts_with(command, "STAT") ) {
 
         } else if ( starts_with(command, "LIST") ) {
-            handle_cmd_list(socket, username);
+            handle_cmd_list(socket, mailHead);
         } else if ( starts_with(command, "RETR") ) {
 
         } else if ( starts_with(command, "DELE") ) {
