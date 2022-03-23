@@ -301,6 +301,52 @@ void handle_cmd_list(int socket, Mail *mailHead) {
     free(buffer);
 }
 
+void handle_cmd_retr(int socket, int index, Mail*mailHead) {
+    printf("retreiving %d email\n", index);
+    Mail *mail = mailHead;
+    while ( mail != NULL) {
+        if ( mail->index == index && mail->is_deleted == 0) {
+            break;
+        }
+        mail = mail->next;
+    }
+
+    char* buffer = malloc(sizeof(char) * BUF_SIZE);
+    if ( mail == NULL) {
+        // invalid index
+        memset(buffer, 0, BUF_SIZE);
+        sprintf(buffer, "+ERR Invalid index");
+        send(socket, buffer, strlen(buffer), 0);
+        return;
+    }
+
+    printf("foudn the index %d\n", mail->index);
+
+    memset(buffer, 0, BUF_SIZE);
+    sprintf(buffer, "+OK %d octets", mail->size);
+    send(socket, buffer, strlen(buffer), 0);
+    memset(buffer, 0, BUF_SIZE);
+    sprintf(buffer, "from: %s\n", mail->from);
+    send(socket, buffer, strlen(buffer), 0);
+    memset(buffer, 0, BUF_SIZE);
+    sprintf(buffer, "to: %s\n", mail->to);
+    send(socket, buffer, strlen(buffer), 0);
+    memset(buffer, 0, BUF_SIZE);
+    sprintf(buffer, "received: %s\n", mail->received_time );
+    send(socket, buffer, strlen(buffer), 0);
+    memset(buffer, 0, BUF_SIZE);
+    sprintf(buffer, "subject: %s\n\n", mail->subject);
+    send(socket, buffer, strlen(buffer), 0);
+    memset(buffer, 0, BUF_SIZE);
+    sprintf(buffer, "%s", mail->body);
+    send(socket, buffer, strlen(buffer), 0);
+    memset(buffer, 0, BUF_SIZE);
+    sprintf(buffer, "\n\n");
+    send(socket, buffer, strlen(buffer), 0);
+
+    free(buffer);
+}
+
 int starts_with(char *string, char *marker) {
     assert( string != NULL );
     assert( marker != NULL );
@@ -386,7 +432,7 @@ void handle_client(int socket) {
         } else if ( starts_with(command, "LIST") ) {
             handle_cmd_list(socket, mailHead);
         } else if ( starts_with(command, "RETR") ) {
-
+            handle_cmd_retr(socket, atoi(command+ 4), mailHead);
         } else if ( starts_with(command, "DELE") ) {
 
         } else if ( starts_with(command, "NOOP") ) {
