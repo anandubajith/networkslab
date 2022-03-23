@@ -252,12 +252,12 @@ Mail* load_messages(char *username) {
 void handle_cmd_list(int socket, Mail *mailHead) {
     char *buffer = malloc(sizeof(char) * BUF_SIZE);
     memset(buffer, 0, BUF_SIZE);
-    sprintf(buffer, "+OK %d messages (%d octects)", 0, 123);
+    sprintf(buffer, "+OK %d messages (%d octects)\n", 0, 123);
     send(socket, buffer, strlen(buffer), 0);
     Mail *iter = mailHead;
     while ( iter != NULL) {
         memset(buffer, 0, BUF_SIZE);
-        sprintf(buffer, "%d %d", iter->index, 123);
+        sprintf(buffer, "%d %d\n", iter->index, 123);
         send(socket, buffer, strlen(buffer), 0);
         iter = iter->next;
     }
@@ -276,14 +276,14 @@ void handle_client(int socket) {
 
     char *buffer = malloc(sizeof(char) * BUF_SIZE);
     memset(buffer, 0, BUF_SIZE);
-    strcpy(buffer, "+OK POP3 server ready");
+    strcpy(buffer, "+OK POP3 server ready\n");
 
 	send(socket, buffer, strlen(buffer), 0);
 
 	int state = 0;
-	char* username;
-	char* password;
-    Mail* mailHead;
+	char* username = NULL;
+	char* password = NULL;
+    Mail* mailHead = NULL;
 	/*
 	 * 0 => Authentiation
 	 * 1 => Transaction
@@ -298,10 +298,11 @@ void handle_client(int socket) {
             return;
         }
         printf("CMD: '%s'\n", command);
+        command[strlen(command)-1] = 0;
         if ( starts_with(command, "USER") ) {
 			if ( username != NULL ) {
                 memset(buffer, 0, BUF_SIZE);
-                strcpy(buffer, "-ERR Already provided username");
+                strcpy(buffer, "-ERR Already provided username\n");
 	            send(socket, buffer, strlen(buffer), 0);
 				continue;
 			}
@@ -310,19 +311,19 @@ void handle_client(int socket) {
 			printf("Extracted username : '%s'", username);
 			if ( check_username(username) != 0 ) {
                 memset(buffer, 0, BUF_SIZE);
-                strcpy(buffer, "-ERR Invalid username");
+                strcpy(buffer, "-ERR Invalid username\n");
 	            send(socket, buffer, strlen(buffer), 0);
 				free(username);
 				username = NULL;
 				continue;
 			}
             memset(buffer, 0, BUF_SIZE);
-            strcpy(buffer, "+OK Username accepted");
+            strcpy(buffer, "+OK Username accepted\n");
             send(socket, buffer, strlen(buffer), 0);
         } else if ( starts_with(command, "PASS") ) {
 			if ( password != NULL ) {
                 memset(buffer, 0, BUF_SIZE);
-                strcpy(buffer, "-ERR Already provided password");
+                strcpy(buffer, "-ERR Already provided password\n");
                 send(socket, buffer, strlen(buffer), 0);
 				continue;
 			}
@@ -331,14 +332,14 @@ void handle_client(int socket) {
 			printf("Extracted password : '%s'", password);
 			if ( check_password(username, password) != 0 ) {
                 memset(buffer, 0, BUF_SIZE);
-                strcpy(buffer, "-ERR Invalid password");
+                strcpy(buffer, "-ERR Invalid password\n");
                 send(socket, buffer, strlen(buffer), 0);
 				free(password);
 				password = NULL;
 				continue;
 			}
             memset(buffer, 0, BUF_SIZE);
-            strcpy(buffer, "+OK Auth successful");
+            strcpy(buffer, "+OK Auth successful\n");
             send(socket, buffer, strlen(buffer), 0);
             mailHead = load_messages(username);
 			state = 1;
@@ -379,8 +380,6 @@ int main (int argc, char *argv[])
     server_address.sin_family = AF_INET;
     server_address.sin_port = htons(atoi(argv[1]));
     server_address.sin_addr.s_addr = INADDR_ANY;
-
-    handle_cmd_list(0, "anandu");
 
     printf("Pop server\n");
     int success = bind(server_sock, (struct sockaddr*)&server_address, sizeof(server_address));
