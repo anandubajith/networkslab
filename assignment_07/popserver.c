@@ -275,7 +275,11 @@ int starts_with(char *string, char *marker) {
 void handle_client(int socket) {
     char *command = malloc(sizeof(char) * BUF_SIZE);
 
-	send(socket, "+OK POP3 server ready", 0);
+    char *buffer = malloc(sizeof(char) * BUF_SIZE);
+    memset(buffer, 0, BUF_SIZE);
+    strcpy(buffer, "+OK POP3 server ready");
+
+	send(socket, buffer, strlen(buffer), 0);
 
 	int state = 0; 
 	char* username;
@@ -296,34 +300,46 @@ void handle_client(int socket) {
         printf("CMD: '%s'\n", command);
         if ( starts_with(command, "USER") ) {
 			if ( username != NULL ) {
-				send(socket, "-ERR Already provided username");
+                memset(buffer, 0, BUF_SIZE);
+                strcpy(buffer, "-ERR Already provided username");
+	            send(socket, buffer, strlen(buffer), 0);
 				continue;
 			} 
 			username = malloc(sizeof(char) * MAX_SIZE);
 			strcpy(username, command+5);
 			printf("Extracted username : '%s'", username);
 			if ( check_username(username) != 0 ) {
-				send(socket, "-ERR Invalid username", 0);
+                memset(buffer, 0, BUF_SIZE);
+                strcpy(buffer, "-ERR Invalid username");
+	            send(socket, buffer, strlen(buffer), 0);
 				free(username);
 				username = NULL;
 				continue;
 			}
-			send(socket, "+OK Username accepted", 0);
+            memset(buffer, 0, BUF_SIZE);
+            strcpy(buffer, "+OK Username accepted");
+            send(socket, buffer, strlen(buffer), 0);
         } else if ( starts_with(command, "PASS") ) {
 			if ( password != NULL ) {
-				send(socket, "-ERR Already provided password", 0);
+                memset(buffer, 0, BUF_SIZE);
+                strcpy(buffer, "-ERR Already provided password");
+                send(socket, buffer, strlen(buffer), 0);
 				continue;
 			} 
 			password = malloc(sizeof(char) * MAX_SIZE);
 			strcpy(password, command+5);
 			printf("Extracted password : '%s'", password);
 			if ( check_password(username, password) != 0 ) {
-				send(socket, "-ERR Invalid password", 0);
+                memset(buffer, 0, BUF_SIZE);
+                strcpy(buffer, "-ERR Invalid password");
+                send(socket, buffer, strlen(buffer), 0);
 				free(password);
 				password = NULL;
 				continue;
 			}
-			send(socket, "+OK Auth successful", 0);
+            memset(buffer, 0, BUF_SIZE);
+            strcpy(buffer, "+OK Auth successful");
+            send(socket, buffer, strlen(buffer), 0);
 			state = 1;
         } else if ( starts_with(command, "QUIT") ) {
 
