@@ -170,7 +170,7 @@ int validate_address(char *address, char**user, char**host) {
     if ( strlen(address) == 0)
         return 1;
 
-    int pos = 0;
+    unsigned long pos = 0;
     while (address[pos] != 0 && address[pos] != '@')
         pos++;
 
@@ -207,7 +207,7 @@ void process_state(State *state) {
 
 }
 
-void handle_cmd_helo(int socket, char *command, State *state) {
+void handle_cmd_helo(int socket, State *state) {
     // clear state
     memset(state, 0 , sizeof(State) );
     send_reply(socket, 250, HOSTNAME);
@@ -276,7 +276,7 @@ void handle_cmd_rcpt(int socket, char *command, State *state) {
     send_reply(socket, 250, "OK");
 }
 
-void handle_cmd_data(int socket, char *command, State *state) {
+void handle_cmd_data(int socket, State *state) {
 
     // todo: refactor this
     state->body = malloc(sizeof(char) * BUF_SIZE *1000);
@@ -298,11 +298,12 @@ void handle_cmd_data(int socket, char *command, State *state) {
 
 }
 
-void handle_cmd_rset(int socket, char *command, State *state) {
+void handle_cmd_rset(int socket, State *state) {
     memset(state, 0 , sizeof(State) );
     send_reply(socket, 250, HOSTNAME);
 }
-void handle_cmd_quit(int socket, char*command, State *state) {
+void handle_cmd_quit(int socket, State *state) {
+    free(state);
     send_reply(socket, 221, HOSTNAME " Service closing transmission channel");
     shutdown(socket, 2);
     exit(0); // todo: find cleaner way
@@ -326,17 +327,17 @@ void handle_client(int socket) {
         }
         printf("CMD: '%s'\n", command);
         if ( starts_with(command, "HELO") ) {
-            handle_cmd_helo(socket, command,  state);
+            handle_cmd_helo(socket, state);
         } else if ( starts_with(command, "QUIT") ) {
-            handle_cmd_quit(socket, command, state);
+            handle_cmd_quit(socket,state);
         } else if ( starts_with(command, "MAIL") ) {
             handle_cmd_mail(socket,command, state);
         } else if ( starts_with(command, "RCPT") ) {
             handle_cmd_rcpt(socket, command, state);
         } else if ( starts_with(command, "DATA") ) {
-            handle_cmd_data(socket,command, state);
+            handle_cmd_data(socket,state);
         } else if ( starts_with(command, "RSET" ) ) {
-            handle_cmd_rset(socket, command, state);
+            handle_cmd_rset(socket, state);
         } else if ( starts_with(command, "NOOP" ) ) {
             send_reply(socket, 250, "NOOP");
         } else {

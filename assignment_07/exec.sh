@@ -11,5 +11,6 @@ tmux new-session \; \
     send-keys './popserver 1110' C-m \; \
     split-window -h \; \
     send-keys './mailclient 2525 1110' C-m \; \
+    select-layout even-horizontal
 
 
