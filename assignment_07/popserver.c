@@ -120,6 +120,8 @@ typedef struct _mail {
     char *received_time;
     char *body;
     char *body_raw;
+    int index;
+    int is_deleted;
     struct _mail* next;
     struct _mail* prev;
 } Mail;
@@ -127,6 +129,7 @@ typedef struct _mail {
 void print_mails(Mail *mail) {
     while ( mail != NULL ) {
         printf("---\n");
+        printf("index: %d deleted: %d\n", mail->index, mail->is_deleted);
         printf("to: '%s'\n", mail->to);
         printf("from: '%s'\n", mail->from);
         printf("received_time: '%s'\n", mail->received_time);
@@ -147,29 +150,7 @@ char* get_mailbox_path(char*username) {
 }
 
 void delete_email(char*username, Mail** head, Mail *mail) {
-    
-    if ( *head == NULL || mail == NULL)
-        return;
-
-    if ( *head == mail) {
-        *head = mail->next;
-    }
-
-    if ( mail->next != NULL) {
-        mail->next->prev = mail->prev;
-    }
-
-    if ( mail->prev != NULL ) {
-        mail->prev->next = mail->next;
-    }
-
-    free(mail->to);
-    free(mail->from);
-    free(mail->subject);
-    free(mail->received_time);
-    free(mail->body);
-    free(mail->body_raw);
-    free(mail);
+    mail->is_deleted = 1;
 }
 
 void update_emails(char*username, Mail**head) {
@@ -177,27 +158,29 @@ void update_emails(char*username, Mail**head) {
     FILE *fp = fopen(path, "w");
     Mail *iter = *head;
     while( iter != NULL) {
-        fprintf(fp, "from: %s\n", iter->from);
-        fprintf(fp, "to: %s\n", iter->to);
-        fprintf(fp, "received: %s\n", iter->received_time );
-        fprintf(fp, "subject: %s\n", iter->subject);
-        fprintf(fp, "%s", iter->body_raw);
-        fprintf(fp, ".\n");
+        if ( iter->is_deleted != 1 ) {
+            fprintf(fp, "from: %s\n", iter->from);
+            fprintf(fp, "to: %s\n", iter->to);
+            fprintf(fp, "received: %s\n", iter->received_time );
+            fprintf(fp, "subject: %s\n", iter->subject);
+            fprintf(fp, "%s", iter->body_raw);
+            fprintf(fp, ".\n");
+        }
         iter = iter->next;
     }
     free(path);
     fclose(fp);
 }
 
-void list_messages(char *username) {
+Mail* load_messages(char *username) {
     char *path = get_mailbox_path(username);
     FILE *fp = fopen(path, "r");
     char *line = NULL;
     size_t len = 0;
     ssize_t read;
 
+    int count = 0;
     int state = 0;
-
     Mail *mailHead = NULL;
 
     Mail* currentMail = malloc(sizeof(Mail));
@@ -245,6 +228,7 @@ void list_messages(char *username) {
                 state = 0;
                 currentMail->next = mailHead;
                 if ( mailHead != NULL) mailHead->prev = currentMail;
+                currentMail->index = ++count;
                 mailHead = currentMail;
                 currentMail = malloc(sizeof(Mail));
                 memset(currentMail, 0, sizeof(Mail));
@@ -262,8 +246,23 @@ void list_messages(char *username) {
 
     fclose(fp);
     free(path);
-    print_mails(mailHead);
+    return mailHead;
+}
 
+void handle_cmd_list(int socket, Mail *mailHead) {
+    char *buffer = malloc(sizeof(char) * BUF_SIZE);
+    memset(buffer, 0, BUF_SIZE);
+    sprintf(buffer, "+OK %d messages (%d octects)", 0, 123);
+    send(socket, buffer, strlen(buffer), 0);
+    Mail *iter = mailHead;
+    while ( iter != NULL) {
+        memset(buffer, 0, BUF_SIZE);
+        sprintf(buffer, "%d %d", iter->index, 123);
+        send(socket, buffer, strlen(buffer), 0);
+        iter = iter->next;
+    }
+
+    free(buffer);
 }
 
 int starts_with(char *string, char *marker) {
@@ -281,7 +280,7 @@ void handle_client(int socket) {
 
 	send(socket, buffer, strlen(buffer), 0);
 
-	int state = 0; 
+	int state = 0;
 	char* username;
 	char* password;
 	/*
@@ -304,7 +303,7 @@ void handle_client(int socket) {
                 strcpy(buffer, "-ERR Already provided username");
 	            send(socket, buffer, strlen(buffer), 0);
 				continue;
-			} 
+			}
 			username = malloc(sizeof(char) * MAX_SIZE);
 			strcpy(username, command+5);
 			printf("Extracted username : '%s'", username);
@@ -325,7 +324,7 @@ void handle_client(int socket) {
                 strcpy(buffer, "-ERR Already provided password");
                 send(socket, buffer, strlen(buffer), 0);
 				continue;
-			} 
+			}
 			password = malloc(sizeof(char) * MAX_SIZE);
 			strcpy(password, command+5);
 			printf("Extracted password : '%s'", password);
@@ -346,7 +345,7 @@ void handle_client(int socket) {
         } else if ( starts_with(command, "STAT") ) {
 
         } else if ( starts_with(command, "LIST") ) {
-
+            handle_cmd_list(socket, username);
         } else if ( starts_with(command, "RETR") ) {
 
         } else if ( starts_with(command, "DELE") ) {
@@ -378,6 +377,8 @@ int main (int argc, char *argv[])
     server_address.sin_family = AF_INET;
     server_address.sin_port = htons(atoi(argv[1]));
     server_address.sin_addr.s_addr = INADDR_ANY;
+
+    handle_cmd_list(0, "anandu");
 
     printf("Pop server\n");
     int success = bind(server_sock, (struct sockaddr*)&server_address, sizeof(server_address));
