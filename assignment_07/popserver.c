@@ -509,7 +509,9 @@ void handle_client(int socket) {
         } else if (state == 1 &&  starts_with(command, "RSET") ) {
             handle_cmd_rset(socket,username, &mailHead);
         } else {
-            // invalid commadn?
+            memset(buffer, 0, BUF_SIZE);
+            strcpy(buffer, "-ERR Invalid command\n");
+            send(socket, buffer, strlen(buffer), 0);
         }
 
 
