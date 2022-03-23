@@ -1,7 +1,3 @@
-/*
- * THIS IS THE MAIL CLIENT
- */
-
 #include <stdio.h>
 #include <sys/socket.h>
 #include <sys/types.h>
@@ -10,37 +6,53 @@
 #include <string.h>
 #include <stdlib.h>
 
-int main (int argc, char *argv[])
-{
-    if ( argc < 2 ) {
-        printf("./mailclient PORT\n");
+#define MAX_SIZE 100
+
+void handle_manage_mail(int server_port, char *username, char *password) {
+    printf("Handle manage email\n");
+}
+
+void handle_send_mail(int server_port, char *username, char *password) {
+    // create socket connection to the SMTP server
+    printf("Handle send email\n");
+
+}
+
+int main (int argc, char *argv[]) {
+    if ( argc < 3 ) {
+        printf("./mailclient SMTP_PORT POP_PORT\n");
         return 1;
     }
 
-    int sock = socket(AF_INET, SOCK_STREAM, 0);
-
-    struct sockaddr_in server_address;
-    server_address.sin_family = AF_INET;
-    server_address.sin_port = htons(atoi(argv[1]));
-    server_address.sin_addr.s_addr = INADDR_ANY;
-
-    /* int r = connect(sock, (struct sockaddr *)&server_address, sizeof(server_address)); */
-    /* if (r == -1) { */
-    /*     printf("Error: Failed to connect()"); */
-    /*     return 0; */
-    /* } */
+    char *username = malloc(sizeof(char) * MAX_SIZE);
+    char *password = malloc(sizeof(char) * MAX_SIZE);
 
     // ask for username
     printf("username: ");
     fflush(stdout);
-    printf("\n");
+    scanf("%s", username);
     // ask for password
     printf("password: ");
     fflush(stdout);
-    printf("\n");
+    scanf("%s", password);
 
-    printf("Welcome %s\n", "asdf");
-    printf("1. Send Mail\n2. Quit\n");
+
+    int input = -1;
+    while(1){
+        printf("\x1b[2J\x1b[H"); // clear and position cursor at top
+        printf("Welcome %s\n", "asdf");
+        printf("1. Manage mail\n2. Send Mail\n3. Quit\n");
+        scanf("%d", &input);
+        /* printf("got input %d", input); */
+        if ( input == 1) {
+            handle_manage_mail(atoi(argv[2]), username, password);
+        } else if ( input == 2) {
+            handle_send_mail(atoi(argv[1]), username, password);
+        } else if ( input == 3) {
+            return 0;
+        }
+        input = -1;
+    }
 
 
     return 0;
