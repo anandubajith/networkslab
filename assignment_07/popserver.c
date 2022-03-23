@@ -279,7 +279,8 @@ void handle_cmd_list(int socket, Mail *mailHead) {
     int total_size = 0;
     while ( iter != NULL ) {
         count++;
-        total_size += iter->size;
+        if ( iter->is_deleted != 1)
+            total_size += iter->size;
         iter = iter->next;
     }
 
@@ -288,9 +289,11 @@ void handle_cmd_list(int socket, Mail *mailHead) {
 
     iter = mailHead;
     while ( iter != NULL) {
-        memset(buffer, 0, BUF_SIZE);
-        sprintf(buffer, "%d %d\n", iter->index, iter->size);
-        send(socket, buffer, strlen(buffer), 0);
+        if ( iter->is_deleted != 1) {
+            memset(buffer, 0, BUF_SIZE);
+            sprintf(buffer, "%d %d\n", iter->index, iter->size);
+            send(socket, buffer, strlen(buffer), 0);
+        }
         iter = iter->next;
     }
 
@@ -369,6 +372,7 @@ void handle_cmd_dele(int socket, int index, Mail* mailHead) {
         return;
     }
 
+    mail->is_deleted = 1;
     memset(buffer, 0, BUF_SIZE);
     sprintf(buffer, "+OK message %d deleted", mail->index);
     send(socket, buffer, strlen(buffer), 0);
