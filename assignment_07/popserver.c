@@ -121,6 +121,7 @@ typedef struct _mail {
     char *body;
     char *body_raw;
     int index;
+    int size;
     int is_deleted;
     struct _mail* next;
     struct _mail* prev;
@@ -183,59 +184,63 @@ Mail* load_messages(char *username) {
     int state = 0;
     Mail *mailHead = NULL;
 
-    Mail* currentMail = malloc(sizeof(Mail));
-    memset(currentMail, 0, sizeof(Mail));
+    Mail* current_mail = malloc(sizeof(Mail));
+    int current_size = 0;
+    memset(current_mail, 0, sizeof(Mail));
 
     while ((read = getline(&line, &len, fp)) != -1) {
         /* printf("'%s'\n",line); */
+        current_size += read;
         if ( state == 0) {
             if (strncmp("from: ", line, 6) == 0) {
                 int len = strlen(line+6);
-                currentMail->from = malloc(sizeof(char) * len );
-                memset(currentMail->from, 0, len);
-                strncpy(currentMail->from, line+6, len-1);
+                current_mail->from = malloc(sizeof(char) * len );
+                memset(current_mail->from, 0, len);
+                strncpy(current_mail->from, line+6, len-1);
             } else if ( strncmp("to: ", line, 4) == 0) {
                 int len = strlen(line+4);
-                currentMail->to = malloc(sizeof(char) * len );
-                memset(currentMail->to, 0, len);
-                strncpy(currentMail->to, line+4, len-1);
+                current_mail->to = malloc(sizeof(char) * len );
+                memset(current_mail->to, 0, len);
+                strncpy(current_mail->to, line+4, len-1);
             } else if ( strncmp("received: ", line, 10) == 0) {
                 int len = strlen(line+10);
-                currentMail->received_time = malloc(sizeof(char) * len );
-                memset(currentMail->received_time, 0, len);
-                strncpy(currentMail->received_time, line+10, len-1);
+                current_mail->received_time = malloc(sizeof(char) * len );
+                memset(current_mail->received_time, 0, len);
+                strncpy(current_mail->received_time, line+10, len-1);
             } else if ( strncmp("subject: ", line, 9) == 0) {
                 int len = strlen(line+9);
-                currentMail->subject = malloc(sizeof(char) * len);
-                memset(currentMail->subject, 0, len);
-                strncpy(currentMail->subject, line+9, len-1);
+                current_mail->subject = malloc(sizeof(char) * len);
+                memset(current_mail->subject, 0, len);
+                strncpy(current_mail->subject, line+9, len-1);
                 state = 1;
             } else {
                 // data corruption?
             }
         } else if ( state == 1) {
             // append to data follwing transparancy procedure
-            if ( currentMail->body == NULL ) {
-                currentMail->body = malloc(sizeof(char) * strlen(line) + 1);
-                currentMail->body_raw = malloc(sizeof(char) * strlen(line) + 1);
-                memset(currentMail->body, 0, strlen(line)+1);
-                memset(currentMail->body_raw, 0, strlen(line)+1);
+            if ( current_mail->body == NULL ) {
+                current_mail->body = malloc(sizeof(char) * strlen(line) + 1);
+                current_mail->body_raw = malloc(sizeof(char) * strlen(line) + 1);
+                memset(current_mail->body, 0, strlen(line)+1);
+                memset(current_mail->body_raw, 0, strlen(line)+1);
             } else {
-                currentMail->body = realloc(currentMail->body, strlen(currentMail->body) + strlen(line) +1);
-                currentMail->body_raw= realloc(currentMail->body_raw, strlen(currentMail->body_raw) + strlen(line) +1);
+                current_mail->body = realloc(current_mail->body, strlen(current_mail->body) + strlen(line) +1);
+                current_mail->body_raw= realloc(current_mail->body_raw, strlen(current_mail->body_raw) + strlen(line) +1);
             }
             if ( strncmp(".", line, 1) == 0 && strlen(line) == 2) {
                 state = 0;
-                currentMail->next = mailHead;
-                if ( mailHead != NULL) mailHead->prev = currentMail;
-                currentMail->index = ++count;
-                mailHead = currentMail;
-                currentMail = malloc(sizeof(Mail));
-                memset(currentMail, 0, sizeof(Mail));
+                current_mail->next = mailHead;
+                if ( mailHead != NULL) mailHead->prev = current_mail;
+                current_mail->index = ++count;
+                current_mail->size = current_size;
+                mailHead = current_mail;
+                current_mail = malloc(sizeof(Mail));
+                current_size = 0;
+                memset(current_mail, 0, sizeof(Mail));
             } else {
                 /* printf("Cattign :'%s' with '%s'", mail->body, line); */
-                strcat(currentMail->body, line + (line[0] == '.' ? 1 : 0 ));
-                strcat(currentMail->body_raw, line);
+                strcat(current_mail->body, line + (line[0] == '.' ? 1 : 0 ));
+                strcat(current_mail->body_raw, line);
             }
         } else {
             // data corruption?
@@ -249,15 +254,46 @@ Mail* load_messages(char *username) {
     return mailHead;
 }
 
+void handle_cmd_stat(int socket, Mail* mailHead) {
+    char *buffer = malloc(sizeof(char) * BUF_SIZE);
+    memset(buffer, 0, BUF_SIZE);
+    Mail *iter = mailHead;
+
+    int count = 0;
+    int total_size = 0;
+    while ( iter != NULL ) {
+        count++;
+        total_size += iter->size;
+        iter = iter->next;
+    }
+
+    sprintf(buffer, "+OK %d %d\n", count, total_size);
+    send(socket, buffer, strlen(buffer), 0);
+
+}
+
 void handle_cmd_list(int socket, Mail *mailHead) {
     char *buffer = malloc(sizeof(char) * BUF_SIZE);
     memset(buffer, 0, BUF_SIZE);
-    sprintf(buffer, "+OK %d messages (%d octects)\n", 0, 123);
-    send(socket, buffer, strlen(buffer), 0);
+
+
     Mail *iter = mailHead;
+
+    int count = 0;
+    int total_size = 0;
+    while ( iter != NULL ) {
+        count++;
+        total_size += iter->size;
+        iter = iter->next;
+    }
+
+    sprintf(buffer, "+OK %d messages (%d octects)\n", count, total_size);
+    send(socket, buffer, strlen(buffer), 0);
+
+    iter = mailHead;
     while ( iter != NULL) {
         memset(buffer, 0, BUF_SIZE);
-        sprintf(buffer, "%d %d\n", iter->index, 123);
+        sprintf(buffer, "%d %d\n", iter->index, iter->size);
         send(socket, buffer, strlen(buffer), 0);
         iter = iter->next;
     }
@@ -346,7 +382,7 @@ void handle_client(int socket) {
         } else if ( starts_with(command, "QUIT") ) {
 
         } else if ( starts_with(command, "STAT") ) {
-
+            handle_cmd_stat(socket, mailHead);
         } else if ( starts_with(command, "LIST") ) {
             handle_cmd_list(socket, mailHead);
         } else if ( starts_with(command, "RETR") ) {
