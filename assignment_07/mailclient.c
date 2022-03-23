@@ -123,10 +123,22 @@ void handle_send_mail(int server_port, char *username, char *password) {
     printf("Handle send email\n");
 
 
+    char *from = malloc(sizeof(char) * BUF_SIZE);
+    char *to = malloc(sizeof(char) * BUF_SIZE);
+    char *subject = malloc(sizeof(char) * BUF_SIZE);
+    char *body = malloc(sizeof(char) * BUF_SIZE);
 
     printf("from: ");
     fflush(stdout);
-    scanf("%s", username );
+    scanf("%s", from);
+
+    printf("to: ");
+    fflush(stdout);
+    scanf("%s", to);
+
+    printf("subject: ");
+    fflush(stdout);
+    scanf("%s", subject);
 
 
     // input from, to, subject
