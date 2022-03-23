@@ -375,11 +375,38 @@ void handle_cmd_dele(int socket, int index, Mail* mailHead) {
 
 }
 
+void handle_cmd_rset(int socket, char*username, Mail**mailHead) {
+    // free everything
+    Mail *prev = NULL;
+    Mail* iter = *mailHead;
+    while ( iter != NULL ) {
+        free(iter->body_raw);
+        free(iter->from);
+        free(iter->to);
+        free(iter->subject);
+        free(iter->received_time);
+        free(iter->body_raw);
+        prev = iter;
+        iter = iter->next;
+        free(prev);
+    }
+
+    *mailHead = load_messages(username);
+
+    /* +OK maildrop has 2 messages (320 octets) */
+    char* buffer = malloc(sizeof(char)* BUF_SIZE);
+    memset(buffer, 0, BUF_SIZE);
+    sprintf(buffer, "+OK maildrop has %d messages (%d octets)", 0,0);
+    send(socket, buffer, strlen(buffer), 0);
+}
+
 int starts_with(char *string, char *marker) {
     assert( string != NULL );
     assert( marker != NULL );
     return strncmp(string, marker, strlen(marker)) == 0;
 }
+
+
 
 void handle_client(int socket) {
     char *command = malloc(sizeof(char) * BUF_SIZE);
@@ -468,7 +495,7 @@ void handle_client(int socket) {
             sprintf(buffer, "+OK");
             send(socket, buffer, strlen(buffer), 0);
         } else if ( starts_with(command, "RSET") ) {
-
+            handle_cmd_rset(socket,username, &mailHead);
         } else {
             // invalid commadn?
         }
