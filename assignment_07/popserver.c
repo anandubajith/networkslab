@@ -397,11 +397,22 @@ void handle_cmd_rset(int socket, char*username, Mail**mailHead) {
 
     *mailHead = load_messages(username);
 
+    iter = *mailHead;
+    int count = 0;
+    int total_size = 0;
+    while ( iter != NULL ) {
+        count++;
+        if ( iter->is_deleted != 1)
+            total_size += iter->size;
+        iter = iter->next;
+    }
+
     /* +OK maildrop has 2 messages (320 octets) */
     char* buffer = malloc(sizeof(char)* BUF_SIZE);
     memset(buffer, 0, BUF_SIZE);
-    sprintf(buffer, "+OK maildrop has %d messages (%d octets)", 0,0);
+    sprintf(buffer, "+OK maildrop has %d messages (%d octets)", count, total_size);
     send(socket, buffer, strlen(buffer), 0);
+    free(buffer);
 }
 
 void handle_cmd_top() {
