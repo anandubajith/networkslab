@@ -400,6 +400,10 @@ void handle_cmd_rset(int socket, char*username, Mail**mailHead) {
     send(socket, buffer, strlen(buffer), 0);
 }
 
+void handle_cmd_top() {
+
+}
+
 int starts_with(char *string, char *marker) {
     assert( string != NULL );
     assert( marker != NULL );
@@ -434,8 +438,8 @@ void handle_client(int socket) {
             printf("Client closed connection");
             return;
         }
-        printf("CMD: '%s'\n", command);
         command[strlen(command)-1] = 0;
+        printf("CMD: '%s'\n", command);
         if ( starts_with(command, "USER") ) {
 			if ( username != NULL ) {
                 memset(buffer, 0, BUF_SIZE);
@@ -481,7 +485,10 @@ void handle_client(int socket) {
             mailHead = load_messages(username);
 			state = 1;
         } else if ( starts_with(command, "QUIT") ) {
-
+            if ( state == 1) {
+                // do update
+            }
+            // close
         } else if ( starts_with(command, "STAT") ) {
             handle_cmd_stat(socket, mailHead);
         } else if ( starts_with(command, "LIST") ) {
