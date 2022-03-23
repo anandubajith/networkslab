@@ -26,6 +26,9 @@ int get_socket_connection(int port ){
 }
 
 void handle_view_message(int socket, int message_index) {
+    char input[100];
+    while ((input[0] = getchar()) != '\n' && input[0] != EOF);
+
     printf("\x1b[2J\x1b[H");
     printf("\nMessage: %d\n", message_index);
     char *buffer = malloc(sizeof(char) * BUF_SIZE);
@@ -35,16 +38,47 @@ void handle_view_message(int socket, int message_index) {
     // receive the message?
     memset(buffer, 0, BUF_SIZE);
     recv(socket, buffer, BUF_SIZE, 0);
-    printf("Received '%s'\n", buffer);
+    printf("Received '%s' \n", buffer);
 
+    int total_bytes = 0;
+    sscanf(buffer+3, "%d", &total_bytes);
+    printf("\nTotal bytes = %d\n\n", total_bytes);
+
+    // receive the rest of message?
+    memset(buffer, 0, BUF_SIZE);
+
+    while ( total_bytes > 0 ) {
+        memset(buffer, 0, BUF_SIZE);
+        int r = recv(socket, buffer, BUF_SIZE, 0);
+        printf("%s", buffer);
+        if ( r <= 0)
+            return;
+        total_bytes -= r;
+    }
     free(buffer);
+
+    scanf(" %s", input);
+    if ( input[0] == 'd' ) {
+        memset(buffer, 0, BUF_SIZE);
+        sprintf(buffer, "DELE %d", message_index);
+        send(socket, buffer, strlen(buffer), 0);
+    }
 }
 
 void handle_manage_mail(int server_port, char *username, char *password) {
     // login to pop server
     //
     int socket = get_socket_connection(server_port);
+
+    struct timeval tv;
+    tv.tv_sec = 0;
+    tv.tv_usec = 1000;
+    setsockopt(socket, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof tv);
+
     char *buffer = malloc(sizeof(char) * BUF_SIZE);
+    memset(buffer, 0, BUF_SIZE);
+    recv(socket, buffer, BUF_SIZE,0); // ready message
+
     memset(buffer, 0, BUF_SIZE);
     sprintf(buffer, "USER %s", username);
     send(socket, buffer, strlen(buffer), 0);
@@ -62,24 +96,22 @@ void handle_manage_mail(int server_port, char *username, char *password) {
 
 
 
-    //
-    /* printf("\x1b[2J\x1b[H"); */
-    printf("Handle manage email\n");
-    printf("List messages\n");
-    printf("Sl. No. <Sender's email id> <received time; date: hour: minute> <Subject> ");
-
     char input[100];
     int message_index;
     while(1) {
+        printf("\x1b[2J\x1b[H");
+        printf("Handle manage email\n");
+        printf("List messages\n");
+        printf("Sl. No. <Sender's email id> <received time; date: hour: minute> <Subject> \n");
         scanf("%s", input);
         printf("Got input %s\n", input);
         if ( input[0] == 'q') {
-            printf("Got the quit command");
+            break;
         } else if( sscanf(input, "%d", &message_index ) == 1 ) {
-            printf("received input %d \n", message_index);
+            /* printf("received input %d \n", message_index); */
             handle_view_message(socket, message_index);
         } else {
-            printf("something else? %s\n", input);
+            /* printf("something else? %s\n", input); */
         }
 
     }

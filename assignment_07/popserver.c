@@ -322,7 +322,7 @@ void handle_cmd_retr(int socket, int index, Mail*mailHead) {
     printf("foudn the index %d\n", mail->index);
 
     memset(buffer, 0, BUF_SIZE);
-    sprintf(buffer, "+OK %d octets", mail->size);
+    sprintf(buffer, "+OK %d octets\n", mail->size);
     send(socket, buffer, strlen(buffer), 0);
     memset(buffer, 0, BUF_SIZE);
     sprintf(buffer, "from: %s\n", mail->from);
