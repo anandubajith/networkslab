@@ -454,7 +454,7 @@ void handle_client(int socket) {
             printf("Client closed connection");
             return;
         }
-        command[strlen(command)-1] = 0;
+        /* command[strlen(command)-1] = 0; */
         printf("CMD: '%s'\n", command);
 
         if ( state == 0 && starts_with(command, "USER") ) {
@@ -540,6 +540,8 @@ int main (int argc, char *argv[])
 	load_usersfile();
 
     int server_sock = socket(AF_INET, SOCK_STREAM, 0);
+    if ( setsockopt(server_sock, SOL_SOCKET, SO_REUSEADDR, &(int){1}, sizeof(int)) < 0)
+        printf("setsockopt() failed");
 
     struct sockaddr_in server_address;
     server_address.sin_family = AF_INET;
