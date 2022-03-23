@@ -407,7 +407,6 @@ void handle_cmd_rset(int socket, char*username, Mail**mailHead) {
         iter = iter->next;
     }
 
-    /* +OK maildrop has 2 messages (320 octets) */
     char* buffer = malloc(sizeof(char)* BUF_SIZE);
     memset(buffer, 0, BUF_SIZE);
     sprintf(buffer, "+OK maildrop has %d messages (%d octets)", count, total_size);
@@ -416,6 +415,8 @@ void handle_cmd_rset(int socket, char*username, Mail**mailHead) {
 }
 
 void handle_cmd_top() {
+    // take mailIndex
+    // return the mail headers
 
 }
 
