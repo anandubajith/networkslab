@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 gcc -Wall -Wextra -g mailclient.c -o mailclient
 gcc -Wall -Wextra -g popserver.c -o popserver
 gcc -Wall -Wextra -g smtpmail.c -o smtpmail
