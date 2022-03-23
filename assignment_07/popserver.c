@@ -444,7 +444,8 @@ void handle_client(int socket) {
         }
         command[strlen(command)-1] = 0;
         printf("CMD: '%s'\n", command);
-        if ( starts_with(command, "USER") ) {
+
+        if ( state == 0 && starts_with(command, "USER") ) {
 			if ( username != NULL ) {
                 memset(buffer, 0, BUF_SIZE);
                 strcpy(buffer, "-ERR Already provided username\n");
@@ -465,7 +466,7 @@ void handle_client(int socket) {
             memset(buffer, 0, BUF_SIZE);
             strcpy(buffer, "+OK Username accepted\n");
             send(socket, buffer, strlen(buffer), 0);
-        } else if ( starts_with(command, "PASS") ) {
+        } else if ( state == 0 && starts_with(command, "PASS") ) {
 			if ( password != NULL ) {
                 memset(buffer, 0, BUF_SIZE);
                 strcpy(buffer, "-ERR Already provided password\n");
@@ -493,19 +494,19 @@ void handle_client(int socket) {
                 // do update
             }
             // close
-        } else if ( starts_with(command, "STAT") ) {
+        } else if ( state == 1 && starts_with(command, "STAT") ) {
             handle_cmd_stat(socket, mailHead);
-        } else if ( starts_with(command, "LIST") ) {
+        } else if (state == 1 &&  starts_with(command, "LIST") ) {
             handle_cmd_list(socket, mailHead);
-        } else if ( starts_with(command, "RETR") ) {
+        } else if (state == 1 &&  starts_with(command, "RETR") ) {
             handle_cmd_retr(socket, atoi(command+ 4), mailHead);
-        } else if ( starts_with(command, "DELE") ) {
+        } else if (state == 1 &&  starts_with(command, "DELE") ) {
             handle_cmd_dele(socket, atoi(command + 4), mailHead);
-        } else if ( starts_with(command, "NOOP") ) {
+        } else if (state == 1 &&  starts_with(command, "NOOP") ) {
             memset(buffer, 0, BUF_SIZE);
             sprintf(buffer, "+OK");
             send(socket, buffer, strlen(buffer), 0);
-        } else if ( starts_with(command, "RSET") ) {
+        } else if (state == 1 &&  starts_with(command, "RSET") ) {
             handle_cmd_rset(socket,username, &mailHead);
         } else {
             // invalid commadn?
