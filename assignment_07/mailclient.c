@@ -26,8 +26,6 @@ int get_socket_connection(int port ){
 }
 
 void handle_view_message(int socket, int message_index) {
-    char input[100];
-    while ((input[0] = getchar()) != '\n' && input[0] != EOF);
 
     printf("\x1b[2J\x1b[H");
     printf("\nMessage: %d\n", message_index);
@@ -52,11 +50,12 @@ void handle_view_message(int socket, int message_index) {
         int r = recv(socket, buffer, BUF_SIZE, 0);
         printf("%s", buffer);
         if ( r <= 0)
-            return;
+            break;
         total_bytes -= r;
     }
     free(buffer);
 
+    char input[100];
     scanf(" %s", input);
     if ( input[0] == 'd' ) {
         memset(buffer, 0, BUF_SIZE);
@@ -123,6 +122,8 @@ void handle_send_mail(int server_port, char *username, char *password) {
     printf("\x1b[2J\x1b[H");
     printf("Handle send email\n");
 
+
+
     printf("from: ");
     fflush(stdout);
     scanf("%s", username );
@@ -160,21 +161,21 @@ int main (int argc, char *argv[]) {
     scanf("%s", password);
 
 
-    int input = -1;
+    char input = 0;
     while(1){
         printf("\x1b[2J\x1b[H"); // clear and position cursor at top
         printf("Welcome %s\n", "asdf");
         printf("1. Manage mail\n2. Send Mail\n3. Quit\n");
-        scanf("%d", &input);
+        scanf("%c", &input);
         /* printf("got input %d", input); */
-        if ( input == 1) {
+        if ( input == '1') {
             handle_manage_mail(atoi(argv[2]), username, password);
-        } else if ( input == 2) {
+        } else if ( input == '2') {
             handle_send_mail(atoi(argv[1]), username, password);
-        } else if ( input == 3) {
+        } else if ( input == '3') {
             return 0;
         }
-        input = -1;
+        input = 0;
     }
 
 
