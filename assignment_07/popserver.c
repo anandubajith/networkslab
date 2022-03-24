@@ -5,6 +5,7 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <netinet/tcp.h>
 #include <unistd.h>
 
 #define BACKLOG 5
@@ -417,9 +418,71 @@ void handle_cmd_rset(int socket, char *username, Mail **mailHead) {
     free(buffer);
 }
 
-void handle_cmd_top() {
-    // take mailIndex
-    // return the mail headers
+void handle_cmd_top(int socket, char *command, Mail *head) {
+    int message_index = 0;
+    int count = 0;
+    if ( sscanf(command +3, "%d %d", &message_index, &count) != 2 ) {
+        // invalid format
+        send(socket, "-ERR Invalid format", 15, 0);
+        return;
+    }
+
+    Mail* iter = head;
+    while (iter != NULL) {
+        if ( iter->index == message_index && iter->is_deleted != 1) {
+            break;
+        }
+        iter = iter->next;
+    }
+    if ( iter == NULL) {
+        send(socket, "-ERR no such message", 20, 0);
+        return;
+    }
+
+    char *buffer = malloc(sizeof(char) * BUF_SIZE);
+    // send OK message
+    memset(buffer, 0, BUF_SIZE);
+    sprintf(buffer, "+OK top of message follows");
+    send(socket, buffer, strlen(buffer), 0);
+
+    if (count > 0) {
+        memset(buffer,0, BUF_SIZE);
+        sprintf(buffer, "from: %s\n", iter->from);
+        send(socket, buffer, strlen(buffer), 0);
+        count--;
+    }
+    if (count > 0) {
+        memset(buffer,0, BUF_SIZE);
+        sprintf(buffer, "to: %s\n", iter->to);
+        send(socket, buffer, strlen(buffer), 0);
+        count--;
+    }
+    if (count > 0) {
+        memset(buffer,0, BUF_SIZE);
+        sprintf(buffer, "received: %s\n", iter->received_time);
+        send(socket, buffer, strlen(buffer), 0);
+        count--;
+    }
+    if (count > 0) {
+        memset(buffer,0, BUF_SIZE);
+        sprintf(buffer, "subject: %s\n", iter->subject);
+        send(socket, buffer, strlen(buffer), 0);
+        count--;
+    }
+
+    char *copy = malloc(sizeof(char) * strlen(iter->body));
+    strcpy(copy, iter->body);
+    char *part = strtok(copy, "\n");
+    while (part != NULL && count > 0) {
+        memset(buffer,0, BUF_SIZE);
+        sprintf(buffer, "%s\n",part);
+        send(socket, buffer, strlen(buffer), 0);
+        count--;
+        part = strtok(NULL, "\n");
+    }
+
+    free(copy);
+    free(buffer);
 }
 
 int starts_with(char *string, char *marker) {
@@ -429,6 +492,7 @@ int starts_with(char *string, char *marker) {
 }
 
 void handle_client(int socket) {
+    setsockopt(socket, SOL_SOCKET,TCP_NODELAY , (char *) &(int){1}, sizeof(int));
     char *command = malloc(sizeof(char) * BUF_SIZE);
 
     char *buffer = malloc(sizeof(char) * BUF_SIZE);
@@ -515,6 +579,8 @@ void handle_client(int socket) {
             handle_cmd_retr(socket, atoi(command + 4), mailHead);
         } else if (state == 1 && starts_with(command, "DELE")) {
             handle_cmd_dele(socket, atoi(command + 4), mailHead);
+        } else if (state == 1 && starts_with(command, "TOP")) {
+            handle_cmd_top(socket, command, mailHead);
         } else if (state == 1 && starts_with(command, "NOOP")) {
             memset(buffer, 0, BUF_SIZE);
             sprintf(buffer, "+OK");
@@ -541,6 +607,7 @@ int main(int argc, char *argv[]) {
     if (setsockopt(server_sock, SOL_SOCKET, SO_REUSEADDR, &(int){1},
                 sizeof(int)) < 0)
         printf("setsockopt() failed");
+
 
     struct sockaddr_in server_address;
     server_address.sin_family = AF_INET;

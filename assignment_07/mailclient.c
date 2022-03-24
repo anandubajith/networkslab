@@ -71,6 +71,7 @@ void handle_manage_mail(int server_port, char *username, char *password) {
     // login to pop server
     //
     int socket = get_socket_connection(server_port);
+    setsockopt(socket, SOL_SOCKET,TCP_NODELAY , (char *) &(int){1}, sizeof(int));
 
     struct timeval tv;
     tv.tv_sec = 0;
@@ -95,14 +96,44 @@ void handle_manage_mail(int server_port, char *username, char *password) {
     recv(socket, buffer, BUF_SIZE, 0);
     printf("received: '%s'\n", buffer);
 
+
     char input[100];
     int message_index;
+    int total_message_count = 0;
     while (1) {
         printf("\x1b[2J\x1b[H");
         printf("Handle manage email\n");
         printf("List messages\n");
-        printf("Sl. No. <Sender's email id> <received time; date: hour: minute> "
-                "<Subject> \n");
+        printf("Sl. No. <Sender's email id> <received time; date: hour: minute> <Subject> \n");
+
+        // send stat and get email count
+        memset(buffer, 0, BUF_SIZE);
+        sprintf(buffer, "STAT");
+        send(socket, buffer, strlen(buffer), 0);
+        memset(buffer, 0, BUF_SIZE);
+        recv(socket, buffer, BUF_SIZE, 0);
+        printf("Got response %s", buffer);
+        sscanf(buffer+3, "%d", &total_message_count); // err chekcing?
+
+        for ( int i = 1; i <= total_message_count; i++) {
+            printf("Message: %d\n", i);
+            memset(buffer, 0, BUF_SIZE);
+            sprintf(buffer, "TOP %d 4", i);
+            send(socket, buffer, strlen(buffer), 0);
+            for ( int j = 0; j < 5;j++) {
+                memset(buffer, 0, BUF_SIZE);
+                if ( recv(socket, buffer, BUF_SIZE, 0) <= 0 )
+                    break;
+                printf("%s\n", buffer);
+            }
+            printf("\n");
+        }
+
+
+        // for each email, TOP i 4 of that email
+        // parse top and display
+
+
         scanf("%s", input);
         printf("Got input %s\n", input);
         if (input[0] == 'q') {
