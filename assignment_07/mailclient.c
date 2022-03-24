@@ -113,9 +113,50 @@ void handle_manage_mail(int server_port, char *username, char *password) {
     }
     free(buffer);
 }
+void send_email(int socket, char *from, char*to, char*subject, char*body, char*buffer){
+
+    memset(buffer, 0, BUF_SIZE);
+    sprintf(buffer, "MAIL FROM:<%s>", from);
+    send(socket, buffer, strlen(buffer), 0);
+    memset(buffer, 0, BUF_SIZE);
+    recv(socket, buffer, BUF_SIZE, 0);
+    if ( buffer[0] == '5' ) {
+        printf("Incorrect format for from address\n");
+        return;
+    }
+
+    printf("Received : '%s'\n", buffer);
+    memset(buffer, 0, BUF_SIZE);
+    sprintf(buffer, "RCPT TO:<%s>", from);
+    send(socket, buffer, strlen(buffer), 0);
+    memset(buffer, 0, BUF_SIZE);
+    recv(socket, buffer, BUF_SIZE, 0);
+    if ( buffer[0] == '5' ) {
+        printf("Incorrect format for to address\n");
+        return;
+    }
+
+    printf("Received : '%s'\n", buffer);
+
+    memset(buffer, 0, BUF_SIZE);
+    sprintf(buffer, "DATA");
+    send(socket, buffer, strlen(buffer), 0);
+
+    memset(buffer, 0, BUF_SIZE);
+    sprintf(buffer, "subject: %s\n", subject);
+    send(socket, buffer, strlen(buffer), 0);
+    send(socket, body, strlen(body), 0);
+    send(socket, ".", 1, 0);
+    memset(buffer, 0, BUF_SIZE);
+    recv(socket, buffer, BUF_SIZE, 0);
+    printf("Received : '%s'\n", buffer);
+    if ( buffer[0] == '5' ) {
+        printf("Error when trying to put in data mode");
+        return;
+    }
+}
 
 void handle_send_mail(int server_port, char *username, char *password) {
-    // create socket connection to the SMTP server
     printf("\x1b[2J\x1b[H");
     printf("Handle send email\n");
 
@@ -158,26 +199,23 @@ void handle_send_mail(int server_port, char *username, char *password) {
             break;
         }
     }
+    free(temp);
 
-    printf("\nReceived input:\n");
-    printf("from: '%s'\n", from);
-    printf("to: '%s'\n", to);
-    printf("subject: '%s'\n", subject);
-    printf("body: '%s'\n", body);
+    /* printf("\nReceived input:\n"); */
+    /* printf("from: '%s'\n", from); */
+    /* printf("to: '%s'\n", to); */
+    /* printf("subject: '%s'\n", subject); */
+    /* printf("body: '%s'\n", body); */
 
-    while(1) {
-
-    }
-
-    // input from, to, subject
-    // take input till receiving . for body
-    //
-    // try to init socket and send email
-    // if invalid => incorrect format message
-    //
-    // else fail on erro
-    // in the end the "Mail send successfully"
-    // show <ENTER>
+    int socket = get_socket_connection(server_port);
+    char* buffer = malloc(sizeof(char) * BUF_SIZE);
+    send_email(socket, from, to, subject, body, buffer);
+    memset(buffer, 0, BUF_SIZE);
+    sprintf(buffer, "QUIT");
+    send(socket, buffer, strlen(buffer),0);
+    shutdown(socket, 2);
+    free(buffer);
+    scanf("%c", &t);
 }
 
 int main(int argc, char *argv[]) {

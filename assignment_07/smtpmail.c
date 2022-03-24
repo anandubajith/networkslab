@@ -215,7 +215,7 @@ void handle_cmd_mail(int socket, char *command, State *state) {
     }
 
     state->from = malloc(sizeof(char) * MAX_SIZE);
-    strncpy(state->from, command + 11, strlen(command + 11) - 2);
+    strncpy(state->from, command + 11, strlen(command + 11) - 1);
 
     if (validate_address(state->from, &state->from_user, &state->from_host) !=
             0) {
@@ -246,7 +246,7 @@ void handle_cmd_rcpt(int socket, char *command, State *state) {
     }
 
     state->to = malloc(sizeof(char) * MAX_SIZE);
-    strncpy(state->to, command + 9, strlen(command + 9) - 2);
+    strncpy(state->to, command + 9, strlen(command + 9) - 1);
 
     if (validate_address(state->to, &state->to_user, &state->to_host) != 0) {
         send_reply(socket, 501, "Syntax error in parameters or arguments");
@@ -288,6 +288,7 @@ void handle_cmd_data(int socket, State *state) {
     }
 
     process_state(state);
+    send_reply(socket, 250, "OK");
 }
 
 void handle_cmd_rset(int socket, State *state) {
