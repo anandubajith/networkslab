@@ -4,6 +4,7 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <netinet/tcp.h>
 #include <unistd.h>
 
 #define MAX_SIZE 100
@@ -21,6 +22,8 @@ int get_socket_connection(int port) {
         printf("Error: Failed to connect()");
         exit(1);
     }
+    setsockopt(sock, SOL_SOCKET,TCP_NODELAY , (char *) &(int){1}, sizeof(int));
+
 
     return sock;
 }
