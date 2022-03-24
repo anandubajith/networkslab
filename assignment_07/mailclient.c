@@ -143,15 +143,16 @@ void handle_send_mail(int server_port, char *username, char *password) {
     scanf("%[^\n]", subject);
     scanf("%c", &t);
 
-    printf("body: ");
+    printf("body: \n");
     fflush(stdout);
     char *temp = malloc(sizeof(char) * BUF_SIZE);
     while (1) {
         memset(temp, 0, BUF_SIZE);
         scanf("%[^\n]%c", temp, &t);
-        printf("read: '%s' %ld", temp, strlen(temp));
-        strcat(body, "\n");
-        if ( strlen(body) != 0 ) strcat(body, temp);
+        /* printf("read: '%s' %ld", temp, strlen(temp)); */
+        if ( strlen(body) != 0 )
+            strcat(body, "\n");
+        strcat(body, temp);
         if (strlen(temp) == 1 && temp[0] == '.') {
             printf("Received end marker\n");
             break;
