@@ -122,19 +122,51 @@ void handle_send_mail(int server_port, char *username, char *password) {
     char *from = malloc(sizeof(char) * BUF_SIZE);
     char *to = malloc(sizeof(char) * BUF_SIZE);
     char *subject = malloc(sizeof(char) * BUF_SIZE);
-    char *body = malloc(sizeof(char) * BUF_SIZE);
+    char *body = malloc(sizeof(char) * BUF_SIZE * 1000);
+    memset(body, 0, BUF_SIZE * 1000);
+
+    char t;
+    scanf("%c", &t);
 
     printf("from: ");
     fflush(stdout);
-    scanf("%s", from);
+    scanf("%[^\n]", from);
+    scanf("%c", &t);
 
     printf("to: ");
     fflush(stdout);
-    scanf("%s", to);
+    scanf("%[^\n]", to);
+    scanf("%c", &t);
 
     printf("subject: ");
     fflush(stdout);
-    scanf("%s", subject);
+    scanf("%[^\n]", subject);
+    scanf("%c", &t);
+
+    printf("body: ");
+    fflush(stdout);
+    char *temp = malloc(sizeof(char) * BUF_SIZE);
+    while (1) {
+        memset(temp, 0, BUF_SIZE);
+        scanf("%[^\n]%c", temp, &t);
+        printf("read: '%s' %ld", temp, strlen(temp));
+        strcat(body, "\n");
+        if ( strlen(body) != 0 ) strcat(body, temp);
+        if (strlen(temp) == 1 && temp[0] == '.') {
+            printf("Received end marker\n");
+            break;
+        }
+    }
+
+    printf("\nReceived input:\n");
+    printf("from: '%s'\n", from);
+    printf("to: '%s'\n", to);
+    printf("subject: '%s'\n", subject);
+    printf("body: '%s'\n", body);
+
+    while(1) {
+
+    }
 
     // input from, to, subject
     // take input till receiving . for body
