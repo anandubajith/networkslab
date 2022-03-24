@@ -86,7 +86,7 @@ void print_users() {
 }
 
 int load_usersfile() {
-    FILE *fp = fopen("./logincred.txt", "r");
+    FILE *fp = fopen("./userlogincred.txt", "r");
     if (fp == NULL)
         return -1;
 
