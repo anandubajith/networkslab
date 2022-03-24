@@ -199,6 +199,7 @@ void process_state(State *state) {
     fprintf(fp, "to: %s@%s\n", state->to_user, state->to_host);
     fprintf(fp, "received: %s\n", get_current_time_str());
     fprintf(fp, "%s", state->body);
+    fprintf(fp, "\n.\n");
     fclose(fp);
 }
 
@@ -273,18 +274,20 @@ void handle_cmd_data(int socket, State *state) {
 
     // todo: refactor this
     state->body = malloc(sizeof(char) * BUF_SIZE * 1000);
+    memset(state->body, 0, BUF_SIZE *1000);
     char *temp = malloc(sizeof(char) * BUF_SIZE);
 
     while (1) {
         memset(temp, 0, BUF_SIZE);
         recv(socket, temp, BUF_SIZE, 0);
         printf("DATA recv: '%s'\n", temp);
-        strcat(state->body, temp);
-
         if (strlen(temp) == 1 && temp[0] == '.') {
             printf("Received end marker\n");
             break;
         }
+        if ( strlen(state->body) > 0 )
+            strcat(state->body, "\n");
+        strcat(state->body, temp);
     }
 
     process_state(state);

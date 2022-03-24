@@ -141,12 +141,23 @@ void send_email(int socket, char *from, char*to, char*subject, char*body, char*b
     memset(buffer, 0, BUF_SIZE);
     sprintf(buffer, "DATA");
     send(socket, buffer, strlen(buffer), 0);
+    usleep(100);
 
     memset(buffer, 0, BUF_SIZE);
-    sprintf(buffer, "subject: %s\n", subject);
+    sprintf(buffer, "subject: %s", subject);
     send(socket, buffer, strlen(buffer), 0);
-    send(socket, body, strlen(body), 0);
+    usleep(100);
+
+    char *token = strtok(body, "\n");
+    while ( token != NULL  ) {
+        memset(buffer, 0, BUF_SIZE);
+        sprintf(buffer, "%s", token);
+        send(socket, buffer, strlen(buffer), 0);
+        token = strtok(NULL, "\n");
+        usleep(100);
+    }
     send(socket, ".", 1, 0);
+
     memset(buffer, 0, BUF_SIZE);
     recv(socket, buffer, BUF_SIZE, 0);
     printf("Received : '%s'\n", buffer);
@@ -191,13 +202,13 @@ void handle_send_mail(int server_port, char *username, char *password) {
         memset(temp, 0, BUF_SIZE);
         scanf("%[^\n]%c", temp, &t);
         /* printf("read: '%s' %ld", temp, strlen(temp)); */
-        if ( strlen(body) != 0 )
-            strcat(body, "\n");
-        strcat(body, temp);
         if (strlen(temp) == 1 && temp[0] == '.') {
             printf("Received end marker\n");
             break;
         }
+        if ( strlen(body) != 0 )
+            strcat(body, "\n");
+        strcat(body, temp);
     }
     free(temp);
 
