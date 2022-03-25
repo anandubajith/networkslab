@@ -34,11 +34,6 @@ demo() {
         select-layout even-horizontal
 }
 
-
-# build
-# demo
-
-
 if [[ "$1" == "clean" ]]; then
     clean
 elif [[ "$1" == "cleanall" ]]; then
