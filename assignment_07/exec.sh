@@ -6,16 +6,19 @@ set -e
 files=("mailclient" "popserver" "smtpmail")
 
 clean() {
+    echo "Removing compiled binaries"
     for binary in ${files[@]}; do
         rm -f $binary
     done
 }
 
 remove_folders() {
+    echo "Removing user folders"
     awk '{print $1}' "userlogincred.txt" | xargs /bin/rm -rf
 }
 
 build() {
+    echo "Building binaries"
     for binary in ${files[@]}; do
         gcc -Wall -Wextra -g "$binary.c" -o "$binary"
     done
@@ -37,7 +40,6 @@ demo() {
 
 
 if [[ "$1" == "clean" ]]; then
-    echo "Removing unwanted files"
     clean
 elif [[ "$1" == "cleanall" ]]; then
     remove_folders
