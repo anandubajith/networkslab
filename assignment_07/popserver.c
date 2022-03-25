@@ -328,6 +328,7 @@ void handle_cmd_retr(int socket, int index, Mail *mailHead) {
     memset(buffer, 0, BUF_SIZE);
     sprintf(buffer, "+OK %d octets\n", mail->size);
     send(socket, buffer, strlen(buffer), 0);
+    usleep(1000);
     memset(buffer, 0, BUF_SIZE);
     sprintf(buffer, "from: %s\n", mail->from);
     send(socket, buffer, strlen(buffer), 0);
@@ -442,7 +443,7 @@ void handle_cmd_top(int socket, char *command, Mail *head) {
     char *buffer = malloc(sizeof(char) * BUF_SIZE);
     // send OK message
     memset(buffer, 0, BUF_SIZE);
-    sprintf(buffer, "+OK top of message follows");
+    sprintf(buffer, "+OK top of message follows\n");
     send(socket, buffer, strlen(buffer), 0);
 
     if (count > 0) {

@@ -28,10 +28,10 @@ int get_socket_connection(int port) {
     return sock;
 }
 
-void handle_view_message(int socket, int message_index) {
+void handle_view_message(int socket, int message_index, int*delete_index) {
 
     printf("\x1b[2J\x1b[H");
-    printf("\nMessage: %d\n", message_index);
+    printf("\n\033[1m\033[37mMessage: %d\n\033[0m", message_index);
     char *buffer = malloc(sizeof(char) * BUF_SIZE);
     memset(buffer, 0, BUF_SIZE);
     sprintf(buffer, "RETR %d", message_index);
@@ -39,11 +39,11 @@ void handle_view_message(int socket, int message_index) {
     // receive the message?
     memset(buffer, 0, BUF_SIZE);
     recv(socket, buffer, BUF_SIZE, 0);
-    printf("Received '%s' \n", buffer);
+    /* printf("Received '%s' \n", buffer); */
 
     int total_bytes = 0;
     sscanf(buffer + 3, "%d", &total_bytes);
-    printf("\nTotal bytes = %d\n\n", total_bytes);
+    printf("Total octets = %d\n\n", total_bytes);
 
     // receive the rest of message?
     memset(buffer, 0, BUF_SIZE);
@@ -58,12 +58,17 @@ void handle_view_message(int socket, int message_index) {
     }
     free(buffer);
 
+    printf("---\n");
+    printf("\x1b[3mPress 'd' to mark email as deleted\n\x1b[23m");
+    printf("\x1b[3mPress any key to return to message list\x1b[23m\n");
+
     char input[100];
     scanf(" %s", input);
     if (input[0] == 'd') {
         memset(buffer, 0, BUF_SIZE);
         sprintf(buffer, "DELE %d", message_index);
         send(socket, buffer, strlen(buffer), 0);
+        delete_index[message_index] = 1;
     }
 }
 
@@ -75,7 +80,7 @@ void handle_manage_mail(int server_port, char *username, char *password) {
 
     struct timeval tv;
     tv.tv_sec = 0;
-    tv.tv_usec = 1000;
+    tv.tv_usec = 10000;
     setsockopt(socket, SOL_SOCKET, SO_RCVTIMEO, (const char *)&tv, sizeof tv);
 
     char *buffer = malloc(sizeof(char) * BUF_SIZE);
@@ -100,23 +105,25 @@ void handle_manage_mail(int server_port, char *username, char *password) {
     char input[100];
     int message_index;
     int total_message_count = 0;
+    int delete_index[100];
+    memset(delete_index, 0, 100);
     while (1) {
         printf("\x1b[2J\x1b[H");
-        printf("Handle manage email\n");
-        printf("List messages\n");
-        printf("Sl. No. <Sender's email id> <received time; date: hour: minute> <Subject> \n");
-
+        printf("\x1b[1;31mManage Mail\n\n\x1b[0m");
         // send stat and get email count
         memset(buffer, 0, BUF_SIZE);
         sprintf(buffer, "STAT");
         send(socket, buffer, strlen(buffer), 0);
         memset(buffer, 0, BUF_SIZE);
         recv(socket, buffer, BUF_SIZE, 0);
-        printf("Got response %s", buffer);
+        /* printf("Got response %s", buffer); */
         sscanf(buffer+3, "%d", &total_message_count); // err chekcing?
 
         for ( int i = 1; i <= total_message_count; i++) {
-            printf("Message: %d\n", i);
+            if ( delete_index[i] == 1) {
+                continue;
+            }
+            printf("\033[1m\033[37mMessage: %d\n\033[0m", i);
             memset(buffer, 0, BUF_SIZE);
             sprintf(buffer, "TOP %d 4", i);
             send(socket, buffer, strlen(buffer), 0);
@@ -140,7 +147,7 @@ void handle_manage_mail(int server_port, char *username, char *password) {
             break;
         } else if (sscanf(input, "%d", &message_index) == 1) {
             /* printf("received input %d \n", message_index); */
-            handle_view_message(socket, message_index);
+            handle_view_message(socket, message_index, delete_index);
         } else {
             /* printf("something else? %s\n", input); */
         }
