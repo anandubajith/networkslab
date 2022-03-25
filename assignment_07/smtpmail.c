@@ -101,7 +101,7 @@ void create_folders() {
     }
 }
 int load_usersfile() {
-    FILE *fp = fopen("./logincred.txt", "r");
+    FILE *fp = fopen("./userlogincred.txt", "r");
     if (fp == NULL)
         return -1;
 
@@ -218,8 +218,7 @@ void handle_cmd_mail(int socket, char *command, State *state) {
     state->from = malloc(sizeof(char) * MAX_SIZE);
     strncpy(state->from, command + 11, strlen(command + 11) - 1);
 
-    if (validate_address(state->from, &state->from_user, &state->from_host) !=
-            0) {
+    if (validate_address(state->from, &state->from_user, &state->from_host) != 0) {
         send_reply(socket, 501, "Syntax error in parameters or arguments");
         return;
     }
@@ -241,7 +240,7 @@ void handle_cmd_mail(int socket, char *command, State *state) {
 }
 void handle_cmd_rcpt(int socket, char *command, State *state) {
     assert(state != NULL);
-    if (starts_with("MAIL FROM:", command) == 1) {
+    if (starts_with("RCPT TO:", command) == 1) {
         send_reply(socket, 501, "Syntax error in parameters or arguments");
         return;
     }

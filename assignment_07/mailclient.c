@@ -33,33 +33,40 @@ void handle_view_message(int socket, int message_index, int*delete_index) {
     printf("\x1b[2J\x1b[H");
     printf("\n\033[1m\033[37mMessage: %d\n\033[0m", message_index);
     char *buffer = malloc(sizeof(char) * BUF_SIZE);
-    memset(buffer, 0, BUF_SIZE);
-    sprintf(buffer, "RETR %d", message_index);
-    send(socket, buffer, strlen(buffer), 0);
-    // receive the message?
-    memset(buffer, 0, BUF_SIZE);
-    recv(socket, buffer, BUF_SIZE, 0);
-    /* printf("Received '%s' \n", buffer); */
 
-    int total_bytes = 0;
-    sscanf(buffer + 3, "%d", &total_bytes);
-    printf("Total octets = %d\n\n", total_bytes);
-
-    // receive the rest of message?
-    memset(buffer, 0, BUF_SIZE);
-
-    while (total_bytes > 0) {
+    if ( delete_index[message_index] == 1) {
+        printf("Message has been marked deleted\n");
+    } else {
         memset(buffer, 0, BUF_SIZE);
-        int r = recv(socket, buffer, BUF_SIZE, 0);
-        printf("%s", buffer);
-        if (r <= 0)
-            break;
-        total_bytes -= r;
+        sprintf(buffer, "RETR %d", message_index);
+        send(socket, buffer, strlen(buffer), 0);
+        // receive the message?
+        memset(buffer, 0, BUF_SIZE);
+        recv(socket, buffer, BUF_SIZE, 0);
+        /* printf("Received '%s' \n", buffer); */
+
+        int total_bytes = 0;
+        sscanf(buffer + 3, "%d", &total_bytes);
+        printf("Total octets = %d\n\n", total_bytes);
+
+        // receive the rest of message?
+        memset(buffer, 0, BUF_SIZE);
+
+        while (total_bytes > 0) {
+            memset(buffer, 0, BUF_SIZE);
+            int r = recv(socket, buffer, BUF_SIZE, 0);
+            printf("%s", buffer);
+            if (r <= 0)
+                break;
+            total_bytes -= r;
+        }
     }
+
     free(buffer);
 
     printf("---\n");
-    printf("\x1b[3mPress 'd' to mark email as deleted\n\x1b[23m");
+    if ( delete_index[message_index] != 1)
+        printf("\x1b[3mPress 'd' to mark email as deleted\n\x1b[23m");
     printf("\x1b[3mPress any key to return to message list\x1b[23m\n");
 
     char input[100];
@@ -127,11 +134,13 @@ void handle_manage_mail(int server_port, char *username, char *password) {
             memset(buffer, 0, BUF_SIZE);
             sprintf(buffer, "TOP %d 4", i);
             send(socket, buffer, strlen(buffer), 0);
+
+
             for ( int j = 0; j < 5;j++) {
                 memset(buffer, 0, BUF_SIZE);
                 if ( recv(socket, buffer, BUF_SIZE, 0) <= 0 )
                     break;
-                printf("%s\n", buffer);
+                printf("%s", buffer + ( buffer[0] == '+' && strlen(buffer) > 26 ? 26: 0));
             }
             printf("\n");
         }
@@ -145,7 +154,7 @@ void handle_manage_mail(int server_port, char *username, char *password) {
         printf("Got input %s\n", input);
         if (input[0] == 'q') {
             break;
-        } else if (sscanf(input, "%d", &message_index) == 1) {
+        } else if (sscanf(input, "%d", &message_index) == 1 ) {
             /* printf("received input %d \n", message_index); */
             handle_view_message(socket, message_index, delete_index);
         } else {
@@ -168,7 +177,7 @@ void send_email(int socket, char *from, char*to, char*subject, char*body, char*b
 
     printf("Received : '%s'\n", buffer);
     memset(buffer, 0, BUF_SIZE);
-    sprintf(buffer, "RCPT TO:<%s>", from);
+    sprintf(buffer, "RCPT TO:<%s>", to);
     send(socket, buffer, strlen(buffer), 0);
     memset(buffer, 0, BUF_SIZE);
     recv(socket, buffer, BUF_SIZE, 0);
@@ -182,12 +191,12 @@ void send_email(int socket, char *from, char*to, char*subject, char*body, char*b
     memset(buffer, 0, BUF_SIZE);
     sprintf(buffer, "DATA");
     send(socket, buffer, strlen(buffer), 0);
-    usleep(100);
+    usleep(1000);
 
     memset(buffer, 0, BUF_SIZE);
     sprintf(buffer, "subject: %s", subject);
     send(socket, buffer, strlen(buffer), 0);
-    usleep(100);
+    usleep(1000);
 
     char *token = strtok(body, "\n");
     while ( token != NULL  ) {
