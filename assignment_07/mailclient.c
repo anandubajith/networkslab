@@ -153,6 +153,9 @@ void handle_manage_mail(int server_port, char *username, char *password) {
         scanf("%s", input);
         printf("Got input %s\n", input);
         if (input[0] == 'q') {
+            memset(input, 0, 100);
+            sprintf(input, "QUIT");
+            send(socket, input, strlen(input), 0);
             break;
         } else if (sscanf(input, "%d", &message_index) == 1 ) {
             /* printf("received input %d \n", message_index); */

@@ -151,10 +151,10 @@ char *get_mailbox_path(char *username) {
     return path;
 }
 
-void update_emails(char *username, Mail **head) {
+void update_emails(char *username, Mail *head) {
     char *path = get_mailbox_path(username);
     FILE *fp = fopen(path, "w");
-    Mail *iter = *head;
+    Mail *iter = head;
     while (iter != NULL) {
         if (iter->is_deleted != 1) {
             fprintf(fp, "from: %s\n", iter->from);
@@ -568,10 +568,15 @@ void handle_client(int socket) {
             mailHead = load_messages(username);
             state = 1;
         } else if (starts_with(command, "QUIT")) {
+            memset(buffer, 0, BUF_SIZE);
             if (state == 1) {
-                // do update
+                // todo: check error?
+                update_emails(username, mailHead);
+                strcpy(buffer, "+OK GoodBye");
+            } else {
+                strcpy(buffer, "+OK GoodBye");
             }
-            // close
+            shutdown(socket, 2);
         } else if (state == 1 && starts_with(command, "STAT")) {
             handle_cmd_stat(socket, mailHead);
         } else if (state == 1 && starts_with(command, "LIST")) {
