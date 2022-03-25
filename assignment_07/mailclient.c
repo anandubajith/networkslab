@@ -142,32 +142,32 @@ void handle_manage_mail(int server_port, char *username, char *password) {
         if ( buffer[0] == '-' ) {
             // todo:
         }
-
         sscanf(buffer+3, "%d", &total_message_count); // err chekcing?
-        if ( total_message_count < 1 ) {
+        int printed_messages = 0;
+        // for each email, TOP i 4 of that email
+        // parse top and display
+        for ( int i = 1; i <= total_message_count; i++) {
+            if ( delete_index[i] == 1) {
+                continue;
+            }
+            printf("\033[1m\033[37mMessage: %d\n\033[0m", i);
+            memset(buffer, 0, BUF_SIZE);
+            sprintf(buffer, "TOP %d 4", i);
+            send(socket, buffer, strlen(buffer), 0);
+
+
+            for ( int j = 0; j < 5;j++) {
+                memset(buffer, 0, BUF_SIZE);
+                if ( recv(socket, buffer, BUF_SIZE, 0) <= 0 )
+                    break;
+                printf("%s", buffer + ( buffer[0] == '+' && strlen(buffer) > 26 ? 26: 0));
+            }
+            printf("\n");
+        }
+
+        if ( printed_messages  == 0 ) {
             printf("\nNo messages in mailbox\n");
             printf("\n");
-        } else {
-            // for each email, TOP i 4 of that email
-            // parse top and display
-            for ( int i = 1; i <= total_message_count; i++) {
-                if ( delete_index[i] == 1) {
-                    continue;
-                }
-                printf("\033[1m\033[37mMessage: %d\n\033[0m", i);
-                memset(buffer, 0, BUF_SIZE);
-                sprintf(buffer, "TOP %d 4", i);
-                send(socket, buffer, strlen(buffer), 0);
-
-
-                for ( int j = 0; j < 5;j++) {
-                    memset(buffer, 0, BUF_SIZE);
-                    if ( recv(socket, buffer, BUF_SIZE, 0) <= 0 )
-                        break;
-                    printf("%s", buffer + ( buffer[0] == '+' && strlen(buffer) > 26 ? 26: 0));
-                }
-                printf("\n");
-            }
         }
 
         scanf("%s", input);

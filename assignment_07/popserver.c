@@ -543,7 +543,7 @@ void handle_client(int socket) {
             }
             username = malloc(sizeof(char) * MAX_SIZE);
             strcpy(username, command + 5);
-            printf("Extracted username : '%s'", username);
+            /* printf("Extracted username : '%s'\n", username); */
             if (check_username(username) != 0) {
                 memset(buffer, 0, BUF_SIZE);
                 strcpy(buffer, "-ERR Invalid username\n");
@@ -564,7 +564,7 @@ void handle_client(int socket) {
             }
             password = malloc(sizeof(char) * MAX_SIZE);
             strcpy(password, command + 5);
-            printf("Extracted password : '%s'", password);
+            /* printf("Extracted password : '%s'", password); */
             if (check_password(username, password) != 0) {
                 memset(buffer, 0, BUF_SIZE);
                 strcpy(buffer, "-ERR Invalid password\n");
