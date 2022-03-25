@@ -33,6 +33,7 @@ void handle_view_message(int socket, int message_index, int*delete_index) {
     printf("\x1b[2J\x1b[H");
     printf("\n\033[1m\033[37mMessage: %d\n\033[0m", message_index);
     char *buffer = malloc(sizeof(char) * BUF_SIZE);
+    int errored = 0;
 
     if ( delete_index[message_index] == 1) {
         printf("Message has been marked deleted\n");
@@ -45,27 +46,35 @@ void handle_view_message(int socket, int message_index, int*delete_index) {
         recv(socket, buffer, BUF_SIZE, 0);
         /* printf("Received '%s' \n", buffer); */
 
-        int total_bytes = 0;
-        sscanf(buffer + 3, "%d", &total_bytes);
-        printf("Total octets = %d\n\n", total_bytes);
+        if ( buffer[0] == '+' ) {
+            int total_bytes = 0;
+            sscanf(buffer + 3, "%d", &total_bytes);
+            printf("Total octets = %d\n\n", total_bytes);
 
-        // receive the rest of message?
-        memset(buffer, 0, BUF_SIZE);
-
-        while (total_bytes > 0) {
+            // receive the rest of message?
             memset(buffer, 0, BUF_SIZE);
-            int r = recv(socket, buffer, BUF_SIZE, 0);
+
+            while (total_bytes > 0) {
+                memset(buffer, 0, BUF_SIZE);
+                int r = recv(socket, buffer, BUF_SIZE, 0);
+                printf("%s", buffer);
+                if (r <= 0)
+                    break;
+                total_bytes -= r;
+            }
+        } else {
+            printf("Error occoured\n");
             printf("%s", buffer);
-            if (r <= 0)
-                break;
-            total_bytes -= r;
+            printf("\n");
+            errored = 1;
         }
+
     }
 
     free(buffer);
 
     printf("---\n");
-    if ( delete_index[message_index] != 1)
+    if ( delete_index[message_index] != 1 && errored != 1)
         printf("\x1b[3mPress 'd' to mark email as deleted\n\x1b[23m");
     printf("\x1b[3mPress any key to return to message list\x1b[23m\n");
 

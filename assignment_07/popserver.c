@@ -318,7 +318,7 @@ void handle_cmd_retr(int socket, int index, Mail *mailHead) {
     if (mail == NULL) {
         // invalid index
         memset(buffer, 0, BUF_SIZE);
-        sprintf(buffer, "+ERR Invalid index");
+        sprintf(buffer, "-ERR Invalid index");
         send(socket, buffer, strlen(buffer), 0);
         return;
     }
