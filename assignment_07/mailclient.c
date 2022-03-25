@@ -80,7 +80,7 @@ void handle_view_message(int socket, int message_index, int*delete_index) {
 
     char input[100];
     scanf(" %s", input);
-    if (input[0] == 'd') {
+    if (input[0] == 'd' && errored != 1) {
         memset(buffer, 0, BUF_SIZE);
         sprintf(buffer, "DELE %d", message_index);
         send(socket, buffer, strlen(buffer), 0);
