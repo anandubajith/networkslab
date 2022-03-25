@@ -63,7 +63,7 @@ void handle_view_message(int socket, int message_index, int*delete_index) {
                 total_bytes -= r;
             }
         } else {
-            printf("Error occoured\n");
+            printf("Error occurred\n");
             printf("%s", buffer);
             printf("\n");
             errored = 1;
@@ -109,7 +109,7 @@ void handle_manage_mail(int server_port, char *username, char *password) {
     memset(buffer, 0, BUF_SIZE);
     recv(socket, buffer, BUF_SIZE, 0);
     if ( buffer[0] == '-' ) {
-        printf("Error occoured\n");
+        printf("Error occurred\n");
         printf("%s\n", buffer);
         exit(-1);
     }
@@ -120,7 +120,7 @@ void handle_manage_mail(int server_port, char *username, char *password) {
     memset(buffer, 0, BUF_SIZE);
     recv(socket, buffer, BUF_SIZE, 0);
     if ( buffer[0] == '-' ) {
-        printf("Error occoured\n");
+        printf("Error occurred\n");
         printf("%s\n", buffer);
         exit(-1);
     }
@@ -142,7 +142,7 @@ void handle_manage_mail(int server_port, char *username, char *password) {
         recv(socket, buffer, BUF_SIZE, 0);
         /* printf("Got response %s", buffer); */
         if ( buffer[0] == '-' ) {
-            printf("Error occoured\n");
+            printf("Error occurred\n");
             printf("%s\n", buffer);
         } else {
             sscanf(buffer+3, "%d", &total_message_count); // err chekcing?
