@@ -109,6 +109,9 @@ void handle_manage_mail(int server_port, char *username, char *password) {
     memset(buffer, 0, BUF_SIZE);
     recv(socket, buffer, BUF_SIZE, 0);
     printf("received: '%s'\n", buffer);
+    if ( buffer[0] == '-' ) {
+        // todo:
+    }
 
     memset(buffer, 0, BUF_SIZE);
     sprintf(buffer, "PASS %s", password);
@@ -116,6 +119,9 @@ void handle_manage_mail(int server_port, char *username, char *password) {
     memset(buffer, 0, BUF_SIZE);
     recv(socket, buffer, BUF_SIZE, 0);
     printf("received: '%s'\n", buffer);
+    if ( buffer[0] == '-' ) {
+        // todo:
+    }
 
 
     char input[100];
@@ -133,31 +139,36 @@ void handle_manage_mail(int server_port, char *username, char *password) {
         memset(buffer, 0, BUF_SIZE);
         recv(socket, buffer, BUF_SIZE, 0);
         /* printf("Got response %s", buffer); */
-        sscanf(buffer+3, "%d", &total_message_count); // err chekcing?
-
-        for ( int i = 1; i <= total_message_count; i++) {
-            if ( delete_index[i] == 1) {
-                continue;
-            }
-            printf("\033[1m\033[37mMessage: %d\n\033[0m", i);
-            memset(buffer, 0, BUF_SIZE);
-            sprintf(buffer, "TOP %d 4", i);
-            send(socket, buffer, strlen(buffer), 0);
-
-
-            for ( int j = 0; j < 5;j++) {
-                memset(buffer, 0, BUF_SIZE);
-                if ( recv(socket, buffer, BUF_SIZE, 0) <= 0 )
-                    break;
-                printf("%s", buffer + ( buffer[0] == '+' && strlen(buffer) > 26 ? 26: 0));
-            }
-            printf("\n");
+        if ( buffer[0] == '-' ) {
+            // todo:
         }
 
+        sscanf(buffer+3, "%d", &total_message_count); // err chekcing?
+        if ( total_message_count < 1 ) {
+            printf("\nNo messages in mailbox\n");
+            printf("\n");
+        } else {
+            // for each email, TOP i 4 of that email
+            // parse top and display
+            for ( int i = 1; i <= total_message_count; i++) {
+                if ( delete_index[i] == 1) {
+                    continue;
+                }
+                printf("\033[1m\033[37mMessage: %d\n\033[0m", i);
+                memset(buffer, 0, BUF_SIZE);
+                sprintf(buffer, "TOP %d 4", i);
+                send(socket, buffer, strlen(buffer), 0);
 
-        // for each email, TOP i 4 of that email
-        // parse top and display
 
+                for ( int j = 0; j < 5;j++) {
+                    memset(buffer, 0, BUF_SIZE);
+                    if ( recv(socket, buffer, BUF_SIZE, 0) <= 0 )
+                        break;
+                    printf("%s", buffer + ( buffer[0] == '+' && strlen(buffer) > 26 ? 26: 0));
+                }
+                printf("\n");
+            }
+        }
 
         scanf("%s", input);
         printf("Got input %s\n", input);
@@ -288,6 +299,11 @@ void handle_send_mail(int server_port, char *username, char *password) {
     send(socket, buffer, strlen(buffer),0);
     shutdown(socket, 2);
     free(buffer);
+    free(from);
+    free(to);
+    free(subject);
+    free(body);
+
     scanf("%c", &t);
 }
 
@@ -321,6 +337,8 @@ int main(int argc, char *argv[]) {
         } else if (input == '2') {
             handle_send_mail(atoi(argv[1]), username, password);
         } else if (input == '3') {
+            free(username);
+            free(password);
             return 0;
         }
         input = 0;

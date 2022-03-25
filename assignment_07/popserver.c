@@ -51,7 +51,7 @@ int add_user(char *username, char *password) {
 int check_username(char *username) {
     User *t = usersHead;
     while (t != NULL) {
-        if (strcmp(t->name, username) == 0) {
+        if (username != NULL && strcmp(t->name, username) == 0) {
             // username already exists
             return 0;
         }
@@ -63,8 +63,8 @@ int check_username(char *username) {
 int check_password(char *username, char *password) {
     User *t = usersHead;
     while (t != NULL) {
-        if (strcmp(t->name, username) == 0) {
-            if (strcmp(t->password, password) == 0) {
+        if (username != NULL && strcmp(t->name, username) == 0) {
+            if (password != NULL && strcmp(t->password, password) == 0) {
                 // successful authentication
                 return 0;
             }
@@ -75,6 +75,16 @@ int check_password(char *username, char *password) {
     }
     // invalid username
     return 2;
+}
+
+void free_users() {
+    while (usersHead != NULL) {
+        User* u = usersHead;
+        usersHead = u->next;
+        free(u->name);
+        free(u->password);
+        free(u);
+    }
 }
 
 void print_users() {
@@ -221,11 +231,8 @@ Mail *load_messages(char *username) {
                 memset(current_mail->body, 0, strlen(line) + 1);
                 memset(current_mail->body_raw, 0, strlen(line) + 1);
             } else {
-                current_mail->body = realloc(
-                        current_mail->body, strlen(current_mail->body) + strlen(line) + 1);
-                current_mail->body_raw =
-                    realloc(current_mail->body_raw,
-                            strlen(current_mail->body_raw) + strlen(line) + 1);
+                current_mail->body = realloc( current_mail->body, strlen(current_mail->body) + strlen(line) + 1);
+                current_mail->body_raw = realloc(current_mail->body_raw, strlen(current_mail->body_raw) + strlen(line) + 1);
             }
             if (strncmp(".", line, 1) == 0 && strlen(line) == 2) {
                 state = 0;
@@ -271,6 +278,7 @@ void handle_cmd_stat(int socket, Mail *mailHead) {
 
     sprintf(buffer, "+OK %d %d\n", count, total_size);
     send(socket, buffer, strlen(buffer), 0);
+    free(buffer);
 }
 
 void handle_cmd_list(int socket, Mail *mailHead) {
@@ -440,7 +448,7 @@ void handle_cmd_top(int socket, char *command, Mail *head) {
         return;
     }
 
-    char *buffer = malloc(sizeof(char) * BUF_SIZE);
+    char *buffer = malloc(sizeof(char) * BUF_SIZE *1000);
     // send OK message
     memset(buffer, 0, BUF_SIZE);
     sprintf(buffer, "+OK top of message follows\n");
@@ -471,18 +479,21 @@ void handle_cmd_top(int socket, char *command, Mail *head) {
         count--;
     }
 
-    char *copy = malloc(sizeof(char) * strlen(iter->body));
-    strcpy(copy, iter->body);
-    char *part = strtok(copy, "\n");
-    while (part != NULL && count > 0) {
-        memset(buffer,0, BUF_SIZE);
-        sprintf(buffer, "%s\n",part);
-        send(socket, buffer, strlen(buffer), 0);
-        count--;
-        part = strtok(NULL, "\n");
+    if ( count > 0 ) {
+        char *copy = malloc(sizeof(char) * strlen(iter->body) + 1);
+        strcpy(copy, iter->body);
+        char *part = strtok(copy, "\n");
+        while (part != NULL && count > 0) {
+            memset(buffer,0, BUF_SIZE);
+            sprintf(buffer, "%s\n",part);
+            send(socket, buffer, strlen(buffer), 0);
+            count--;
+            part = strtok(NULL, "\n");
+        }
+
+        free(copy);
     }
 
-    free(copy);
     free(buffer);
 }
 
@@ -517,7 +528,7 @@ void handle_client(int socket) {
         if (r == -1)
             continue;
         if (r == 0) {
-            printf("Client closed connection");
+            printf("Client closed connection\n");
             return;
         }
         /* command[strlen(command)-1] = 0; */
@@ -577,6 +588,7 @@ void handle_client(int socket) {
                 strcpy(buffer, "+OK GoodBye");
             }
             shutdown(socket, 2);
+            break;
         } else if (state == 1 && starts_with(command, "STAT")) {
             handle_cmd_stat(socket, mailHead);
         } else if (state == 1 && starts_with(command, "LIST")) {
@@ -599,6 +611,10 @@ void handle_client(int socket) {
             send(socket, buffer, strlen(buffer), 0);
         }
     }
+    free(command);
+    free(buffer);
+    free(username);
+    free(password);
 }
 
 int main(int argc, char *argv[]) {
@@ -610,8 +626,7 @@ int main(int argc, char *argv[]) {
     load_usersfile();
 
     int server_sock = socket(AF_INET, SOCK_STREAM, 0);
-    if (setsockopt(server_sock, SOL_SOCKET, SO_REUSEADDR, &(int){1},
-                sizeof(int)) < 0)
+    if (setsockopt(server_sock, SOL_SOCKET, SO_REUSEADDR, &(int){1}, sizeof(int)) < 0)
         printf("setsockopt() failed");
 
 
@@ -621,8 +636,7 @@ int main(int argc, char *argv[]) {
     server_address.sin_addr.s_addr = INADDR_ANY;
 
     printf("Pop server\n");
-    int success = bind(server_sock, (struct sockaddr *)&server_address,
-            sizeof(server_address));
+    int success = bind(server_sock, (struct sockaddr *)&server_address, sizeof(server_address));
     if (success != 0) {
         printf("bind() failed");
         return 1;
