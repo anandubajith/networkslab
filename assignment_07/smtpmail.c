@@ -308,6 +308,11 @@ void handle_cmd_quit(int socket, State *state) {
 void handle_client(int socket) {
     printf("Handling client with socket %d\n", socket);
 
+    struct timeval tv;
+    tv.tv_sec = 0;
+    tv.tv_usec = 10000;
+    setsockopt(socket, SOL_SOCKET, SO_RCVTIMEO, (const char *)&tv, sizeof tv);
+
     char *command = malloc(sizeof(char) * BUF_SIZE);
 
     State *state = malloc(sizeof(State));
