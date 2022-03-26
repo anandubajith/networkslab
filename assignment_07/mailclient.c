@@ -22,8 +22,6 @@ int get_socket_connection(int port) {
         printf("Error: Failed to connect()");
         exit(1);
     }
-    setsockopt(sock, SOL_SOCKET,TCP_NODELAY , (char *) &(int){1}, sizeof(int));
-
 
     return sock;
 }
@@ -39,12 +37,12 @@ void handle_view_message(int socket, int message_index, int*delete_index) {
         printf("Message has been marked deleted\n");
     } else {
         memset(buffer, 0, BUF_SIZE);
-        sprintf(buffer, "RETR %d", message_index);
+        sprintf(buffer, "RETR %d\r\n", message_index);
         send(socket, buffer, strlen(buffer), 0);
         // receive the message?
         memset(buffer, 0, BUF_SIZE);
         recv(socket, buffer, BUF_SIZE, 0);
-        /* printf("Received '%s' \n", buffer); */
+        printf("Received '%s' \n", buffer); // todo: parse this and force this much bytes to be read?
 
         if ( buffer[0] == '+' ) {
             int total_bytes = 0;
@@ -92,19 +90,13 @@ void handle_manage_mail(int server_port, char *username, char *password) {
     // login to pop server
     //
     int socket = get_socket_connection(server_port);
-    setsockopt(socket, SOL_SOCKET,TCP_NODELAY , (char *) &(int){1}, sizeof(int));
-
-    struct timeval tv;
-    tv.tv_sec = 0;
-    tv.tv_usec = 10000;
-    setsockopt(socket, SOL_SOCKET, SO_RCVTIMEO, (const char *)&tv, sizeof tv);
 
     char *buffer = malloc(sizeof(char) * BUF_SIZE);
     memset(buffer, 0, BUF_SIZE);
     recv(socket, buffer, BUF_SIZE, 0); // ready message
 
     memset(buffer, 0, BUF_SIZE);
-    sprintf(buffer, "USER %s", username);
+    sprintf(buffer, "USER %s\r\n", username);
     send(socket, buffer, strlen(buffer), 0);
     memset(buffer, 0, BUF_SIZE);
     recv(socket, buffer, BUF_SIZE, 0);
@@ -115,7 +107,7 @@ void handle_manage_mail(int server_port, char *username, char *password) {
     }
 
     memset(buffer, 0, BUF_SIZE);
-    sprintf(buffer, "PASS %s", password);
+    sprintf(buffer, "PASS %s\r\n", password);
     send(socket, buffer, strlen(buffer), 0);
     memset(buffer, 0, BUF_SIZE);
     recv(socket, buffer, BUF_SIZE, 0);
@@ -129,6 +121,7 @@ void handle_manage_mail(int server_port, char *username, char *password) {
     char input[100];
     int message_index;
     int total_message_count = 0;
+    int total_size = 0;
     int delete_index[100];
     memset(delete_index, 0, 100 * sizeof(int));
     while (1) {
@@ -136,36 +129,52 @@ void handle_manage_mail(int server_port, char *username, char *password) {
         printf("\x1b[1;31mManage Mail\n\n\x1b[0m");
         // send stat and get email count
         memset(buffer, 0, BUF_SIZE);
-        sprintf(buffer, "STAT");
-        send(socket, buffer, strlen(buffer), 0);
+        sprintf(buffer, "STAT\r\n");
+        if ( send(socket, buffer, strlen(buffer), 0) <= 0 ) {
+            printf("Error sending STAT");
+            break;
+        }
         memset(buffer, 0, BUF_SIZE);
-        recv(socket, buffer, BUF_SIZE, 0);
-        /* printf("Got response %s", buffer); */
+        if ( recv(socket, buffer, BUF_SIZE, 0) <= 0 ) {
+            printf("Error receiving STAT");
+            break;
+
+        }
+        /* printf("Got responseSTAT= %s\n\n", buffer); */
         if ( buffer[0] == '-' ) {
             printf("Error occurred\n");
             printf("%s\n", buffer);
         } else {
-            sscanf(buffer+3, "%d", &total_message_count); // err chekcing?
+            if ( sscanf(buffer+3, "%d %d", &total_message_count, &total_size) != 2 ) {
+                printf("Error occurred: Invalid response from server\n");
+                break;
+            }
             int printed_messages = 0;
-            // for each email, TOP i 4 of that email
-            // parse top and display
             for ( int i = 1; i <= total_message_count; i++) {
                 if ( delete_index[i] == 1) {
                     continue;
                 }
                 printf("\033[1m\033[37mMessage: %d\n\033[0m", i);
                 memset(buffer, 0, BUF_SIZE);
-                sprintf(buffer, "TOP %d 4", i);
+                sprintf(buffer, "TOP %d 4\r\n", i);
                 send(socket, buffer, strlen(buffer), 0);
 
-
-                for ( int j = 0; j < 5;j++) {
+                char *temp = malloc(sizeof(char) * BUF_SIZE * 5);
+                memset(temp, 0, BUF_SIZE *5);
+                int line_count = 5;
+                while ( line_count > 0 ) {
                     memset(buffer, 0, BUF_SIZE);
-                    if ( recv(socket, buffer, BUF_SIZE, 0) <= 0 )
-                        break;
-                    printf("%s", buffer + ( buffer[0] == '+' && strlen(buffer) > 26 ? 26: 0));
+                    recv(socket, buffer, BUF_SIZE, 0);
+                    /* printf("received after top: '%s'\n", buffer); */
+                    for ( int i =0; i< BUF_SIZE; i++) {
+                        if ( buffer[i] == '\n')
+                            line_count--;
+                    }
+                    strcat(temp, buffer);
                 }
+                printf("%s", temp + 26);
                 printf("\n");
+                free(temp);
                 printed_messages++;
             }
 
@@ -176,10 +185,12 @@ void handle_manage_mail(int server_port, char *username, char *password) {
         }
         scanf("%s", input);
         printf("Got input %s\n", input);
+
         if (input[0] == 'q') {
             memset(input, 0, 100);
-            sprintf(input, "QUIT");
+            sprintf(input, "QUIT\r\n");
             send(socket, input, strlen(input), 0);
+            shutdown(socket, 2);
             break;
         } else if (sscanf(input, "%d", &message_index) == 1
                         &&  message_index > 0

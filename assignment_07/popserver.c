@@ -433,6 +433,7 @@ void handle_cmd_rset(int socket, char *username, Mail **mailHead) {
 }
 
 void handle_cmd_top(int socket, char *command, Mail *head) {
+    printf(">> handling command : '%s'\n", command);
     int message_index = 0;
     int count = 0;
     if ( sscanf(command +3, "%d %d", &message_index, &count) != 2 ) {
@@ -456,30 +457,30 @@ void handle_cmd_top(int socket, char *command, Mail *head) {
     char *buffer = malloc(sizeof(char) * BUF_SIZE *1000);
     // send OK message
     memset(buffer, 0, BUF_SIZE);
-    sprintf(buffer, "+OK top of message follows\n");
+    sprintf(buffer, "+OK top of message follows\r\n");
     send(socket, buffer, strlen(buffer), 0);
 
     if (count > 0) {
         memset(buffer,0, BUF_SIZE);
-        sprintf(buffer, "from: %s\n", iter->from);
+        sprintf(buffer, "from: %s\r\n", iter->from);
         send(socket, buffer, strlen(buffer), 0);
         count--;
     }
     if (count > 0) {
         memset(buffer,0, BUF_SIZE);
-        sprintf(buffer, "to: %s\n", iter->to);
+        sprintf(buffer, "to: %s\r\n", iter->to);
         send(socket, buffer, strlen(buffer), 0);
         count--;
     }
     if (count > 0) {
         memset(buffer,0, BUF_SIZE);
-        sprintf(buffer, "received: %s\n", iter->received_time);
+        sprintf(buffer, "received: %s\r\n", iter->received_time);
         send(socket, buffer, strlen(buffer), 0);
         count--;
     }
     if (count > 0) {
         memset(buffer,0, BUF_SIZE);
-        sprintf(buffer, "subject: %s\n", iter->subject);
+        sprintf(buffer, "subject: %s\r\n", iter->subject);
         send(socket, buffer, strlen(buffer), 0);
         count--;
     }
@@ -490,7 +491,7 @@ void handle_cmd_top(int socket, char *command, Mail *head) {
         char *part = strtok(copy, "\n");
         while (part != NULL && count > 0) {
             memset(buffer,0, BUF_SIZE);
-            sprintf(buffer, "%s\n",part);
+            sprintf(buffer, "%s\r\n",part);
             send(socket, buffer, strlen(buffer), 0);
             count--;
             part = strtok(NULL, "\n");
@@ -510,13 +511,13 @@ int starts_with(char *string, char *marker) {
 
 void handle_client(int socket) {
     setsockopt(socket, SOL_SOCKET,TCP_NODELAY , (char *) &(int){1}, sizeof(int));
-    char *command = malloc(sizeof(char) * BUF_SIZE);
+    char *buffer_out = malloc(sizeof(char) * BUF_SIZE);
+    char *buffer_in = malloc(sizeof(char) * BUF_SIZE*1000);
+    char *work = malloc(sizeof(char) * BUF_SIZE *1000);
+    memset(buffer_out, 0, BUF_SIZE);
+    strcpy(buffer_out, "+OK POP3 server ready\n");
 
-    char *buffer = malloc(sizeof(char) * BUF_SIZE);
-    memset(buffer, 0, BUF_SIZE);
-    strcpy(buffer, "+OK POP3 server ready\n");
-
-    send(socket, buffer, strlen(buffer), 0);
+    send(socket, buffer_out, strlen(buffer_out), 0);
 
     int state = 0;
     char *username = NULL;
@@ -528,96 +529,103 @@ void handle_client(int socket) {
      */
 
     while (1) {
-        memset(command, 0, BUF_SIZE);
-        int r = recv(socket, command, BUF_SIZE, 0);
+        memset(buffer_in, 0, BUF_SIZE*1000);
+        int r = recv(socket, buffer_in, BUF_SIZE, 0);
         if (r == -1)
             continue;
         if (r == 0) {
             printf("Client closed connection\n");
             return;
         }
-        /* command[strlen(command)-1] = 0; */
-        printf("CMD: '%s'\n", command);
+        memset(work, 0, BUF_SIZE*1000);
+        strcpy(work, buffer_in);
 
-        if (state == 0 && starts_with(command, "USER")) {
-            if (username != NULL) {
-                memset(buffer, 0, BUF_SIZE);
-                strcpy(buffer, "-ERR Already provided username\n");
-                send(socket, buffer, strlen(buffer), 0);
-                continue;
-            }
-            username = malloc(sizeof(char) * MAX_SIZE);
-            strcpy(username, command + 5);
-            /* printf("Extracted username : '%s'\n", username); */
-            if (check_username(username) != 0) {
-                memset(buffer, 0, BUF_SIZE);
-                strcpy(buffer, "-ERR Invalid username\n");
-                send(socket, buffer, strlen(buffer), 0);
-                free(username);
-                username = NULL;
-                continue;
-            }
-            memset(buffer, 0, BUF_SIZE);
-            strcpy(buffer, "+OK Username accepted\n");
-            send(socket, buffer, strlen(buffer), 0);
-        } else if (state == 0 && starts_with(command, "PASS")) {
-            if (password != NULL) {
-                memset(buffer, 0, BUF_SIZE);
-                strcpy(buffer, "-ERR Already provided password\n");
-                send(socket, buffer, strlen(buffer), 0);
-                continue;
-            }
-            password = malloc(sizeof(char) * MAX_SIZE);
-            strcpy(password, command + 5);
-            /* printf("Extracted password : '%s'", password); */
-            if (check_password(username, password) != 0) {
-                memset(buffer, 0, BUF_SIZE);
-                strcpy(buffer, "-ERR Invalid password\n");
-                send(socket, buffer, strlen(buffer), 0);
-                free(password);
-                password = NULL;
-                continue;
-            }
-            memset(buffer, 0, BUF_SIZE);
-            strcpy(buffer, "+OK Auth successful\n");
-            send(socket, buffer, strlen(buffer), 0);
-            mailHead = load_messages(username);
-            state = 1;
-        } else if (starts_with(command, "QUIT")) {
-            memset(buffer, 0, BUF_SIZE);
-            if (state == 1) {
-                // todo: check error?
-                update_emails(username, mailHead);
-                strcpy(buffer, "+OK GoodBye");
+        char *buffer_split_ptr;
+
+        char *command = strtok_r(work, "\r\n", &buffer_split_ptr);
+        while (command != NULL) {
+            printf("CMD: '%s'\n", command);
+            if (state == 0 && starts_with(command, "USER")) {
+                if (username != NULL) {
+                    memset(buffer_out, 0, BUF_SIZE);
+                    strcpy(buffer_out, "-ERR Already provided username\n");
+                    send(socket, buffer_out, strlen(buffer_out), 0);
+                    continue;
+                }
+                username = malloc(sizeof(char) * MAX_SIZE);
+                strcpy(username, command + 5);
+                /* printf("Extracted username : '%s'\n", username); */
+                if (check_username(username) != 0) {
+                    memset(buffer_out, 0, BUF_SIZE);
+                    strcpy(buffer_out, "-ERR Invalid username\n");
+                    send(socket, buffer_out, strlen(buffer_out), 0);
+                    free(username);
+                    username = NULL;
+                    continue;
+                }
+                memset(buffer_out, 0, BUF_SIZE);
+                strcpy(buffer_out, "+OK Username accepted\n");
+                send(socket, buffer_out, strlen(buffer_out), 0);
+            } else if (state == 0 && starts_with(command, "PASS")) {
+                if (password != NULL) {
+                    memset(buffer_out, 0, BUF_SIZE);
+                    strcpy(buffer_out, "-ERR Already provided password\n");
+                    send(socket, buffer_out, strlen(buffer_out), 0);
+                    continue;
+                }
+                password = malloc(sizeof(char) * MAX_SIZE);
+                strcpy(password, command + 5);
+                /* printf("Extracted password : '%s'", password); */
+                if (check_password(username, password) != 0) {
+                    memset(buffer_out, 0, BUF_SIZE);
+                    strcpy(buffer_out, "-ERR Invalid password\n");
+                    send(socket, buffer_out, strlen(buffer_out), 0);
+                    free(password);
+                    password = NULL;
+                    continue;
+                }
+                memset(buffer_out, 0, BUF_SIZE);
+                strcpy(buffer_out, "+OK Auth successful\n");
+                send(socket, buffer_out, strlen(buffer_out), 0);
+                mailHead = load_messages(username);
+                state = 1;
+            } else if (starts_with(command, "QUIT")) {
+                memset(buffer_out, 0, BUF_SIZE);
+                if (state == 1) {
+                    // todo: check error?
+                    update_emails(username, mailHead);
+                    strcpy(buffer_out, "+OK GoodBye");
+                } else {
+                    strcpy(buffer_out, "+OK GoodBye");
+                }
+                shutdown(socket, 2);
+                break;
+            } else if (state == 1 && starts_with(command, "STAT")) {
+                handle_cmd_stat(socket, mailHead);
+            } else if (state == 1 && starts_with(command, "LIST")) {
+                handle_cmd_list(socket, mailHead);
+            } else if (state == 1 && starts_with(command, "RETR")) {
+                handle_cmd_retr(socket, atoi(command + 4), mailHead);
+            } else if (state == 1 && starts_with(command, "DELE")) {
+                handle_cmd_dele(socket, atoi(command + 4), mailHead);
+            } else if (state == 1 && starts_with(command, "TOP")) {
+                handle_cmd_top(socket, command, mailHead);
+            } else if (state == 1 && starts_with(command, "NOOP")) {
+                memset(buffer_out, 0, BUF_SIZE);
+                sprintf(buffer_out, "+OK");
+                send(socket, buffer_out, strlen(buffer_out), 0);
+            } else if (state == 1 && starts_with(command, "RSET")) {
+                handle_cmd_rset(socket, username, &mailHead);
             } else {
-                strcpy(buffer, "+OK GoodBye");
+                memset(buffer_out, 0, BUF_SIZE);
+                strcpy(buffer_out, "-ERR Invalid command\n");
+                send(socket, buffer_out, strlen(buffer_out), 0);
             }
-            shutdown(socket, 2);
-            break;
-        } else if (state == 1 && starts_with(command, "STAT")) {
-            handle_cmd_stat(socket, mailHead);
-        } else if (state == 1 && starts_with(command, "LIST")) {
-            handle_cmd_list(socket, mailHead);
-        } else if (state == 1 && starts_with(command, "RETR")) {
-            handle_cmd_retr(socket, atoi(command + 4), mailHead);
-        } else if (state == 1 && starts_with(command, "DELE")) {
-            handle_cmd_dele(socket, atoi(command + 4), mailHead);
-        } else if (state == 1 && starts_with(command, "TOP")) {
-            handle_cmd_top(socket, command, mailHead);
-        } else if (state == 1 && starts_with(command, "NOOP")) {
-            memset(buffer, 0, BUF_SIZE);
-            sprintf(buffer, "+OK");
-            send(socket, buffer, strlen(buffer), 0);
-        } else if (state == 1 && starts_with(command, "RSET")) {
-            handle_cmd_rset(socket, username, &mailHead);
-        } else {
-            memset(buffer, 0, BUF_SIZE);
-            strcpy(buffer, "-ERR Invalid command\n");
-            send(socket, buffer, strlen(buffer), 0);
+            command = strtok_r(NULL, "\r\n", &buffer_split_ptr);
+
         }
     }
-    free(command);
-    free(buffer);
+    free(buffer_out);
     free(username);
     free(password);
 }
