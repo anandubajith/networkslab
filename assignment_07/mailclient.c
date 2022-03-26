@@ -199,6 +199,7 @@ void send_email(int socket, char *from, char*to, char*subject, char*body, char*b
     recv(socket, buffer, BUF_SIZE, 0);
     if ( buffer[0] == '5' ) {
         printf("Incorrect format for from address\n");
+        printf("ERROR: %s\n",buffer);
         return;
     }
 
@@ -210,6 +211,7 @@ void send_email(int socket, char *from, char*to, char*subject, char*body, char*b
     recv(socket, buffer, BUF_SIZE, 0);
     if ( buffer[0] == '5' ) {
         printf("Incorrect format for to address\n");
+        printf("ERROR: %s\n",buffer);
         return;
     }
 
@@ -240,13 +242,14 @@ void send_email(int socket, char *from, char*to, char*subject, char*body, char*b
     printf("Received : '%s'\n", buffer);
     if ( buffer[0] == '5' ) {
         printf("Error when trying to put in data mode");
+        printf("ERROR: %s\n",buffer);
         return;
     }
 }
 
 void handle_send_mail(int server_port, char *username, char *password) {
     printf("\x1b[2J\x1b[H");
-    printf("Handle send email\n");
+    printf("\x1b[1;31mSend Email\n\n\x1b[0m");
 
     char *from = malloc(sizeof(char) * BUF_SIZE);
     char *to = malloc(sizeof(char) * BUF_SIZE);
@@ -280,7 +283,7 @@ void handle_send_mail(int server_port, char *username, char *password) {
         scanf("%[^\n]%c", temp, &t);
         /* printf("read: '%s' %ld", temp, strlen(temp)); */
         if (strlen(temp) == 1 && temp[0] == '.') {
-            printf("Received end marker\n");
+            printf("DATA end\n");
             break;
         }
         if ( strlen(body) != 0 )
