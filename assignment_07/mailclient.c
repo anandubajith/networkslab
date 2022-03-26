@@ -283,7 +283,7 @@ void handle_send_mail(int server_port, char *username, char *password) {
         scanf("%[^\n]%c", temp, &t);
         /* printf("read: '%s' %ld", temp, strlen(temp)); */
         if (strlen(temp) == 1 && temp[0] == '.') {
-            printf("DATA end\n");
+            printf("\nSendign email\n");
             break;
         }
         if ( strlen(body) != 0 )
