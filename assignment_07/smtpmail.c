@@ -310,7 +310,6 @@ void handle_client(int socket) {
     char *command = malloc(sizeof(char) * BUF_SIZE);
 
     State *state = malloc(sizeof(State));
-    // what all state do need to keep?
 
     while (1) {
         memset(command, 0, BUF_SIZE);
