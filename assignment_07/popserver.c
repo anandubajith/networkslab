@@ -183,6 +183,11 @@ void update_emails(char *username, Mail *head) {
 Mail *load_messages(char *username) {
     char *path = get_mailbox_path(username);
     FILE *fp = fopen(path, "r");
+
+    if ( fp == NULL ) {
+        return NULL;
+    }
+
     char *line = NULL;
     size_t len = 0;
     ssize_t read;
