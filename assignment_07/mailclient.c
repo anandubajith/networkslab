@@ -4,7 +4,7 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <sys/types.h>
-#include <netinet/tcp.h>
+#include <linux/tcp.h>
 #include <unistd.h>
 
 #define MAX_SIZE 100

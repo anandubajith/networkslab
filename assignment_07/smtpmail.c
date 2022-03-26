@@ -7,6 +7,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <time.h>
+#include <linux/tcp.h>
 #include <unistd.h>
 
 #define BACKLOG 5
@@ -307,6 +308,8 @@ void handle_cmd_quit(int socket, State *state) {
 
 void handle_client(int socket) {
     printf("Handling client with socket %d\n", socket);
+
+    setsockopt(socket, SOL_SOCKET,TCP_NODELAY , (char *) &(int){1}, sizeof(int));
 
     struct timeval tv;
     tv.tv_sec = 0;
