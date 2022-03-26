@@ -245,6 +245,10 @@ void send_email(int socket, char *from, char*to, char*subject, char*body, char*b
         printf("ERROR: %s\n",buffer);
         return;
     }
+
+    send(socket, "QUIT", 4, 0);
+    printf("Mail sent successfully");
+
 }
 
 void handle_send_mail(int server_port, char *username, char *password) {
