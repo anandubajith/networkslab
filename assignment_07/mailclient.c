@@ -80,7 +80,7 @@ void handle_view_message(int socket, int message_index, int*delete_index) {
 
     char input[100];
     scanf(" %s", input);
-    if (input[0] == 'd' && errored != 1) {
+    if (input[0] == 'd' && errored != 1 && delete_index[message_index] != 1) {
         memset(buffer, 0, BUF_SIZE);
         sprintf(buffer, "DELE %d", message_index);
         send(socket, buffer, strlen(buffer), 0);
@@ -181,7 +181,9 @@ void handle_manage_mail(int server_port, char *username, char *password) {
             sprintf(input, "QUIT");
             send(socket, input, strlen(input), 0);
             break;
-        } else if (sscanf(input, "%d", &message_index) == 1 ) {
+        } else if (sscanf(input, "%d", &message_index) == 1
+                        &&  message_index > 0
+                        && message_index <= total_message_count) {
             /* printf("received input %d \n", message_index); */
             handle_view_message(socket, message_index, delete_index);
         } else {
