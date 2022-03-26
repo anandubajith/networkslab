@@ -140,7 +140,7 @@ void send_reply(int socket, int code, char *message) {
     char *temp = malloc(sizeof(char) * BUF_SIZE);
     memset(temp, 0, BUF_SIZE);
     sprintf(temp, "%d %s\n", code, message);
-    printf("sending reply '%s'\n", temp);
+    /* printf("sending reply '%s'\n", temp); */
     send(socket, temp, strlen(temp), 0);
     free(temp);
 }

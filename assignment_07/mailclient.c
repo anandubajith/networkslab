@@ -253,7 +253,7 @@ void send_email(int socket, char *from, char*to, char*subject, char*body, char*b
 
 void handle_send_mail(int server_port, char *username, char *password) {
     printf("\x1b[2J\x1b[H");
-    printf("\x1b[1;31mSend Email\n\n\x1b[0m");
+    printf("\x1b[1;32mSend Email\n\n\x1b[0m");
 
     char *from = malloc(sizeof(char) * BUF_SIZE);
     memset(from, 0, BUF_SIZE);
@@ -342,8 +342,8 @@ int main(int argc, char *argv[]) {
     char input = 0;
     while (1) {
         printf("\x1b[2J\x1b[H"); // clear and position cursor at top
-        printf("Welcome %s\n", "asdf");
-        printf("1. Manage mail\n2. Send Mail\n3. Quit\n");
+        printf("Welcome %s\n\n", username);
+        printf("\x1b[1;31m1. Manage mail\n\x1b[1;32m2. Send Mail\n\x1b[1;33m3. Quit\n\x1b[1;0m# ");
         scanf("%c", &input);
         /* printf("got input %d", input); */
         if (input == '1') {
