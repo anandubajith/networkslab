@@ -235,7 +235,7 @@ void send_email(int socket, char *from, char*to, char*subject, char*body, char*b
         sprintf(buffer, "%s", token);
         send(socket, buffer, strlen(buffer), 0);
         token = strtok(NULL, "\n");
-        usleep(100);
+        usleep(1000);
     }
     send(socket, ".", 1, 0);
 

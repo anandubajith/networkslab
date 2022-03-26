@@ -278,7 +278,8 @@ void handle_cmd_data(int socket, State *state) {
 
     while (1) {
         memset(temp, 0, BUF_SIZE);
-        recv(socket, temp, BUF_SIZE, 0);
+        int r = recv(socket, temp, BUF_SIZE, 0);
+        if ( r <= 0) break;
         printf("DATA recv: '%s'\n", temp);
         if (strlen(temp) == 1 && temp[0] == '.') {
             printf("Received end marker\n");
