@@ -222,12 +222,12 @@ void send_email(int socket, char *from, char*to, char*subject, char*body, char*b
     memset(buffer, 0, BUF_SIZE);
     sprintf(buffer, "DATA");
     send(socket, buffer, strlen(buffer), 0);
-    usleep(1000);
+    usleep(10000);
 
     memset(buffer, 0, BUF_SIZE);
     sprintf(buffer, "subject: %s", subject);
     send(socket, buffer, strlen(buffer), 0);
-    usleep(1000);
+    usleep(10000);
 
     char *token = strtok(body, "\n");
     while ( token != NULL  ) {
@@ -235,7 +235,7 @@ void send_email(int socket, char *from, char*to, char*subject, char*body, char*b
         sprintf(buffer, "%s", token);
         send(socket, buffer, strlen(buffer), 0);
         token = strtok(NULL, "\n");
-        usleep(1000);
+        usleep(10000);
     }
     send(socket, ".", 1, 0);
 
