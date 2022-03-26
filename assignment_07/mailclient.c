@@ -80,7 +80,7 @@ void handle_view_message(int socket, int message_index, int*delete_index) {
     scanf(" %s", input);
     if (input[0] == 'd' && errored != 1 && delete_index[message_index] != 1) {
         memset(buffer, 0, BUF_SIZE);
-        sprintf(buffer, "DELE %d", message_index);
+        sprintf(buffer, "DELE %d\r\n", message_index);
         send(socket, buffer, strlen(buffer), 0);
         delete_index[message_index] = 1;
     }
@@ -90,6 +90,13 @@ void handle_manage_mail(int server_port, char *username, char *password) {
     // login to pop server
     //
     int socket = get_socket_connection(server_port);
+    struct timeval timeout;
+    timeout.tv_sec = 0;
+    timeout.tv_usec = 10000;
+
+    if (setsockopt (socket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof timeout) < 0)
+        printf("setsocketopt(SO_RCVTIMEO) failed");
+
 
     char *buffer = malloc(sizeof(char) * BUF_SIZE);
     memset(buffer, 0, BUF_SIZE);
@@ -318,7 +325,7 @@ void handle_send_mail(int server_port, char *username, char *password) {
     char* buffer = malloc(sizeof(char) * BUF_SIZE);
     send_email(socket, from, to, subject, body, buffer);
     memset(buffer, 0, BUF_SIZE);
-    sprintf(buffer, "QUIT");
+    sprintf(buffer, "QUIT\r\n");
     send(socket, buffer, strlen(buffer),0);
     shutdown(socket, 2);
     free(buffer);

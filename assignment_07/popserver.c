@@ -510,7 +510,6 @@ int starts_with(char *string, char *marker) {
 }
 
 void handle_client(int socket) {
-    setsockopt(socket, SOL_SOCKET,TCP_NODELAY , (char *) &(int){1}, sizeof(int));
     char *buffer_out = malloc(sizeof(char) * BUF_SIZE);
     char *buffer_in = malloc(sizeof(char) * BUF_SIZE*1000);
     char *work = malloc(sizeof(char) * BUF_SIZE *1000);
