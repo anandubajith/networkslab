@@ -274,9 +274,9 @@ void handle_cmd_rcpt(int socket, char *command, State *state) {
 void handle_cmd_data_body(int socket, char* command, State*state) {
     if ( strlen(state->body) > 0 ) strcat(state->body, "\n");
     strcat(state->body, command);
-    printf("Appending\n");
+    /* printf("Appending\n"); */
     if (strlen(command) == 1 && command[0] == '.') {
-        printf("Received end marker, processing\n");
+        printf("DATA: received end marker\n");
         state->handling_data = 0;
         process_state(state);
         send_reply(socket, 250, "OK");
@@ -316,8 +316,11 @@ void handle_client(int socket) {
             printf("Client closed connection");
             return;
         }
+        // assumption: there won't be partial messages?
 
-        char *command = strtok(buffer, "\r\n");
+        memset(work, 0, BUF_SIZE);
+        strcpy(work, buffer);
+        char *command = strtok(work, "\r\n");
         while (command != NULL) {
             printf("CMD: '%s'\n", command);
             if ( state->handling_data == 1) {
@@ -359,8 +362,7 @@ int main(int argc, char *argv[]) {
     create_folders();
 
     int server_sock = socket(AF_INET, SOCK_STREAM, 0);
-    if (setsockopt(server_sock, SOL_SOCKET, SO_REUSEADDR, &(int){1},
-                sizeof(int)) < 0)
+    if (setsockopt(server_sock, SOL_SOCKET, SO_REUSEADDR, &(int){1}, sizeof(int)) < 0)
         printf("setsockopt() failed");
 
     struct sockaddr_in server_address;
@@ -368,12 +370,12 @@ int main(int argc, char *argv[]) {
     server_address.sin_port = htons(atoi(argv[1]));
     server_address.sin_addr.s_addr = INADDR_ANY;
 
-    int success = bind(server_sock, (struct sockaddr *)&server_address,
-            sizeof(server_address));
+    int success = bind(server_sock, (struct sockaddr *)&server_address, sizeof(server_address));
     if (success != 0) {
         printf("bind() failed");
         return 1;
     }
+
     listen(server_sock, BACKLOG);
     printf("Listening on port %d\n", atoi(argv[1]));
 
