@@ -161,6 +161,7 @@ typedef struct _state {
     char *to_host;
     char *body;
     int current;
+    int handling_data;
 } State;
 
 int validate_address(char *address, char **user, char **host) {
@@ -270,29 +271,22 @@ void handle_cmd_rcpt(int socket, char *command, State *state) {
     send_reply(socket, 250, "OK");
 }
 
-void handle_cmd_data(int socket, State *state) {
+void handle_cmd_data_body(int socket, char* command, State*state) {
+    if ( strlen(state->body) > 0 ) strcat(state->body, "\n");
+    strcat(state->body, command);
+    printf("Appending\n");
+    if (strlen(command) == 1 && command[0] == '.') {
+        printf("Received end marker, processing\n");
+        state->handling_data = 0;
+        process_state(state);
+        send_reply(socket, 250, "OK");
+    }
+}
 
-    // todo: refactor this
+void handle_cmd_data(int socket, State *state) {
     state->body = malloc(sizeof(char) * BUF_SIZE * 1000);
     memset(state->body, 0, BUF_SIZE *1000);
-    char *temp = malloc(sizeof(char) * BUF_SIZE);
-
-    while (1) {
-        memset(temp, 0, BUF_SIZE);
-        int r = recv(socket, temp, BUF_SIZE, 0);
-        if ( r <= 0) break;
-        printf("DATA recv: '%s'\n", temp);
-        if (strlen(temp) == 1 && temp[0] == '.') {
-            printf("Received end marker\n");
-            break;
-        }
-        if ( strlen(state->body) > 0 )
-            strcat(state->body, "\n");
-        strcat(state->body, temp);
-    }
-
-    process_state(state);
-    send_reply(socket, 250, "OK");
+    state->handling_data = 1;
 }
 
 void handle_cmd_rset(int socket, State *state) {
@@ -309,46 +303,50 @@ void handle_cmd_quit(int socket, State *state) {
 void handle_client(int socket) {
     printf("Handling client with socket %d\n", socket);
 
-    setsockopt(socket, SOL_SOCKET,TCP_NODELAY , (char *) &(int){1}, sizeof(int));
-
-    struct timeval tv;
-    tv.tv_sec = 0;
-    tv.tv_usec = 10000;
-    setsockopt(socket, SOL_SOCKET, SO_RCVTIMEO, (const char *)&tv, sizeof tv);
-
-    char *command = malloc(sizeof(char) * BUF_SIZE);
-
+    char *buffer = malloc(sizeof(char) * BUF_SIZE);
+    char *work = malloc(sizeof(char) * BUF_SIZE);
     State *state = malloc(sizeof(State));
 
     while (1) {
-        memset(command, 0, BUF_SIZE);
-        int r = recv(socket, command, BUF_SIZE, 0);
+        memset(buffer, 0, BUF_SIZE);
+        int r = recv(socket, buffer, BUF_SIZE, 0);
         if (r == -1)
             continue;
         if (r == 0) {
             printf("Client closed connection");
             return;
         }
-        printf("CMD: '%s'\n", command);
-        if (starts_with(command, "HELO")) {
-            handle_cmd_helo(socket, state);
-        } else if (starts_with(command, "QUIT")) {
-            handle_cmd_quit(socket, state);
-        } else if (starts_with(command, "MAIL")) {
-            handle_cmd_mail(socket, command, state);
-        } else if (starts_with(command, "RCPT")) {
-            handle_cmd_rcpt(socket, command, state);
-        } else if (starts_with(command, "DATA")) {
-            handle_cmd_data(socket, state);
-        } else if (starts_with(command, "RSET")) {
-            handle_cmd_rset(socket, state);
-        } else if (starts_with(command, "NOOP")) {
-            send_reply(socket, 250, "NOOP");
-        } else {
-            send_reply(socket, 502, "not implemented");
-            // reply with 505 command not implemented
+
+        char *command = strtok(buffer, "\r\n");
+        while (command != NULL) {
+            printf("CMD: '%s'\n", command);
+            if ( state->handling_data == 1) {
+                handle_cmd_data_body(socket, command, state);
+            } else {
+                if (starts_with(command, "HELO")) {
+                    handle_cmd_helo(socket, state);
+                } else if (starts_with(command, "QUIT")) {
+                    handle_cmd_quit(socket, state);
+                } else if (starts_with(command, "MAIL")) {
+                    handle_cmd_mail(socket, command, state);
+                } else if (starts_with(command, "RCPT")) {
+                    handle_cmd_rcpt(socket, command, state);
+                } else if (starts_with(command, "DATA")) {
+                    handle_cmd_data(socket, state);
+                } else if (starts_with(command, "RSET")) {
+                    handle_cmd_rset(socket, state);
+                } else if (starts_with(command, "NOOP")) {
+                    send_reply(socket, 250, "NOOP");
+                } else {
+                    send_reply(socket, 502, "not implemented");
+                    // reply with 505 command not implemented
+                }
+            }
+            command = strtok(NULL, "\r\n");
         }
+
     }
+
 }
 
 int main(int argc, char *argv[]) {

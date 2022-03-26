@@ -195,7 +195,7 @@ void handle_manage_mail(int server_port, char *username, char *password) {
 void send_email(int socket, char *from, char*to, char*subject, char*body, char*buffer){
 
     memset(buffer, 0, BUF_SIZE);
-    sprintf(buffer, "MAIL FROM:<%s>", from);
+    sprintf(buffer, "MAIL FROM:<%s>\r\n", from);
     send(socket, buffer, strlen(buffer), 0);
     memset(buffer, 0, BUF_SIZE);
     recv(socket, buffer, BUF_SIZE, 0);
@@ -207,7 +207,7 @@ void send_email(int socket, char *from, char*to, char*subject, char*body, char*b
 
     printf("Received : '%s'\n", buffer);
     memset(buffer, 0, BUF_SIZE);
-    sprintf(buffer, "RCPT TO:<%s>", to);
+    sprintf(buffer, "RCPT TO:<%s>\r\n", to);
     send(socket, buffer, strlen(buffer), 0);
     memset(buffer, 0, BUF_SIZE);
     recv(socket, buffer, BUF_SIZE, 0);
@@ -220,24 +220,21 @@ void send_email(int socket, char *from, char*to, char*subject, char*body, char*b
     printf("Received : '%s'\n", buffer);
 
     memset(buffer, 0, BUF_SIZE);
-    sprintf(buffer, "DATA");
+    sprintf(buffer, "DATA\r\n");
     send(socket, buffer, strlen(buffer), 0);
-    usleep(10000);
 
     memset(buffer, 0, BUF_SIZE);
-    sprintf(buffer, "subject: %s", subject);
+    sprintf(buffer, "subject: %s\r\n", subject);
     send(socket, buffer, strlen(buffer), 0);
-    usleep(10000);
 
     char *token = strtok(body, "\n");
     while ( token != NULL  ) {
         memset(buffer, 0, BUF_SIZE);
-        sprintf(buffer, "%s", token);
+        sprintf(buffer, "%s\r\n", token);
         send(socket, buffer, strlen(buffer), 0);
         token = strtok(NULL, "\n");
-        usleep(10000);
     }
-    send(socket, ".", 1, 0);
+    send(socket, ".\r\n", 3, 0);
 
     memset(buffer, 0, BUF_SIZE);
     recv(socket, buffer, BUF_SIZE, 0);
