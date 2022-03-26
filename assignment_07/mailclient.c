@@ -246,7 +246,6 @@ void send_email(int socket, char *from, char*to, char*subject, char*body, char*b
         return;
     }
 
-    send(socket, "QUIT", 4, 0);
     printf("Mail sent successfully");
 
 }

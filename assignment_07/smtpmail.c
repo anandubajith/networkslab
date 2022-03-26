@@ -184,7 +184,7 @@ int validate_address(char *address, char **user, char **host) {
     if (strlen(*host) == 0 || strlen(*user) == 0)
         return 1;
 
-    printf("'%s' '%s'\n\n", *user, *host);
+    /* printf("'%s' '%s'\n\n", *user, *host); */
 
     return 0;
 }
