@@ -252,8 +252,11 @@ void handle_send_mail(int server_port, char *username, char *password) {
     printf("\x1b[1;31mSend Email\n\n\x1b[0m");
 
     char *from = malloc(sizeof(char) * BUF_SIZE);
+    memset(from, 0, BUF_SIZE);
     char *to = malloc(sizeof(char) * BUF_SIZE);
+    memset(to, 0, BUF_SIZE);
     char *subject = malloc(sizeof(char) * BUF_SIZE);
+    memset(subject, 0, BUF_SIZE);
     char *body = malloc(sizeof(char) * BUF_SIZE * 1000);
     memset(body, 0, BUF_SIZE * 1000);
 
