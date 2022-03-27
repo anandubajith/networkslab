@@ -69,8 +69,6 @@ void handle_view_message(int socket, int message_index, int*delete_index) {
 
     }
 
-    free(buffer);
-
     printf("---\n");
     if ( delete_index[message_index] != 1 && errored != 1)
         printf("\x1b[3mPress 'd' to mark email as deleted\n\x1b[23m");
@@ -89,6 +87,7 @@ void handle_view_message(int socket, int message_index, int*delete_index) {
             delete_index[message_index] = 1;
         usleep(10000);
     }
+    free(buffer);
 }
 
 void handle_manage_mail(int server_port, char *username, char *password) {
