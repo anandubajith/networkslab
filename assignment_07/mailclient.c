@@ -29,7 +29,7 @@ int get_socket_connection(int port) {
 void handle_view_message(int socket, int message_index, int*delete_index) {
 
     printf("\x1b[2J\x1b[H");
-    printf("\n\033[1m\033[37mMessage: %d\n\033[0m", message_index);
+    printf("\n\033[1m\033[37m\033[4mMessage: %d\n\033[0m", message_index);
     char *buffer = malloc(sizeof(char) * BUF_SIZE);
     int errored = 0;
 
@@ -165,7 +165,7 @@ void handle_manage_mail(int server_port, char *username, char *password) {
                 if ( delete_index[i] == 1) {
                     continue;
                 }
-                printf("\033[1m\033[37mMessage: %d\n\033[0m", i);
+                printf("\033[1m\033[37m\033[4mMessage: %d\n\033[0m", i);
                 memset(buffer, 0, BUF_SIZE);
                 sprintf(buffer, "TOP %d 4\r\n", i);
                 send(socket, buffer, strlen(buffer), 0);
