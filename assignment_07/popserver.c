@@ -530,7 +530,8 @@ void handle_client(int socket) {
 
     while (1) {
         memset(buffer_in, 0, BUF_SIZE*1000);
-        int r = recv(socket, buffer_in, BUF_SIZE, 0);
+        memset(work, 0, BUF_SIZE * 1000);
+        int r = recv(socket, buffer_in, BUF_SIZE *1000, 0);
         if (r == -1)
             continue;
         if (r == 0) {
@@ -550,6 +551,7 @@ void handle_client(int socket) {
                     memset(buffer_out, 0, BUF_SIZE);
                     strcpy(buffer_out, "-ERR Already provided username\n");
                     send(socket, buffer_out, strlen(buffer_out), 0);
+                    command = strtok_r(NULL, "\r\n", &buffer_split_ptr);
                     continue;
                 }
                 username = malloc(sizeof(char) * MAX_SIZE);
@@ -561,6 +563,7 @@ void handle_client(int socket) {
                     send(socket, buffer_out, strlen(buffer_out), 0);
                     free(username);
                     username = NULL;
+                    command = strtok_r(NULL, "\r\n", &buffer_split_ptr);
                     continue;
                 }
                 memset(buffer_out, 0, BUF_SIZE);
@@ -571,6 +574,7 @@ void handle_client(int socket) {
                     memset(buffer_out, 0, BUF_SIZE);
                     strcpy(buffer_out, "-ERR Already provided password\n");
                     send(socket, buffer_out, strlen(buffer_out), 0);
+                    command = strtok_r(NULL, "\r\n", &buffer_split_ptr);
                     continue;
                 }
                 password = malloc(sizeof(char) * MAX_SIZE);
@@ -582,6 +586,7 @@ void handle_client(int socket) {
                     send(socket, buffer_out, strlen(buffer_out), 0);
                     free(password);
                     password = NULL;
+                    command = strtok_r(NULL, "\r\n", &buffer_split_ptr);
                     continue;
                 }
                 memset(buffer_out, 0, BUF_SIZE);
