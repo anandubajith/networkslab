@@ -219,6 +219,11 @@ void handle_cmd_mail(int socket, char *command, State *state) {
         send_reply(socket, 535, "Authentication requried");
         return;
     }
+    if ( state->current != 0) {
+        send_reply(socket, 503 , "Bad sequence of commands");
+        return;
+    }
+
     if (starts_with("MAIL FROM:", command) == 1) {
         send_reply(socket, 501, "Syntax error in parameters or arguments");
         return;
@@ -245,12 +250,17 @@ void handle_cmd_mail(int socket, char *command, State *state) {
     printf(">> Received from '%s'\n", state->from);
     assert(strlen(state->from) != 0);
 
+    state->current++;
     send_reply(socket, 250, "OK");
 }
 void handle_cmd_rcpt(int socket, char *command, State *state) {
     assert(state != NULL);
     if ( state->authenticated != 1) {
         send_reply(socket, 535, "Authentication requried");
+        return;
+    }
+    if ( state->current != 1) {
+        send_reply(socket, 503 , "Bad sequence of commands");
         return;
     }
     if (starts_with("RCPT TO:", command) == 1) {
@@ -279,6 +289,7 @@ void handle_cmd_rcpt(int socket, char *command, State *state) {
     printf(">> Received to '%s'\n", state->to);
     assert(strlen(state->to) != 0);
 
+    state->current++;
     send_reply(socket, 250, "OK");
 }
 
@@ -299,8 +310,13 @@ void handle_cmd_data(int socket, State *state) {
         send_reply(socket, 535, "Authentication requried");
         return;
     }
+    if ( state->current != 2) {
+        send_reply(socket, 503 , "Bad sequence of commands");
+        return;
+    }
     state->body = malloc(sizeof(char) * BUF_SIZE * 1000);
     memset(state->body, 0, BUF_SIZE *1000);
+    state->current++;
     state->handling_data = 1;
 }
 
