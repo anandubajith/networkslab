@@ -661,11 +661,11 @@ int main(int argc, char *argv[]) {
         int client_sock = accept(server_sock, NULL, NULL);
         if (client_sock == -1)
             continue;
-        /* if (!fork()) { */
-            /* close(server_sock); */
+        if (!fork()) {
+            close(server_sock);
             handle_client(client_sock);
-        /* } */
-        /* close(client_sock); */
+        }
+        close(client_sock);
     }
     close(server_sock);
 

@@ -42,7 +42,7 @@ void handle_view_message(int socket, int message_index, int*delete_index) {
         // receive the message?
         memset(buffer, 0, BUF_SIZE);
         recv(socket, buffer, BUF_SIZE, 0);
-        printf("Received '%s' \n", buffer); // todo: parse this and force this much bytes to be read?
+        /* printf("Received '%s' \n", buffer); // todo: parse this and force this much bytes to be read? */
 
         if ( buffer[0] == '+' ) {
             int total_bytes = 0;
