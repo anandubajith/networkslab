@@ -83,9 +83,11 @@ void handle_view_message(int socket, int message_index, int*delete_index) {
         sprintf(buffer, "DELE %d\r\n", message_index);
         send(socket, buffer, strlen(buffer), 0);
         memset(buffer, 0, BUF_SIZE);
+        usleep(10000);
         recv(socket, buffer, BUF_SIZE, 0);
         if ( buffer[0] == '+' )
             delete_index[message_index] = 1;
+        usleep(10000);
     }
 }
 

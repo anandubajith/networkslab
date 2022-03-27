@@ -394,6 +394,7 @@ void handle_cmd_dele(int socket, int index, Mail *mailHead) {
     memset(buffer, 0, BUF_SIZE);
     sprintf(buffer, "+OK message %d deleted", mail->index);
     send(socket, buffer, strlen(buffer), 0);
+    usleep(10000);
 }
 
 void handle_cmd_rset(int socket, char *username, Mail **mailHead) {
