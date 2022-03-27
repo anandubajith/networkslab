@@ -242,6 +242,11 @@ void handle_cmd_mail(int socket, char *command, State *state) {
         return;
     }
 
+    if ( strcmp(state->from_user, state->username) != 0) {
+        send_reply(socket, 550, "From address not same as logged in user");
+        return;
+    }
+
     if (check_username(state->from_user) != 0) {
         send_reply(socket, 550, "Requested action not taken: mailbox unavailable");
         return;
