@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -326,6 +327,9 @@ void handle_client(int socket) {
             if ( state->handling_data == 1) {
                 handle_cmd_data_body(socket, command, state);
             } else {
+                for ( int i = 0; i < 4; i++) {
+                    command[i] = toupper(command[i]);
+                }
                 if (starts_with(command, "HELO")) {
                     handle_cmd_helo(socket, state);
                 } else if (starts_with(command, "QUIT")) {
