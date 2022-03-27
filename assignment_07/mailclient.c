@@ -28,7 +28,7 @@ int get_socket_connection(int port) {
 
 void handle_view_message(int socket, int message_index, int*delete_index) {
 
-    printf("\x1b[2J\x1b[H");
+    /* printf("\x1b[2J\x1b[H"); */
     printf("\n\033[1m\033[37mMessage: %d\n\033[0m", message_index);
     char *buffer = malloc(sizeof(char) * BUF_SIZE);
     int errored = 0;
@@ -82,7 +82,10 @@ void handle_view_message(int socket, int message_index, int*delete_index) {
         memset(buffer, 0, BUF_SIZE);
         sprintf(buffer, "DELE %d\r\n", message_index);
         send(socket, buffer, strlen(buffer), 0);
-        delete_index[message_index] = 1;
+        memset(buffer, 0, BUF_SIZE);
+        recv(socket, buffer, BUF_SIZE, 0);
+        if ( buffer[0] == '+' )
+            delete_index[message_index] = 1;
     }
 }
 
@@ -132,7 +135,7 @@ void handle_manage_mail(int server_port, char *username, char *password) {
     int delete_index[100];
     memset(delete_index, 0, 100 * sizeof(int));
     while (1) {
-        printf("\x1b[2J\x1b[H");
+        /* printf("\x1b[2J\x1b[H"); */
         printf("\x1b[1;31mManage Mail\n\n\x1b[0m");
         // send stat and get email count
         memset(buffer, 0, BUF_SIZE);
@@ -268,7 +271,7 @@ void send_email(int socket, char *from, char*to, char*subject, char*body, char*b
 }
 
 void handle_send_mail(int server_port, char *username, char *password) {
-    printf("\x1b[2J\x1b[H");
+    /* printf("\x1b[2J\x1b[H"); */
     printf("\x1b[1;32mSend Email\n\n\x1b[0m");
 
     char *from = malloc(sizeof(char) * BUF_SIZE);
@@ -357,7 +360,7 @@ int main(int argc, char *argv[]) {
 
     char input = 0;
     while (1) {
-        printf("\x1b[2J\x1b[H"); // clear and position cursor at top
+        /* printf("\x1b[2J\x1b[H"); // clear and position cursor at top */
         printf("Welcome %s\n\n", username);
         printf("\x1b[1;31m1. Manage mail\n\x1b[1;32m2. Send Mail\n\x1b[1;33m3. Quit\n\x1b[1;0m# ");
         scanf("%c", &input);
