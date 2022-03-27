@@ -338,8 +338,8 @@ void handle_cmd_quit(int socket, State *state) {
 
 void handle_cmd_auth(int socket, char* command, State *state) {
     // AUTH user pass
-    char* parts = strtok(command, " "); // AUTH
-    char* username = strtok(NULL, " ");
+    char* username = strtok(command, " "); // AUTH
+    username = strtok(NULL, " ");
     if ( username == NULL || strlen(username) == 0) {
         send_reply(socket, 501, "Malformed AUTH");
         return;
