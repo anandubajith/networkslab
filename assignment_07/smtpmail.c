@@ -161,6 +161,8 @@ typedef struct _state {
     char *to_user;
     char *to_host;
     char *body;
+    char *username;
+    int authenticated;
     int current;
     int handling_data;
 } State;
@@ -213,6 +215,10 @@ void handle_cmd_helo(int socket, State *state) {
 }
 void handle_cmd_mail(int socket, char *command, State *state) {
     assert(state != NULL);
+    if ( state->authenticated != 1) {
+        send_reply(socket, 535, "Authentication requried");
+        return;
+    }
     if (starts_with("MAIL FROM:", command) == 1) {
         send_reply(socket, 501, "Syntax error in parameters or arguments");
         return;
@@ -243,6 +249,10 @@ void handle_cmd_mail(int socket, char *command, State *state) {
 }
 void handle_cmd_rcpt(int socket, char *command, State *state) {
     assert(state != NULL);
+    if ( state->authenticated != 1) {
+        send_reply(socket, 535, "Authentication requried");
+        return;
+    }
     if (starts_with("RCPT TO:", command) == 1) {
         send_reply(socket, 501, "Syntax error in parameters or arguments");
         return;
@@ -285,6 +295,10 @@ void handle_cmd_data_body(int socket, char* command, State*state) {
 }
 
 void handle_cmd_data(int socket, State *state) {
+    if ( state->authenticated != 1) {
+        send_reply(socket, 535, "Authentication requried");
+        return;
+    }
     state->body = malloc(sizeof(char) * BUF_SIZE * 1000);
     memset(state->body, 0, BUF_SIZE *1000);
     state->handling_data = 1;
@@ -299,6 +313,36 @@ void handle_cmd_quit(int socket, State *state) {
     send_reply(socket, 221, HOSTNAME " Service closing transmission channel");
     shutdown(socket, 2);
     exit(0); // todo: find cleaner way
+}
+
+void handle_cmd_auth(int socket, char* command, State *state) {
+    // AUTH user pass
+    char* parts = strtok(command, " "); // AUTH
+    char* username = strtok(NULL, " ");
+    if ( username == NULL || strlen(username) == 0) {
+        send_reply(socket, 501, "Malformed AUTH");
+        return;
+    }
+    char* password = strtok(NULL, " ");
+    if ( password == NULL || strlen(password) == 0) {
+        send_reply(socket, 501, "Malformed AUTH");
+        return;
+    }
+
+    /* printf("username = %s\n", username); */
+    /* printf("password = %s\n", password); */
+
+    if (check_password(username, password) == 0) {
+        // valid auth
+        state->username = malloc(sizeof(char) * MAX_SIZE);
+        memset(state->username, 0, MAX_SIZE);
+        strcpy(state->username, username);
+        state->authenticated = 1;
+        send_reply(socket, 235, "Authentication successful");
+    } else {
+        // return error
+        send_reply(socket, 501, "Invalid username/password");
+    }
 }
 
 void handle_client(int socket) {
@@ -321,7 +365,8 @@ void handle_client(int socket) {
 
         memset(work, 0, BUF_SIZE);
         strcpy(work, buffer);
-        char *command = strtok(work, "\r\n");
+        char *command_ptr;
+        char *command = strtok_r(work, "\r\n", &command_ptr);
         while (command != NULL) {
             printf("CMD: '%s'\n", command);
             if ( state->handling_data == 1) {
@@ -332,6 +377,8 @@ void handle_client(int socket) {
                 }
                 if (starts_with(command, "HELO")) {
                     handle_cmd_helo(socket, state);
+                } else if ( starts_with(command, "AUTH")) {
+                    handle_cmd_auth(socket,command,state);
                 } else if (starts_with(command, "QUIT")) {
                     handle_cmd_quit(socket, state);
                 } else if (starts_with(command, "MAIL")) {
@@ -349,7 +396,7 @@ void handle_client(int socket) {
                     // reply with 505 command not implemented
                 }
             }
-            command = strtok(NULL, "\r\n");
+            command = strtok_r(NULL, "\r\n", &command_ptr);
         }
 
     }

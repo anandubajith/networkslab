@@ -274,6 +274,20 @@ void handle_send_mail(int server_port, char *username, char *password) {
     printf("\x1b[2J\x1b[H");
     printf("\x1b[1;32mSend Email\n\n\x1b[0m");
 
+    int socket = get_socket_connection(server_port);
+    char* buffer = malloc(sizeof(char) * BUF_SIZE);
+    memset(buffer, 0, BUF_SIZE);
+    sprintf(buffer, "AUTH %s %s\r\n", username, password);
+    send(socket, buffer, strlen(buffer), 0);
+    memset(buffer, 0, BUF_SIZE);
+    recv(socket, buffer, BUF_SIZE, 0);
+    if ( buffer[0] != '2' ) {
+        printf("Error occurred during SMTP AUTH\n");
+        printf("Error: %s\n", buffer);
+        free(buffer);
+        exit(0);
+    }
+
     char *from = malloc(sizeof(char) * BUF_SIZE);
     memset(from, 0, BUF_SIZE);
     char *to = malloc(sizeof(char) * BUF_SIZE);
@@ -324,8 +338,6 @@ void handle_send_mail(int server_port, char *username, char *password) {
     /* printf("subject: '%s'\n", subject); */
     /* printf("body: '%s'\n", body); */
 
-    int socket = get_socket_connection(server_port);
-    char* buffer = malloc(sizeof(char) * BUF_SIZE);
     send_email(socket, from, to, subject, body, buffer);
     memset(buffer, 0, BUF_SIZE);
     sprintf(buffer, "QUIT\r\n");
