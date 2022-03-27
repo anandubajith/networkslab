@@ -227,7 +227,7 @@ void send_email(int socket, char *from, char*to, char*subject, char*body, char*b
         return;
     }
 
-    printf("Received : '%s'\n", buffer);
+    /* printf("Received : '%s'\n", buffer); */
     memset(buffer, 0, BUF_SIZE);
     sprintf(buffer, "RCPT TO:<%s>\r\n", to);
     send(socket, buffer, strlen(buffer), 0);
@@ -238,8 +238,7 @@ void send_email(int socket, char *from, char*to, char*subject, char*body, char*b
         printf("ERROR: %s\n",buffer);
         return;
     }
-
-    printf("Received : '%s'\n", buffer);
+    /* printf("Received : '%s'\n", buffer); */
 
     memset(buffer, 0, BUF_SIZE);
     sprintf(buffer, "DATA\r\n");
@@ -260,14 +259,14 @@ void send_email(int socket, char *from, char*to, char*subject, char*body, char*b
 
     memset(buffer, 0, BUF_SIZE);
     recv(socket, buffer, BUF_SIZE, 0);
-    printf("Received : '%s'\n", buffer);
+    /* printf("Received : '%s'\n", buffer); */
     if ( buffer[0] == '5' ) {
         printf("Error when trying to put in data mode");
         printf("ERROR: %s\n",buffer);
         return;
     }
 
-    printf("Mail sent successfully");
+    printf("Mail sent successfully\n");
 
 }
 
@@ -310,7 +309,7 @@ void handle_send_mail(int server_port, char *username, char *password) {
         scanf("%[^\n]%c", temp, &t);
         /* printf("read: '%s' %ld", temp, strlen(temp)); */
         if (strlen(temp) == 1 && temp[0] == '.') {
-            printf("\nSendign email\n");
+            printf("\nSending email\n");
             break;
         }
         if ( strlen(body) != 0 )
