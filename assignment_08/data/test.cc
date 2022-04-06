@@ -1,5 +1,11 @@
 #include "ns3/applications-module.h"
 #include "ns3/core-module.h"
+#include "ns3/yans-wifi-helper.h"
+#include "ns3/ssid.h"
+#include "ns3/mobility-helper.h"
+#include "ns3/on-off-helper.h"
+#include "ns3/yans-wifi-channel.h"
+#include "ns3/mobility-model.h"
 #include "ns3/csma-module.h"
 #include "ns3/internet-module.h"
 #include "ns3/ipv4-global-routing-helper.h"
@@ -39,17 +45,17 @@ int main() {
 
   // Connection between R0 and R1 with 2mbps and 20ms delay
   PointToPointHelper R0toR1pointToPoint;
-  R0toR1pointToPoin.SetDeviceAttribute("DataRate", StringValue("2Mbps"));
+  R0toR1pointToPoint.SetDeviceAttribute("DataRate", StringValue("2Mbps"));
   R0toR1pointToPoint.SetChannelAttribute("Delay", StringValue("20ms"));
 
   // Connection between R1 and R2 with faulty cable loss probability 0.15
   PointToPointHelper R1toR2pointToPoint;
-  R1toR2pointToPoin.SetDeviceAttribute("DataRate", StringValue("5Mbps"));
+  R1toR2pointToPoint.SetDeviceAttribute("DataRate", StringValue("5Mbps"));
   R1toR2pointToPoint.SetChannelAttribute("Delay", StringValue("20ms"));
 
   // Connection between R1 and WiFI
   PointToPointHelper R1toWiFipointToPoint;
-  R1toWiFipointToPoin.SetDeviceAttribute("DataRate", StringValue("5Mbps"));
+  R1toWiFipointToPoint.SetDeviceAttribute("DataRate", StringValue("5Mbps"));
   R1toWiFipointToPoint.SetChannelAttribute("Delay", StringValue("20ms"));
 
   NodeContainer wifiApNode;
