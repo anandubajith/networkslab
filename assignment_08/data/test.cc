@@ -1,5 +1,6 @@
 #include "ns3/applications-module.h"
 #include "ns3/core-module.h"
+#include "ns3/rectangle.h"
 #include "ns3/yans-wifi-helper.h"
 #include "ns3/ssid.h"
 #include "ns3/mobility-helper.h"
@@ -59,7 +60,7 @@ int main() {
   R1toWiFipointToPoint.SetChannelAttribute("Delay", StringValue("20ms"));
 
   NodeContainer wifiApNode;
-  wifiApNode.create(1);
+  wifiApNode.Create(1);
 
   YansWifiChannelHelper channel = YansWifiChannelHelper::Default();
   YansWifiPhyHelper phy;
@@ -109,7 +110,7 @@ int main() {
   // FTP Client on CCC Desktop LAN
   PacketSinkHelper sink("ns3::TcpSocketFactory",
                         InetSocketAddress(Ipv4Address::GetAny(), port));
-  ApplicationContainer sinkApps = sink.Install(ccc_desktop_lan.get(2));
+  ApplicationContainer sinkApps = sink.Install(ccc_desktop_lan.Get(2));
   sinkApps.Start(Seconds(0.0));
   sinkApps.Stop(Seconds(30.0));
 
@@ -124,7 +125,7 @@ int main() {
   echoClient.SetAttribute("Interval", TimeValue(Seconds(1.0)));
   echoClient.SetAttribute("PacketSize", UintegerValue(1024));
 
-  ApplicationContainer clientApps = echoClient.Install(nodes.Get(0));
+  ApplicationContainer clientApps = echoClient.Install(cnc_lan.Get(1));
   clientApps.Start(Seconds(2.0));
   clientApps.Stop(Seconds(10.0));
 
