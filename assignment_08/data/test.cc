@@ -116,7 +116,7 @@ int main() {
 
   // Server2 -> CBR application to one of laptop devices
   UdpEchoServerHelper echoServer(9);
-  ApplicationContainer serverApps = echoServer.Install(nodes.Get(1));
+  ApplicationContainer serverApps = echoServer.Install(ccc_laptop_nodes.Get(1));
   serverApps.Start(Seconds(1.0));
   serverApps.Stop(Seconds(10.0));
 
