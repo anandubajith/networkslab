@@ -54,6 +54,7 @@ int main() {
     cccDesktopNodes.Add(nodes.Get(3));
     cccDesktopNodes.Add(nodes.Get(4));
     cccDesktopNodes.Add(nodes.Get(5));
+    cccDesktopNodes.Add(nodes.Get(11));
 
     NodeContainer cccLaptopNodes;
     cccLaptopNodes.Add(nodes.Get(6));
@@ -77,8 +78,18 @@ int main() {
     cccDesktopDevices = csma.Install(cccDesktopNodes);
     allDevices.Add(cccDesktopDevices);
 
-    // todo: add router
-    // todo: add server
+    PointToPointHelper p2pHelper1;
+    p2pHelper1.SetDeviceAttribute("DataRate", StringValue("2Mbps"));
+    p2pHelper1.SetChannelAttribute("Delay", StringValue("20ms"));
+    p2pHelper1.Install(nodes.Get(9), nodes.Get(10));
+
+    PointToPointHelper p2pHelper2;
+    p2pHelper2.SetDeviceAttribute("DataRate", StringValue("5Mbps"));
+    p2pHelper2.Install(nodes.Get(10), nodes.Get(11));
+    p2pHelper2.Install(nodes.Get(10), nodes.Get(12));
+    p2pHelper2.Install(nodes.Get(1), nodes.Get(9));
+    p2pHelper2.Install(nodes.Get(2), nodes.Get(9));
+    p2pHelper2.Install(nodes.Get(10), nodes.Get(9));
 
     /*
      * WiFi in CCC Room
