@@ -2,6 +2,14 @@
 #include "ns3/core-module.h"
 #include "ns3/rectangle.h"
 #include "ns3/yans-wifi-helper.h"
+#include <string>
+#include <fstream>
+#include "ns3/core-module.h"
+#include "ns3/point-to-point-module.h"
+#include "ns3/internet-module.h"
+#include "ns3/applications-module.h"
+#include "ns3/network-module.h"
+#include "ns3/packet-sink.h"
 #include "ns3/ssid.h"
 #include "ns3/mobility-helper.h"
 #include "ns3/on-off-helper.h"
@@ -12,6 +20,22 @@
 #include "ns3/ipv4-global-routing-helper.h"
 #include "ns3/network-module.h"
 #include "ns3/point-to-point-module.h"
+#include "ns3/core-module.h"
+#include "ns3/network-module.h"
+#include "ns3/csma-module.h"
+#include "ns3/internet-module.h"
+#include "ns3/point-to-point-module.h"
+#include "ns3/applications-module.h"
+#include "ns3/ipv4-global-routing-helper.h"
+#include "ns3/core-module.h"
+#include "ns3/point-to-point-module.h"
+#include "ns3/network-module.h"
+#include "ns3/applications-module.h"
+#include "ns3/mobility-module.h"
+#include "ns3/csma-module.h"
+#include "ns3/internet-module.h"
+#include "ns3/yans-wifi-helper.h"
+#include "ns3/ssid.h"
 
 using namespace ns3;
 
@@ -71,12 +95,11 @@ int main() {
                             "Ssid", SsidValue(ssid),
                             "ActiveProbing", BooleanValue(false)
     );
-    // todo: pass node 12
     cccLaptopDevices = wifi.Install(phy, mac, cccLaptopNodes);
     allDevices.Add(cccLaptopDevices);
     NetDeviceContainer wifiApDevices;
     mac.SetType("ns3::ApWifiMac", "Ssid", SsidValue(ssid));
-    wifiApDevices = wifi.Install(phy, mac, wifiApNodes);
+    wifiApDevices = wifi.Install(phy, mac, wifiApNodes.Get(0));
     allDevices.Add(wifiApDevices);
 
     MobilityHelper mobility;
