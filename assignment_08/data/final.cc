@@ -18,22 +18,45 @@ using namespace ns3;
 int main() {
     NodeContainer nodes;
     nodes.create(13);
-    /* {0,1}     = CNC servers
-     * {2,3,4,5} = CCC Desktop lan
-     * {6,7,8}   = CCC Laptops
-     * {9,10,11} = Routers
-     * {12} = WiFi AP
-     */
+
+    NodeContainer cncServerNodes;
+    cncServerNodes.Add(nodes.get(0));
+    cncServerNodes.Add(nodes.get(1));
+
+    NodeContainer cccDesktopNodes;
+    cccDesktopNodes.Add(nodes.get(2));
+    cccDesktopNodes.Add(nodes.get(3));
+    cccDesktopNodes.Add(nodes.get(4));
+    cccDesktopNodes.Add(nodes.get(5));
+
+    NodeContainer cccLaptopNodes;
+    cccLaptopNodes.Add(nodes.get(6));
+    cccLaptopNodes.Add(nodes.get(7));
+    cccLaptopNodes.Add(nodes.get(8));
+
+    NodeContainer routerNodes;
+    routerNodes.Add(nodes.get(9));
+    routerNodes.Add(nodes.get(10));
+    routerNodes.Add(nodes.get(11));
+
+    NodeContainer wifiApNodes;
+    wifiApNodes.Add(nodes.get(12));
 
     /*
      * Setup physical connections
      */
+    CsmaHelper csma;
+    csma.SetChannelAttribute("DataRate", StringValue("5Mbps"));
+    NetDeviceContainer cccDesktopDevices;
+    cccDesktopDevices = csma.Install(cccDesktopNodes);
+    // todo: add router
+
 
 
     /*
      * WiFi in CCC Room
      */
-    NetDeviceContainer cccWifiDevices;
+    NetDeviceContainer cccLaptopDevices;
     YansWifiChannelHelper channel = YansWifiChannelHelper::Default();
     YansWifiPhyHelper phy;
     phy.SetChannel(channel.Create());
@@ -46,10 +69,10 @@ int main() {
                             "ActiveProbing", BooleanValue(false)
     );
     // todo: pass node 12
-    cccWifiDevices = wifi.Install(phy, mac, ccc_laptop_nodes);
-    NetDeviceContainer apDevices;
+    cccLaptopDevices = wifi.Install(phy, mac, cccLaptopNodes);
+    NetDeviceContainer wifiApDevices;
     mac.SetType("ns3::ApWifiMac", "Ssid", SsidValue(ssid));
-    apDevices = wifi.Install(phy, mac, wifiApNode);
+    wifiApDevices = wifi.Install(phy, mac, wifiApNodes);
 
     MobilityHelper mobility;
 
@@ -62,24 +85,20 @@ int main() {
                                           "LayoutType", StringValue("RowFirst")
     );
 
-    mobility.SetMobilityModel("ns3::RandomWalk2dMobilityModel", "Bounds",
-            RectangleValue(Rectangle(-50, 50, -50, 50)));
-    // todo: pass nodes 6,7,8
-    mobility.Install(ccc_laptop_nodes);
-
+    mobility.SetMobilityModel("ns3::RandomWalk2dMobilityModel",
+                                        "Bounds", RectangleValue(Rectangle(-50, 50, -50, 50))
+    );
+    mobility.Install(cccLaptopNodes);
     mobility.SetMobilityModel("ns3::ConstantPositionMobilityModel");
-    mobility.Install(wifiApNode);
+    mobility.Install(wifiApNodes);
 
     /*
      * Setup Networking stack and routing
      */
     InternetStackHelper stack;
-    stack.Install (csmaNodes);
-    stack.Install (wifiApNode);
-    stack.Install (wifiStaNodes);
+    stack.Install (nodes);
 
     Ipv4AddressHelper address;
-
     address.SetBase ("10.1.1.0", "255.255.255.0");
     Ipv4InterfaceContainer p2pInterfaces;
     p2pInterfaces = address.Assign (p2pDevices);
@@ -91,6 +110,7 @@ int main() {
     address.SetBase ("10.1.3.0", "255.255.255.0");
     address.Assign (staDevices);
     address.Assign (apDevices);
+
     Ipv4GlobalRoutingHelper::PopulateRoutingTables();
 
     /*
