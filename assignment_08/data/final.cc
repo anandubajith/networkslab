@@ -16,31 +16,33 @@
 using namespace ns3;
 
 int main() {
+    NetDeviceContainer allDevices;
+
     NodeContainer nodes;
-    nodes.create(13);
+    nodes.Create(13);
 
     NodeContainer cncServerNodes;
-    cncServerNodes.Add(nodes.get(0));
-    cncServerNodes.Add(nodes.get(1));
+    cncServerNodes.Add(nodes.Get(0));
+    cncServerNodes.Add(nodes.Get(1));
 
     NodeContainer cccDesktopNodes;
-    cccDesktopNodes.Add(nodes.get(2));
-    cccDesktopNodes.Add(nodes.get(3));
-    cccDesktopNodes.Add(nodes.get(4));
-    cccDesktopNodes.Add(nodes.get(5));
+    cccDesktopNodes.Add(nodes.Get(2));
+    cccDesktopNodes.Add(nodes.Get(3));
+    cccDesktopNodes.Add(nodes.Get(4));
+    cccDesktopNodes.Add(nodes.Get(5));
 
     NodeContainer cccLaptopNodes;
-    cccLaptopNodes.Add(nodes.get(6));
-    cccLaptopNodes.Add(nodes.get(7));
-    cccLaptopNodes.Add(nodes.get(8));
+    cccLaptopNodes.Add(nodes.Get(6));
+    cccLaptopNodes.Add(nodes.Get(7));
+    cccLaptopNodes.Add(nodes.Get(8));
 
     NodeContainer routerNodes;
-    routerNodes.Add(nodes.get(9));
-    routerNodes.Add(nodes.get(10));
-    routerNodes.Add(nodes.get(11));
+    routerNodes.Add(nodes.Get(9));
+    routerNodes.Add(nodes.Get(10));
+    routerNodes.Add(nodes.Get(11));
 
     NodeContainer wifiApNodes;
-    wifiApNodes.Add(nodes.get(12));
+    wifiApNodes.Add(nodes.Get(12));
 
     /*
      * Setup physical connections
@@ -49,9 +51,10 @@ int main() {
     csma.SetChannelAttribute("DataRate", StringValue("5Mbps"));
     NetDeviceContainer cccDesktopDevices;
     cccDesktopDevices = csma.Install(cccDesktopNodes);
+    allDevices.Add(cccDesktopDevices);
+
     // todo: add router
     // todo: add server
-
 
     /*
      * WiFi in CCC Room
@@ -70,9 +73,11 @@ int main() {
     );
     // todo: pass node 12
     cccLaptopDevices = wifi.Install(phy, mac, cccLaptopNodes);
+    allDevices.Add(cccLaptopDevices);
     NetDeviceContainer wifiApDevices;
     mac.SetType("ns3::ApWifiMac", "Ssid", SsidValue(ssid));
     wifiApDevices = wifi.Install(phy, mac, wifiApNodes);
+    allDevices.Add(wifiApDevices);
 
     MobilityHelper mobility;
 
@@ -98,10 +103,6 @@ int main() {
     InternetStackHelper stack;
     stack.Install (nodes);
 
-    NetDeviceContainer allDevices;
-    allDevices.Add(cccLaptopDevices);
-    allDevices.Add(wifiApDevices);
-    allDevices.Add(cccDesktopDevices);
 
     Ipv4AddressHelper address;
     address.SetBase ("10.1.1.0", "255.255.255.0");
@@ -116,38 +117,38 @@ int main() {
     // Server1 -> FTP application to one of CCC help desk
     uint16_t port = 21;
     // FTP Server on Server 1
-    BulkSendHelper source("ns3::TcpSocketFactory", InetSocketAddress(i.GetAddress(1), port));
+    BulkSendHelper source("ns3::TcpSocketFactory", InetSocketAddress(deviceInterfaces.GetAddress(0), port));
     source.SetAttribute("MaxBytes", UintegerValue(10000)); // send 10000 bytes
-    ApplicationContainer sourceApps = source.Install(cnc_lan.Get(0));
+    ApplicationContainer sourceApps = source.Install(cncServerNodes.Get(0));
     sourceApps.Start(Seconds(0.0));
     sourceApps.Stop(Seconds(10.0));
     // FTP Client on CCC Desktop LAN
     PacketSinkHelper sink("ns3::TcpSocketFactory", InetSocketAddress(Ipv4Address::GetAny(), port));
-    ApplicationContainer sinkApps = sink.Install(ccc_desktop_lan.Get(2));
+    ApplicationContainer sinkApps = sink.Install(cccDesktopNodes.Get(2));
     sinkApps.Start(Seconds(0.0));
     sinkApps.Stop(Seconds(30.0));
 
     // Server2 -> CBR application to one of laptop devices
     UdpEchoServerHelper echoServer(9);
-    ApplicationContainer serverApps = echoServer.Install(ccc_laptop_nodes.Get(1));
+    ApplicationContainer serverApps = echoServer.Install(cccLaptopNodes.Get(1));
     serverApps.Start(Seconds(1.0));
     serverApps.Stop(Seconds(10.0));
 
-    UdpEchoClientHelper echoClient(i.GetAddress(2), 9);
+    UdpEchoClientHelper echoClient(deviceInterfaces.GetAddress(1), 9);
     echoClient.SetAttribute("MaxPackets", UintegerValue(1));
     echoClient.SetAttribute("Interval", TimeValue(Seconds(1.0)));
     echoClient.SetAttribute("PacketSize", UintegerValue(1024));
 
-    ApplicationContainer clientApps = echoClient.Install(cnc_lan.Get(1));
+    ApplicationContainer clientApps = echoClient.Install(cncServerNodes.Get(1));
 
 
     /*
      * Setup tracing
      */
     phy.SetPcapDataLinkType (WifiPhyHelper::DLT_IEEE802_11_RADIO);
-    pointToPoint.EnablePcapAll ("third");
-    phy.EnablePcap ("third", apDevices.Get (0));
-    csma.EnablePcap ("third", csmaDevices.Get (0), true);
+    /* pointToPoint.EnablePcapAll ("third"); */
+    phy.EnablePcap ("third", wifiApDevices.Get (0));
+    /* csma.EnablePcap ("third", csmaDevices.Get (0), true); */
 
     /*
      * Run simulation
