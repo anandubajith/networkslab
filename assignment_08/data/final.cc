@@ -188,10 +188,10 @@ int main() {
     p2pHelper2.EnableAsciiAll(ascii.CreateFileStream("ns3-anandu-p2p-2.tr"));
     csma.EnableAsciiAll(ascii.CreateFileStream("ns3-anandu-csma.tr"));
 
-    p2pHelper1.EnablePcapAll ("ns3-anandu-p2p-1");
-    p2pHelper2.EnablePcapAll ("ns3-anandu-p2p-1");
-    phy.EnablePcap ("ns3-anandu-phy");
-    csma.EnablePcap ("ns3-anandu-csma");
+    p2pHelper1.EnablePcapAll("ns3-anandu-p2p-1");
+    p2pHelper2.EnablePcapAll("ns3-anandu-p2p-1");
+    phy.EnablePcapAll("ns3-anandu-phy");
+    csma.EnablePcapAll("ns3-anandu-csma");
 
     /*
      * Run simulation
