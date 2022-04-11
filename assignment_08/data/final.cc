@@ -85,7 +85,8 @@ int main() {
      */
     NetDeviceContainer cccLaptopDevices;
     YansWifiChannelHelper channel = YansWifiChannelHelper::Default();
-    YansWifiPhyHelper phy;
+    YansWifiPhyHelper phy = YansWifiPhyHelper::Default();
+
     phy.SetChannel(channel.Create());
 
     WifiMacHelper mac;
