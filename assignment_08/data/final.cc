@@ -50,7 +50,7 @@ int main() {
     NetDeviceContainer cccDesktopDevices;
     cccDesktopDevices = csma.Install(cccDesktopNodes);
     // todo: add router
-
+    // todo: add server
 
 
     /*
@@ -98,18 +98,15 @@ int main() {
     InternetStackHelper stack;
     stack.Install (nodes);
 
+    NetDeviceContainer allDevices;
+    allDevices.Add(cccLaptopDevices);
+    allDevices.Add(wifiApDevices);
+    allDevices.Add(cccDesktopDevices);
+
     Ipv4AddressHelper address;
     address.SetBase ("10.1.1.0", "255.255.255.0");
-    Ipv4InterfaceContainer p2pInterfaces;
-    p2pInterfaces = address.Assign (p2pDevices);
-
-    address.SetBase ("10.1.2.0", "255.255.255.0");
-    Ipv4InterfaceContainer csmaInterfaces;
-    csmaInterfaces = address.Assign (csmaDevices);
-
-    address.SetBase ("10.1.3.0", "255.255.255.0");
-    address.Assign (staDevices);
-    address.Assign (apDevices);
+    Ipv4InterfaceContainer deviceInterfaces;
+    deviceInterfaces = address.Assign (allDevices);
 
     Ipv4GlobalRoutingHelper::PopulateRoutingTables();
 
