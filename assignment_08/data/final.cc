@@ -181,7 +181,7 @@ int main() {
      * Setup tracing
      */
     AsciiTraceHelper ascii;
-    phy.EnableAsciiAll(ascii.createFileStream("ns3-anandu.tr"));
+    phy.EnableAsciiAll(ascii.CreateFileStream("ns3-anandu.tr"));
     phy.SetPcapDataLinkType (WifiPhyHelper::DLT_IEEE802_11_RADIO);
     p2pHelper1.EnablePcapAll ("ns3-anandu");
     p2pHelper2.EnablePcapAll ("ns3-anandu");
