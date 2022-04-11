@@ -181,12 +181,17 @@ int main() {
      * Setup tracing
      */
     AsciiTraceHelper ascii;
-    phy.EnableAsciiAll(ascii.CreateFileStream("ns3-anandu.tr"));
     phy.SetPcapDataLinkType (WifiPhyHelper::DLT_IEEE802_11_RADIO);
-    p2pHelper1.EnablePcapAll ("ns3-anandu");
-    p2pHelper2.EnablePcapAll ("ns3-anandu");
-    phy.EnablePcap ("ns3-anandu", wifiApDevices.Get (0));
-    csma.EnablePcap ("ns3-anandu", cccDesktopDevices.Get (0), true);
+
+    phy.EnableAsciiAll(ascii.CreateFileStream("ns3-anandu-phy.tr"));
+    p2pHelper1.EnableAsciiAll(ascii.CreateFileStream("ns3-anandu-p2p-1.tr"));
+    p2pHelper2.EnableAsciiAll(ascii.CreateFileStream("ns3-anandu-p2p-2.tr"));
+    csma.EnableAsciiAll(ascii.CreateFileStream("ns3-anandu-csma.tr"));
+
+    p2pHelper1.EnablePcapAll ("ns3-anandu-p2p-1");
+    p2pHelper2.EnablePcapAll ("ns3-anandu-p2p-1");
+    phy.EnablePcap ("ns3-anandu-phy");
+    csma.EnablePcap ("ns3-anandu-csma");
 
     /*
      * Run simulation
